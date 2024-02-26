@@ -18,11 +18,11 @@
 #include "esp_camera.h"
 #include "esp_timer.h"
 #include "img_converters.h"
-#include "Arduino.h"
+//#include "Arduino.h"
 #include "soc/soc.h"           // Disable brownour problems
 #include "soc/rtc_cntl_reg.h"  // Disable brownour problems
 #include "driver/rtc_io.h"
-#include <ESPAsyncWebServer.h>
+//#include <ESPAsyncWebServer.h>
 #include <StringArray.h>
 #include <SPIFFS.h>
 #include <FS.h>
@@ -239,13 +239,13 @@ void setup() {
   // Start server
   server.begin();
 
-  ArduinoOTA.begin(); // OTA Upload via ArduinoIDE
-  ArduinoOTA.setPassword("11er");
+//  ArduinoOTA.begin(); // OTA Upload via ArduinoIDE
+//  ArduinoOTA.setPassword("11er");
 
 }
 
 void loop() {
-  ArduinoOTA.handle();
+//  ArduinoOTA.handle();
 
   if (takeNewPhoto) {
     capturePhotoSaveSpiffs();

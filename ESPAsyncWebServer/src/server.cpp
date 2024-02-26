@@ -14,7 +14,7 @@
 #include <Arduino.h>
 
 // for Send-Mail
-#include <ESP_Mail_Client.h>
+//#include <ESP_Mail_Client.h>
 
 #include <WiFi.h>
 //#include <WiFiClient.h>
