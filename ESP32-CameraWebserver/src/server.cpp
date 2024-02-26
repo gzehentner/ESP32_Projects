@@ -9,38 +9,19 @@
 //   css    f.css         css for all on flash (program) memory
 //   php                  not really php - only a resource doing actions and not returning content (just http header 204 ok)
 //   ***************************************************************** */
-//
-
-#include <Arduino.h>
-
-// for Send-Mail
-#include <ESP_Mail_Client.h>
-
-#include <WiFi.h>
-//#include <WiFiClient.h>
-//#include <ESPAsyncWebServer.h>
-
-#include <WebServer.h>  // for the webserver
-//#include <ESP8266HTTPClient.h> // for the webclient https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266HTTPClient
-//#include <ESP8266mDNS.h>       // Bonjour/multicast DNS, finds the device on network by name
-#include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
-
-#include <NTPClient.h> // get time from timeserver
-#include <WiFiUdp.h>
-
-#include <timeserver.h>
-#include <waterlevel_defines.h>
-#include <waterlevel.h>
-
-int val_AHH;
-int val_AH;
-int val_AL;
-int val_ALL;
-
-// AsyncWebServer server(80); // an instance for the webserver
-
-
-
+////
+//#include <Arduino.h>//
+//#include <WiFi.h>//
+//// for Send-Mail
+//#include <ESP_Mail_Client.h>//
+//#include <waterlevel_defines.h>//
+//#include <timeserver.h>
+//#include <waterlevel.h>//
+//int val_AHH;
+//int val_AH;
+//int val_AL;
+//int val_ALL;//
+//// ESP8266WebServer server(80); // an instance for the webserver//////
 ///* =======================================*/
 //void handleNotFound()
 //{
@@ -61,15 +42,13 @@ int val_ALL;
 //    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
 //  }
 //  server.send(404, "text/plain", message);
-//}
-
-/* =======================================*/
+//}//
+///* =======================================*/
 //void handle204()
 ///* =======================================*/
 //{
 //  server.send(204); // this page doesn't send back content
-//}
-
+//}//
 ///* =======================================*/
 ///* add a header  to each page including refs for all other pages */
 //void addTop(String &message)
@@ -89,24 +68,20 @@ int val_ALL;
 //  message += F("<nav> <a href=\"/\">[Home]</a> <a href=\"filtered.htm\">[Value History]</a>" 
 //               "<a href=\"graph.htm\">[Graph]</a> </nav></header>"
 //               "<main>");
-//}
-//
+//}//
 ///* =======================================*/
 ///* The footer will display the uptime, the IP-address the version of the sketch and the compile date/time */
 ///* add code to calculate the uptime */
 //void addBottom(String &message)
 //{
-//  /* =======================================*/
-//
+//  /* =======================================*///
 //  message += F("</main>"
 //               "<footer><p>");
-//  message += F("<p>Actual Date and Time: ");
-//
+//  message += F("<p>Actual Date and Time: ");//
 //  message += currentDate;
 //  message += F(" -- ");
 //  message += formattedTime;
-//  message += F("<br>");
-//
+//  message += F("<br>");//
 //  if (seconds_since_startup > 604800)
 //  {
 //    message += F("<span id='week'>");
@@ -124,20 +99,17 @@ int val_ALL;
 //    message += F("<span id='hour'>");
 //    message += ((seconds_since_startup / 3600) % 24);
 //    message += F("</span> hours ");
-//  }
-//
+//  }//
 //  message += F("<span id='min'>");
 //  message += ((seconds_since_startup / 60) % 60);
-//  message += F("</span> minutes ");
-//
+//  message += F("</span> minutes ");//
 //  message += F("<span id='sec'>");
 //  message += (seconds_since_startup % 60);
 //  message += F("</span> seconds since startup | Version " VERSION " | IP: ");
 //  message += WiFi.localIP().toString();
 //  message += F(" | " __DATE__ " " __TIME__ "</p></footer></body></html>");
 //  server.send(200, "text/html", message);
-//}
-//
+//}//
 //// the html output
 //// finally check your output if it is valid html: https://validator.w3.org
 //// *** HOME ***  0.htm
@@ -150,18 +122,15 @@ int val_ALL;
 ///* =======================================*/
 //{
 //  String message;
-//  addTop(message);
-//
+//  addTop(message);//
 //  message += F("<article>"
 //               "<h2>Wasserstand Zehentner Teisendorf</h2>" // here you write your html code for your homepage. Let's give some examples...
 //               "<p>Hier kann man den aktuellen Wasserstand in der Regenwasser-Zisterne  "
 //               "von Georg Zehentner, Streiblweg 19, Teisendorf ablesen.<br> "
 //               " Bei Überschreiten des Höchststand muss eine Pumpe aktiviert werden</p>"
-//               "</article>");
-//
+//               "</article>");//
 //  message += F("<article>"
-//               "<h2>Rohdaten</h2><pre>");
-//
+//               "<h2>Rohdaten</h2><pre>");//
 //  // input signals are low active
 //  message += F("Level Alarm   high: <span id='val_AHH'>");
 //  if (val_AHH == 0)
@@ -203,8 +172,7 @@ int val_ALL;
 //    message += F("--");
 //  }
 //  message += F("</span><br>");
-//  message += F("</pre></article>");
-//
+//  message += F("</pre></article>");//
 //  message += F("<article>"
 //               "<h2>Auswertung Wasserstand</h2>");
 //  if (alarmState == 5)
@@ -234,8 +202,7 @@ int val_ALL;
 //    message += F("<message_ok> Wasserstand ist zwischen ");
 //    message += Level_ALL;
 //    message += F(" und ");
-//    message += Level_AL;
-//
+//    message += Level_AL;//
 //    message += F("<br></message_ok>");
 //  }
 //  else if (alarmState == 1)
@@ -243,41 +210,33 @@ int val_ALL;
 //    message += F("<message_ok>   Wasserstand &lt; ");
 //    message += Level_ALL;
 //    message += F("<br></message_ok>");
-//  }
-//
+//  }//
 //  // print when a new value arrieves
 //  message += F("<br><br>  Zeit: ");
 //  message += formattedTime;
 //  message += F("   Wasserstand aktuell: ");
-//  message += myValueFilteredAct;
-//
-//  message += F("</article>");
-//
+//  message += myValueFilteredAct;//
+//  message += F("</article>");//
 //  addBottom(message);
 //  server.send(200, "text/html", message);
-//}
-//
-//
+//}////
 ///* =======================================*/
 ///* print value history*/
 //void handleListFiltered()
 ///* =======================================*/
 //{
 //  String message = "";
-//  addTop(message);
-//
+//  addTop(message);//
 //  message += F("<article>"
 //               "<h2>Wasserstand Zehentner Teisendorf</h2>" 
 //               "<p>Index ");
 //  message += filterCnt;             
-//  message += "<br> </p>";
-//
+//  message += "<br> </p>";//
 //  // create header of table
 //  message += "<pre>rdRingPtr  Time     Value ADC <br>";
 //  
 //  // read out ringbuffer and display values
-//    for ( rdRingPtr = wrRingPtr+1; rdRingPtr != wrRingPtr; ){
-//
+//    for ( rdRingPtr = wrRingPtr+1; rdRingPtr != wrRingPtr; ){//
 //      // align values 
 //      if (rdRingPtr<10) {
 //        //message += " &nbsp";
@@ -289,17 +248,14 @@ int val_ALL;
 //      message += ringValue[rdRingPtr];
 //      message += "  ";
 //      message += ringADC[rdRingPtr];
-//      message += "<br>";
-//
+//      message += "<br>";//
 //      if (rdRingPtr<iRingValueMax) {
 //        rdRingPtr++;
 //      } else {
 //        rdRingPtr = 0;
-//      }
-//
+//      }//
 //    }
-//    message += F("</pre></article><br>");
-//
+//    message += F("</pre></article><br>");//
 //  addBottom(message);
 //  server.send(200, "text/html", message);
 //}
@@ -309,23 +265,18 @@ int val_ALL;
 ///* =======================================*/
 //{
 //  String message;
-//  addTop(message);
-//
-//
+//  addTop(message);////
 //  message += F("<article>"
 //               "<h2>Wasserstand Zehentner Teisendorf</h2>" 
-//               "<p>Line Graph<br> </p> "); 
-//
+//               "<p>Line Graph<br> </p> "); //
 //  message += "<br>filterCnt= ";
-//  message += filterCnt;
-//
+//  message += filterCnt;//
 //  // print when a new value arrieves
 //  message += F("<br><br>  Zeit: ");
 //  message += formattedTime;
 //  message += F("   Wasserstand aktuell: ");
 //  message += myValueFilteredAct;
-//  message += "</article>";
-//
+//  message += "</article>";//
 //  message += "<script"
 //               " src=\"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js\">"
 //               "</script>";
@@ -379,17 +330,14 @@ int val_ALL;
 //  message +=  "     yAxes: [{ticks: {min: 1000, max:2000}}]";
 //  message +=  "   }";
 //  message +=  " }";
-//  message +=  " });";
-//
-//  message +=  "</script>";
-//
+//  message +=  " });";//
+//  message +=  "</script>";//
 //  // message +=  "</body>";
 //  //message +=  "</html>";
 //  
 //  addBottom(message);
 //  server.send(200, "text/html", message);
-//}
-//
+//}//
 ///* =======================================*/
 //void handleCss()
 ///* =======================================*/
@@ -423,8 +371,7 @@ int val_ALL;
 //              "message_warn{color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:orange;width:19em;text-align:center}"
 //              "message_err {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:red   ;width:19em;text-align:center}");
 //  server.send(200, "text/css", message);
-//}
-//
+//}//
 ///* =======================================*/
 //// Output: send data to browser as JSON
 //// after modification always check if JSON is still valid. Just call the JSON (json) in your webbrowser and check.
@@ -445,8 +392,7 @@ int val_ALL;
 //  message += digitalRead(GPin_ALL);
 //  message += (F("}"));                           // End of JSON
 //  server.send(200, "application/json", message); // set MIME type https://www.ietf.org/rfc/rfc4627.txt
-//}
-//
+//}//
 ///* =======================================*/
 //// Output: a fetch API / JavaScript
 //// a function in the JavaScript uses fetch API to request a JSON file from the webserver and updates the values on the page if the object names and ID are the same
@@ -477,13 +423,11 @@ int val_ALL;
 //               "}\n"
 //               "document.addEventListener('DOMContentLoaded', renew, setInterval(renew, ");
 //  message += ajaxIntervall * 1000;
-//  message += F("));");
-//
+//  message += F("));");//
 //  server.send(200, "text/javascript", message);
-//}
-//
+//}//
 ///*
 //=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*==*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=**=
 //========== end of including server.cpp
 //=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*==*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=**=
-//*/
+//*///

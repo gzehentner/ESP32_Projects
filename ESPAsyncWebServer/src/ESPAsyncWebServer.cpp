@@ -14,6 +14,7 @@
 #include <ArduinoOTA.h>
 
 #include "WiFi.h"
+#include "WebServer.h"
 #include "esp_camera.h"
 #include "esp_timer.h"
 #include "img_converters.h"
@@ -31,7 +32,8 @@ const char* ssid = "Zehentner";
 const char* password = "ElisabethScho";
 
 // Create AsyncWebServer object on port 80
-AsyncWebServer server(80);
+//AsyncWebServer server(80);
+WebServer server(80);
 
 boolean takeNewPhoto = false;
 
@@ -98,6 +100,11 @@ const char index_html[] PROGMEM = R"rawliteral(
 
 /************************************************/
 
+void handle204()
+/* =======================================*/
+{
+  server.send(204); // this page doesn't send back content
+}
 
 // Check if photo capture was successful
 bool checkPhoto( fs::FS &fs ) {
