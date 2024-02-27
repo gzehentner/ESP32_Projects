@@ -34,6 +34,8 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
+#include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
+
 #include <server.h>
 #include <timeserver.h>
 #include <waterlevel_defines.h>
@@ -143,6 +145,12 @@ void setup(void) {
   pinMode(led, OUTPUT);
   digitalWrite(led, 0);
   Serial.begin(9600);
+
+    // Connect to WIFI
+  char myhostname[8] = {"esp"};
+  strcat(myhostname, TXT_BOARDID);
+  WiFi.hostname(myhostname);
+
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   Serial.println("");
@@ -172,10 +180,20 @@ void setup(void) {
   server.on("/test",handlePage);
   server.begin();
   Serial.println("HTTP server started");
+
+   /*=================================================================*/
+  /* IDE OTA */
+  ArduinoOTA.setHostname(myhostname); // give a name to your ESP for the Arduino IDE
+  ArduinoOTA.begin();                 // OTA Upload via ArduinoIDE https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html
+
 }
 
 void loop(void) {
   server.handleClient();
   delay(2);//allow the cpu to switch to other tasks
+
+  /*=================================================================*/
+  /* Over the Air UPdate */
+  ArduinoOTA.handle(); // OTA Upload via ArduinoIDE
 }
 
