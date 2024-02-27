@@ -68,7 +68,7 @@ void CurrentLoopSensor::check()
 int CurrentLoopSensor::getAdc()
 {
   // return adc;
-  return analogRead(pin);
+  return ; // GZE analogRead(pin);
 }
 
 /*
@@ -79,7 +79,7 @@ int CurrentLoopSensor::getValue()
   adc = 0;
   for (byte i = 0; i < measures; i++)
   {
-    adc += analogRead(pin);
+// GZE    adc += analogRead(pin);
     delay(10);
   }
   adc = adc / measures;
@@ -98,7 +98,7 @@ int CurrentLoopSensor::getFilteredAdc()
   adc = 0;
   for (byte i = 0; i < measures; i++)
   {
-    adc += analogRead(pin);
+    // GZE adc += analogRead(pin);
     delay(10);
   }
   adc = adc / measures;

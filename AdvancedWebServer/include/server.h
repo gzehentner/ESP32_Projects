@@ -14,13 +14,16 @@ Include file for web-server things
 
 //extern WebServer server; // declare an instance for the webserver
 
+void handleRoot();
+
 // /* =======================================*/
 // // Output a "404 not found" page. It includes the parameters which comes handy for test purposes.
 // void handleNotFound();
+void handleNotFound();
 
-// /* =======================================*/
-// // this page doesn't send back content
-// void handle204();
+/* =======================================*/
+// this page doesn't send back content
+void handle204();
 
 /* =======================================*/
 /* main page of this application:
@@ -29,14 +32,16 @@ Include file for web-server things
  */
 void handlePage();
 
-// /* =======================================*/
-// /* print filtered values*/
-// void handleListFiltered();
+/* =======================================*/
+/* print filtered values*/
+void handleListFiltered();
 
-// /* =======================================*/
-// /* print graph*/
-// void handleGraph();
-// /* =======================================*/
+/* =======================================*/
+/* print graph*/
+void handleGraph();
+/* =======================================*/
+
+void drawGraph();
 
 /* =======================================*/
 // output of stylesheet

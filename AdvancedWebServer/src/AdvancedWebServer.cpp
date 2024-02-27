@@ -29,10 +29,13 @@
 */
 
 #include <Arduino.h>
+#include <ESP_Mail_Client.h>
+
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
+
 
 #include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
@@ -43,17 +46,16 @@
 #include <NoiascaCurrentLoop.h>   // library for analog measurement
 #include <Current2Waterlevel.h>
 
-const char *ssid = "Zehentner";
-const char *password = "ElisabethScho";
+// GZE const char *ssid = "Zehentner";
+// const char *password = "ElisabethScho";
 
 extern CurrentLoopSensor currentLoopSensor();
 
 WebServer server(80);
 
-/*********************************************/
-/* Global Variables */
-String currentDate;   // hold the current date
-String formattedTime; // hold the current time
+/********************************************************************
+         Globals - Variables and constants
+ ********************************************************************/
 
 unsigned long seconds_since_startup = 0;      // current second since startup
 const uint16_t ajaxIntervall = 5;             // intervall for AJAX or fetch API call of website in seconds
@@ -69,84 +71,79 @@ int alarmState;    // shows the actual water level
 int alarmStateOld; // previous value of alarmState
 bool executeSendMail = false;
 
-/* END of Global Variables */
-/*********************************************/
+/* ============================================================= */
+/* Definition for Send-Mail                                      */
 
-const int led = 13;
+/* settings for GMAIL */
+#define SMTP_HOST "smtp.gmail.com"
+#define SMTP_PORT esp_mail_smtp_port_587 // port 465 is not available for Outlook.com
 
-void handleRoot() {
-  digitalWrite(led, 1);
-  char temp[400];
-  int sec = millis() / 1000;
-  int min = sec / 60;
-  int hr = min / 60;
+/* The log in credentials */
+#define AUTHOR_NAME "Pegelstand Zehentner"
+#define AUTHOR_EMAIL "georgzehentneresp@gmail.com"
+#define AUTHOR_PASSWORD "lwecoyvlkmordnly"
 
-  snprintf(temp, 400,
+/* Recipient email address */
+#define RECIPIENT_EMAIL "gzehentner@web.de"
 
-           "<html>\
-  <head>\
-    <meta http-equiv='refresh' content='5'/>\
-    <title>ESP32 Demo</title>\
-    <style>\
-      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-    </style>\
-  </head>\
-  <body>\
-    <h1>Hello from ESP32!</h1>\
-    <p>Uptime: %02d:%02d:%02d</p>\
-    <img src=\"/test.svg\" />\
-  </body>\
-</html>",
+/* Declare the global used SMTPSession object for SMTP transport */
+SMTPSession smtp;
 
-           hr, min % 60, sec % 60
-          );
-  server.send(200, "text/html", temp);
-  digitalWrite(led, 0);
-}
+Session_Config config;
 
-void handleNotFound() {
-  digitalWrite(led, 1);
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += server.uri();
-  message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += server.args();
-  message += "\n";
+/* Callback function to get the Email sending status */
+void smtpCallback(SMTP_Status status);
 
-  for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-  }
+#include "HeapStat.h"
+HeapStat heapInfo;
 
-  server.send(404, "text/plain", message);
-  digitalWrite(led, 0);
-}
+// const char rootCACert[] PROGMEM = "-----BEGIN CERTIFICATE-----\n"
+//                                   "-----END CERTIFICATE-----\n";
+/* END Definition for Send-Mail                                      */
+/* ============================================================= */
 
-void drawGraph() {
-  String out = "";
-  char temp[100];
-  out += "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"400\" height=\"150\">\n";
-  out += "<rect width=\"400\" height=\"150\" fill=\"rgb(250, 230, 210)\" stroke-width=\"1\" stroke=\"rgb(0, 0, 0)\" />\n";
-  out += "<g stroke=\"black\">\n";
-  int y = rand() % 130;
-  for (int x = 10; x < 390; x += 10) {
-    int y2 = rand() % 130;
-    sprintf(temp, "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke-width=\"1\" />\n", x, 140 - y, x + 10, 140 - y2);
-    out += temp;
-    y = y2;
-  }
-  out += "</g>\n</svg>\n";
+/* *******************************************************************
+         other settings / weitere Einstellungen für den Anwender
+ ********************************************************************/
 
-  server.send(200, "image/svg+xml", out);
-}
+#ifndef STASSID                // either use an external .h file containing STASSID and STAPSK or ...
+#define STASSID "Zehentner"    // ... modify these line to your SSID
+#define STAPSK "ElisabethScho" // ... and set your WIFI password
+#endif
+
+const char *ssid = STASSID;
+const char *password = STAPSK;
+
+/*=================================================================*/
+/* Variables to connect to timeserver   */
+/* Define NTP Client to get time */
+
+String currentDate;   // hold the current date
+String formattedTime; // hold the current time
+
+WiFiUDP ntpUDP;
+// GZE NTPClient timeClient(ntpUDP, "pool.ntp.org");
+
+/* End Timeserver */
+
+
+/* *******************************************************************
+         S E T U P
+ ********************************************************************/
 
 void setup(void) {
   pinMode(led, OUTPUT);
   digitalWrite(led, 0);
-  Serial.begin(9600);
 
-    // Connect to WIFI
+ /*=================================================================*/
+  /* setup serial  and connect to WLAN */
+  Serial.begin(9600);
+  Serial.println(F("\n" TXT_BOARDNAME "\nVersion: " VERSION " Board " TXT_BOARDID " "));
+  Serial.print(__DATE__);
+  Serial.print(F(" "));
+  Serial.println(__TIME__);
+
+  // Connect to WIFI
   char myhostname[8] = {"esp"};
   strcat(myhostname, TXT_BOARDID);
   WiFi.hostname(myhostname);
@@ -171,15 +168,101 @@ void setup(void) {
     Serial.println("MDNS responder started");
   }
 
-  server.on("/", handleRoot);
+  /*=================================================================*/
+  // /* Prepare SendMail */
+
+  // MailClient.networkReconnect(true);
+  // smtp.debug(1);
+
+  // smtp.callback(smtpCallback);
+
+  // config.server.host_name = SMTP_HOST;
+  // config.server.port = SMTP_PORT;
+  // config.login.email = AUTHOR_EMAIL;
+  // config.login.password = AUTHOR_PASSWORD;
+
+  // config.login.user_domain = F("127.0.0.1");
+
+  // /*
+  // Set the NTP config time
+  // For times east of the Prime Meridian use 0-12
+  // For times west of the Prime Meridian add 12 to the offset.
+  // Ex. American/Denver GMT would be -6. 6 + 12 = 18
+  // See https://en.wikipedia.org/wiki/Time_zone for a list of the GMT/UTC timezone offsets
+  // */
+  // config.time.ntp_server = F("pool.ntp.org,time.nist.gov");
+  // config.time.gmt_offset = 1;
+  // config.time.day_light_offset = 1;
+
+  /*=================================================================*/
+  /* Prepare WaterLevel Application */
+
+  // prepare relais input / output
+
+  pinMode(GPin_AHH, INPUT_PULLUP);
+  pinMode(GPin_AH, INPUT_PULLUP);
+  pinMode(GPin_AL, INPUT_PULLUP);
+  pinMode(GPin_ALL, INPUT_PULLUP);
+  pinMode(GPout_GND, OUTPUT);
+
+  digitalWrite(GPout_GND, 0);
+
+  /* ----End Setup WaterLevel ------------------------------------------ */
+  /*=================================================================*/
+
+  /*=================================================================*/
+  /* Setup WebServer and start*/
+
+  // define the pages and other content for the webserver
+  server.on("/", handlePage);      // send root page
+  server.on("/0.htm", handlePage); // a request can reuse another handler
+  server.on("/graph.htm", handleGraph);
+  server.on("/filtered.htm",handleListFiltered);
+
+  server.on("/f.css", handleCss); // a stylesheet
+  server.on("/j.js", handleJs);   // javscript based on fetch API to update the page
+  // server.on("/j.js",  handleAjax);             // a javascript to handle AJAX/JSON update of the page  https://werner.rothschopf.net/201809_arduino_esp8266_server_client_2_ajax.htm
+  server.on("/json", handleJson);    // send data in JSON format
+                                     //  server.on("/c.php", handleCommand);            // process commands
+                                     //  server.on("/favicon.ico", handle204);          // process commands
+  server.onNotFound(handleNotFound); // show a typical HTTP Error 404 page
+
+  // the next two handlers are necessary to receive and show data from another module
+  //  server.on("/d.php", handleData);               // receives data from another module
+  //  server.on("/r.htm", handlePageR);              // show data as received from the remote module
+
+  server.begin(); // start the webserver
+  Serial.println(F("HTTP server started"));
+
+  /*=================================================================*/
+  /* IDE OTA */
+  ArduinoOTA.setHostname(myhostname); // give a name to your ESP for the Arduino IDE
+  ArduinoOTA.begin();                 // OTA Upload via ArduinoIDE https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html
+
+
+
+  // server.on("/", handleRoot);
   server.on("/test.svg", drawGraph);
   server.on("/inline", []() {
     server.send(200, "text/plain", "this works as well");
   });
   server.onNotFound(handleNotFound);
-  server.on("/test",handlePage);
   server.begin();
   Serial.println("HTTP server started");
+
+// /*=================================================================*/
+//   /* Initialize a NTPClient to get time */
+
+//   timeClient.begin();
+//   // Set offset time in seconds to adjust for your timezone, for example:
+//   // GMT +1 = 3600
+//   // GMT +8 = 28800
+//   // GMT -1 = -3600
+//   // GMT 0 = 0
+//   timeClient.setTimeOffset(3600);
+
+  /*=================================================================*/
+  beginCurrentLoopSensor();
 
    /*=================================================================*/
   /* IDE OTA */
@@ -188,6 +271,10 @@ void setup(void) {
 
 }
 
+/* *******************************************************************
+         M A I N L O O P
+ ********************************************************************/
+
 void loop(void) {
   server.handleClient();
   delay(2);//allow the cpu to switch to other tasks
@@ -195,5 +282,229 @@ void loop(void) {
   /*=================================================================*/
   /* Over the Air UPdate */
   ArduinoOTA.handle(); // OTA Upload via ArduinoIDE
+
+    /*=================================================================*/
+  /* WebClient (not used yet)*/
+
+  seconds_since_startup = millis() / 1000;
+  if (clientIntervall > 0 && (seconds_since_startup - clientPreviousSs) >= clientIntervall)
+  {
+    //   sendPost();
+    clientPreviousSs = seconds_since_startup;
+  }
+  server.handleClient();
+
+  /*=================================================================*/
+  /* Over the Air UPdate */
+  ArduinoOTA.handle(); // OTA Upload via ArduinoIDE
+
+  /*=================================================================*/
+  /* evaluate water level */
+  /*=================================================================*/
+
+  // Get waterlevel out of Current
+  Current2Waterlevel();
+
+  // Read in relais status
+  val_AHH = digitalRead(GPin_AHH);
+  val_AH = digitalRead(GPin_AH);
+  val_AL = digitalRead(GPin_AL);
+  val_ALL = digitalRead(GPin_ALL);
+
+  // set alarmState
+  alarmStateOld = alarmState;
+
+  if ((val_AHH == 0) && (val_AH == 0))
+  {
+    alarmState = 5;
+  }
+  else if (val_AH == 0)
+  {
+    alarmState = 4;
+  }
+  else if (val_AL == 1)
+  {
+    alarmState = 3;
+  }
+  else if ((val_AL == 0) && (val_ALL == 1))
+  {
+    alarmState = 2;
+  }
+  else if ((val_ALL == 0))
+  {
+    alarmState = 1;
+  }
+
+  // send mail depending on alarmState
+  String subject;
+  String textMsg;
+  String htmlMsg;
+
+  if (alarmStateOld > 0)
+  { // alarmStateOld == 0 means, it is the first run / dont send mail at the first run
+    if (alarmStateOld < alarmState)
+    { // water level is increasing
+      if (alarmState == 4)
+      {
+        // send warning mail
+        Serial.println(F("warning mail should be sent"));
+        subject = F("Pegel Zehentner -- Warnung ");
+        htmlMsg = F("<p>Wasserstand Zehentner ist in den Warnbereich gestiegen <br>");
+        htmlMsg += F("Pegelstand über die Web-Seite: </p>; // <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
+        executeSendMail = true;
+      }
+      else if (alarmState == 5)
+      {
+        // send alarm mail
+        Serial.println("alarm mail should be sent");
+        subject = F("Pegel Zehentner -- Alarm ");
+        htmlMsg = F("<p>Wasserstand Zehentner ist jetzt im Alarmbareich<br>");
+        htmlMsg += F("es muss umgehend eine Pumpe in Betrieb genommen werden. <br>");
+        htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
+        executeSendMail = true;
+      }
+    }
+    else if (alarmStateOld > alarmState)
+    { // water level is decreasing
+      if (alarmState == 4)
+      {
+        // info that level comes from alarm and goes to warning
+        Serial.println(F("level decreasing, now warning"));
+        subject = F("Pegel Zehentner -- Warnung ");
+        htmlMsg = F("<p>Wasserstand Zehentner ist wieder zurück in den Warnbereich gesunken<br>");
+        htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
+        executeSendMail = true;
+      }
+      else if (alarmState == 3)
+      {
+        // info that level is now ok
+        Serial.println(F("level decreased to OK"));
+        subject = F("Pegel Zehentner -- OK ");
+        htmlMsg = F("<p>Wasserstand Zehentner ist wieder im Normalbereich</p>");
+        executeSendMail = true;
+      }
+    }
+    else if (alarmStateOld == alarmState)
+    {
+      // do nothing
+      executeSendMail = false;
+    }
+  }
+
+  /*=================================================================*/
+  /*  code for getting time from NTP       */
+  // GZE timeClient.update();
+
+  // time_t epochTime = timeClient.getEpochTime();
+
+  //formattedTime = timeClient.getFormattedTime();
+
+  // Get a time structure
+ // struct tm *ptm = gmtime((time_t *)&epochTime);
+
+  // int monthDay = ptm->tm_mday;
+  // int currentMonth = ptm->tm_mon + 1;
+  // int currentYear = ptm->tm_year + 1900;
+
+  // // Print complete date:
+  // currentDate = String(currentYear) + "-" + String(currentMonth) + "-" + String(monthDay);
+
+
+  // /* End getting time and date */
+
+  // set a delay to avoid ESP is busy all the time
+  delay(1);
+
+  /*=================================================================*/
+  /* Send Email reusing session   */
+  /*=================================================================*/
+
+  if (executeSendMail)
+  {
+    executeSendMail = false;
+
+    SMTP_Message message;
+
+    message.sender.name = F("Pegel Zehentner");
+    message.sender.email = AUTHOR_EMAIL;
+    message.subject = subject;
+
+    message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL);
+
+    // htmlMsg already set by Waterlevel
+    message.html.content = htmlMsg;
+    message.text.content = F("");
+
+    Serial.println();
+    Serial.println(F("Sending Email..."));
+
+    if (!smtp.isLoggedIn())
+    {
+      /* Set the TCP response read timeout in seconds */
+      // smtp.setTCPTimeout(10);
+
+      if (!smtp.connect(&config))
+      {
+        MailClient.printf("Connection error, Status Code: %d, Error Code: %d, Reason: %s\n", smtp.statusCode(), smtp.errorCode(), smtp.errorReason().c_str());
+        goto exit;
+      }
+
+      if (!smtp.isLoggedIn())
+      {
+        Serial.println(F("Error, Not yet logged in."));
+        goto exit;
+      }
+      else
+      {
+        if (smtp.isAuthenticated())
+          Serial.println(F("Successfully logged in."));
+        else
+          Serial.println(F("Connected with no Auth."));
+      }
+    }
+
+    if (!MailClient.sendMail(&smtp, &message, false))
+      MailClient.printf("Error, Status Code: %d, Error Code: %d, Reason: %s\n", smtp.statusCode(), smtp.errorCode(), smtp.errorReason().c_str());
+
+  exit:
+
+    heapInfo.collect();
+    heapInfo.print();
+
+    /*=END Send_Reuse_Session =====================================*/
+  }
+  
+  delay(99);
+
+} // end void loop()
+
+/* Callback function to get the Email sending status */
+void smtpCallback(SMTP_Status status)
+{
+
+  Serial.println(status.info());
+
+  if (status.success())
+  {
+
+    Serial.println(F("----------------"));
+    MailClient.printf("Message sent success: %d\n", status.completedCount());
+    MailClient.printf("Message sent failed: %d\n", status.failedCount());
+    Serial.println(F("----------------\n"));
+
+    for (size_t i = 0; i < smtp.sendingResult.size(); i++)
+    {
+      SMTP_Result result = smtp.sendingResult.getItem(i);
+
+      MailClient.printf("Message No: %d\n", i + 1);
+      MailClient.printf("Status: %s\n", result.completed ? "success" : "failed");
+      MailClient.printf("Date/Time: %s\n", MailClient.Time.getDateTimeString(result.timestamp, "%B %d, %Y %H:%M:%S").c_str());
+      MailClient.printf("Recipient: %s\n", result.recipients.c_str());
+      MailClient.printf("Subject: %s\n", result.subject.c_str());
+    }
+    Serial.println("----------------\n");
+
+    smtp.sendingResult.clear();
+  }
 }
 

@@ -31,6 +31,9 @@ Some basic defines for the whole project
 
 #define PWM_OUT 1 // PWM-Output to IO1
 
+const int led = 13;
+
+
 /* -- Alarm-Level -- */
 // Pegel wurde verändert, hängt um 6cm höher
 // --> Werte korrigieren
