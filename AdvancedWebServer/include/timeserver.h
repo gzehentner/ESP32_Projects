@@ -1,0 +1,10 @@
+
+
+#ifndef TIMESERVER_H
+#define TIMESERVER_H
+
+// declare global variables
+extern String currentDate;   // hold the current date
+extern String formattedTime; // hold the current time
+
+#endif
