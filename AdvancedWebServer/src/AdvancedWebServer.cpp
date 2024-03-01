@@ -121,10 +121,13 @@ String currentDate;   // hold the current date
 String formattedTime; // hold the current time
 
 WiFiUDP ntpUDP;
-
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 /* End Timeserver */
+
+#ifndef CSS_MAINCOLOR
+#define CSS_MAINCOLOR "#8A0829" // fallback if no CSS_MAINCOLOR was declared for the board
+#endif
 
 
 /* *******************************************************************
@@ -133,7 +136,7 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 void setup(void) {
   pinMode(led, OUTPUT);
-  digitalWrite(led, 0);
+//  digitalWrite(led, 0);
 
  /*=================================================================*/
   /* setup serial  and connect to WLAN */
@@ -171,17 +174,17 @@ void setup(void) {
   /*=================================================================*/
   // /* Prepare SendMail */
 
-  // MailClient.networkReconnect(true);
-  // smtp.debug(1);
+  MailClient.networkReconnect(true);
+  smtp.debug(1);
 
-  // smtp.callback(smtpCallback);
+  smtp.callback(smtpCallback);
 
-  // config.server.host_name = SMTP_HOST;
-  // config.server.port = SMTP_PORT;
-  // config.login.email = AUTHOR_EMAIL;
-  // config.login.password = AUTHOR_PASSWORD;
+  config.server.host_name = SMTP_HOST;
+  config.server.port = SMTP_PORT;
+  config.login.email = AUTHOR_EMAIL;
+  config.login.password = AUTHOR_PASSWORD;
 
-  // config.login.user_domain = F("127.0.0.1");
+  config.login.user_domain = F("127.0.0.1");
 
   /*
   Set the NTP config time
@@ -231,6 +234,13 @@ void setup(void) {
   //  server.on("/d.php", handleData);               // receives data from another module
   //  server.on("/r.htm", handlePageR);              // show data as received from the remote module
 
+
+  // following settings are coming from AdvancedWebServer
+  // server.on("/test.svg", drawGraph);
+  // server.on("/inline", []() {
+  //   server.send(200, "text/plain", "this works as well");
+  // });
+
   server.begin(); // start the webserver
   Serial.println(F("HTTP server started"));
 
@@ -241,16 +251,7 @@ void setup(void) {
 
 
 
-  // server.on("/", handleRoot);
-  server.on("/test.svg", drawGraph);
-  server.on("/inline", []() {
-    server.send(200, "text/plain", "this works as well");
-  });
-  server.onNotFound(handleNotFound);
-  server.begin();
-  Serial.println("HTTP server started");
-
-/*=================================================================*/
+  /*=================================================================*/
   /* Initialize a NTPClient to get time */
 
   timeClient.begin();
@@ -272,8 +273,20 @@ void setup(void) {
  ********************************************************************/
 
 void loop(void) {
-  server.handleClient();
+
   delay(2);//allow the cpu to switch to other tasks
+
+  /*=================================================================*/
+  /* WebClient (not used yet)*/
+
+  seconds_since_startup = millis() / 1000;
+  if (clientIntervall > 0 && (seconds_since_startup - clientPreviousSs) >= clientIntervall)
+  {
+    //   sendPost();
+    clientPreviousSs = seconds_since_startup;
+  }
+  server.handleClient();
+
 
   /*=================================================================*/
   /* Over the Air UPdate */
@@ -385,24 +398,24 @@ void loop(void) {
 
   /*=================================================================*/
   /*  code for getting time from NTP       */
-  // GZE timeClient.update();
+  timeClient.update();
 
-  // time_t epochTime = timeClient.getEpochTime();
+  time_t epochTime = timeClient.getEpochTime();
 
-  //formattedTime = timeClient.getFormattedTime();
+  formattedTime = timeClient.getFormattedTime();
 
   // Get a time structure
- // struct tm *ptm = gmtime((time_t *)&epochTime);
+  struct tm *ptm = gmtime((time_t *)&epochTime);
 
-  // int monthDay = ptm->tm_mday;
-  // int currentMonth = ptm->tm_mon + 1;
-  // int currentYear = ptm->tm_year + 1900;
+  int monthDay = ptm->tm_mday;
+  int currentMonth = ptm->tm_mon + 1;
+  int currentYear = ptm->tm_year + 1900;
 
-  // // Print complete date:
-  // currentDate = String(currentYear) + "-" + String(currentMonth) + "-" + String(monthDay);
+  // Print complete date:
+  currentDate = String(currentYear) + "-" + String(currentMonth) + "-" + String(monthDay);
 
 
-  // /* End getting time and date */
+  /* End getting time and date */
 
   // set a delay to avoid ESP is busy all the time
   delay(1);
