@@ -25,14 +25,15 @@
  */
  
 #include <NoiascaCurrentLoop.h>
+#define maxAdc_value 4096 // 12 bit ADC
 
 CurrentLoopSensor::CurrentLoopSensor(byte pin, uint16_t resistor, byte vref, uint16_t maxValue) :
   pin (pin),
   resistor (resistor),
   vref (vref),
   maxValue (maxValue),
-  minAdc (210), // (0.004 * resistor * 1024 / (vref / 10.0)),
-  maxAdc (0.020 * resistor * 1024 / (vref / 10.0))
+  minAdc (210), // (0.004 * resistor * maxAdc_value / (vref / 10.0)),
+  maxAdc (0.020 * resistor * maxAdc_value / (vref / 10.0))
   {}
 
 int CurrentLoopSensor::begin()
@@ -49,7 +50,7 @@ void CurrentLoopSensor::check()
     Serial.println(F("[Sensor] E:resistor might be to low for your VREF"));
     err++;
   }
-  if (maxAdc > 1024 - 1) {
+  if (maxAdc > maxAdc_value - 1) {
     Serial.println(F("[Sensor] E:resistor might be to large for your VREF"));
     err++;
   }
@@ -68,7 +69,7 @@ void CurrentLoopSensor::check()
 int CurrentLoopSensor::getAdc()
 {
   // return adc;
-  return 10; // GZE analogRead(pin);
+  return analogRead(pin);
 }
 
 /*
@@ -79,7 +80,7 @@ int CurrentLoopSensor::getValue()
   adc = 0;
   for (byte i = 0; i < measures; i++)
   {
-// GZE    adc += analogRead(pin);
+    adc += analogRead(pin);
     delay(10);
   }
   adc = adc / measures;
@@ -98,7 +99,7 @@ int CurrentLoopSensor::getFilteredAdc()
   adc = 0;
   for (byte i = 0; i < measures; i++)
   {
-    // GZE adc += analogRead(pin);
+    adc += analogRead(pin);
     delay(10);
   }
   adc = adc / measures;
