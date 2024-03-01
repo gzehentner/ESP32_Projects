@@ -16,16 +16,6 @@
 // for Send-Mail
 // #include <ESP_Mail_Client.h>
 
-// #include <ESP8266WiFi.h>
-// #include <WiFiClient.h>
-// #include <ESP8266WebServer.h>  // for the webserver
-// #include <ESP8266HTTPClient.h> // for the webclient https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266HTTPClient
-// #include <ESP8266mDNS.h>       // Bonjour/multicast DNS, finds the device on network by name
-// #include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
-
-// #include <NTPClient.h> // get time from timeserver
-// #include <WiFiUdp.h>
-
 #include <timeserver.h>
 #include <waterlevel_defines.h>
 #include <waterlevel.h>

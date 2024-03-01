@@ -36,6 +36,7 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
+#include <NTPClient.h>    // get time from timeserver
 
 #include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
@@ -46,8 +47,6 @@
 #include <NoiascaCurrentLoop.h>   // library for analog measurement
 #include <Current2Waterlevel.h>
 
-// GZE const char *ssid = "Zehentner";
-// const char *password = "ElisabethScho";
 
 extern CurrentLoopSensor currentLoopSensor();
 
@@ -122,7 +121,8 @@ String currentDate;   // hold the current date
 String formattedTime; // hold the current time
 
 WiFiUDP ntpUDP;
-// GZE NTPClient timeClient(ntpUDP, "pool.ntp.org");
+
+NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 /* End Timeserver */
 
@@ -183,16 +183,16 @@ void setup(void) {
 
   // config.login.user_domain = F("127.0.0.1");
 
-  // /*
-  // Set the NTP config time
-  // For times east of the Prime Meridian use 0-12
-  // For times west of the Prime Meridian add 12 to the offset.
-  // Ex. American/Denver GMT would be -6. 6 + 12 = 18
-  // See https://en.wikipedia.org/wiki/Time_zone for a list of the GMT/UTC timezone offsets
-  // */
-  // config.time.ntp_server = F("pool.ntp.org,time.nist.gov");
-  // config.time.gmt_offset = 1;
-  // config.time.day_light_offset = 1;
+  /*
+  Set the NTP config time
+  For times east of the Prime Meridian use 0-12
+  For times west of the Prime Meridian add 12 to the offset.
+  Ex. American/Denver GMT would be -6. 6 + 12 = 18
+  See https://en.wikipedia.org/wiki/Time_zone for a list of the GMT/UTC timezone offsets
+  */
+  config.time.ntp_server = F("pool.ntp.org,time.nist.gov");
+  config.time.gmt_offset = 1;
+  config.time.day_light_offset = 1;
 
   /*=================================================================*/
   /* Prepare WaterLevel Application */
@@ -250,25 +250,21 @@ void setup(void) {
   server.begin();
   Serial.println("HTTP server started");
 
-// /*=================================================================*/
-//   /* Initialize a NTPClient to get time */
+/*=================================================================*/
+  /* Initialize a NTPClient to get time */
 
-//   timeClient.begin();
-//   // Set offset time in seconds to adjust for your timezone, for example:
-//   // GMT +1 = 3600
-//   // GMT +8 = 28800
-//   // GMT -1 = -3600
-//   // GMT 0 = 0
-//   timeClient.setTimeOffset(3600);
+  timeClient.begin();
+  // Set offset time in seconds to adjust for your timezone, for example:
+  // GMT +1 = 3600
+  // GMT +8 = 28800
+  // GMT -1 = -3600
+  // GMT 0 = 0
+  timeClient.setTimeOffset(3600);
 
   /*=================================================================*/
   beginCurrentLoopSensor();
 
-   /*=================================================================*/
-  /* IDE OTA */
-  ArduinoOTA.setHostname(myhostname); // give a name to your ESP for the Arduino IDE
-  ArduinoOTA.begin();                 // OTA Upload via ArduinoIDE https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html
-
+  
 }
 
 /* *******************************************************************
@@ -293,10 +289,6 @@ void loop(void) {
     clientPreviousSs = seconds_since_startup;
   }
   server.handleClient();
-
-  /*=================================================================*/
-  /* Over the Air UPdate */
-  ArduinoOTA.handle(); // OTA Upload via ArduinoIDE
 
   /*=================================================================*/
   /* evaluate water level */

@@ -68,7 +68,7 @@ void CurrentLoopSensor::check()
 int CurrentLoopSensor::getAdc()
 {
   // return adc;
-  return ; // GZE analogRead(pin);
+  return 10; // GZE analogRead(pin);
 }
 
 /*
