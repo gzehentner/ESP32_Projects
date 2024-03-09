@@ -130,6 +130,40 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 #endif
 
 
+/*=================================================================*/
+/*  Prepare analog out        */
+/*=================================================================*/
+// use first channel of 16 channels (started from zero)
+#define LEDC_CHANNEL_0     PWM_OUT
+
+// use 12 bit precission for LEDC timer
+#define LEDC_TIMER_12_BIT  12
+
+// use 5000 Hz as a LEDC base frequency
+#define LEDC_BASE_FREQ     5000
+
+// fade LED PIN (replace with LED_BUILTIN constant for built-in LED)
+#define LED_PIN            led
+
+int brightness = 0;    // how bright the LED is
+int fadeAmount = 5;    // how many points to fade the LED by
+
+// Arduino like analogWrite
+// value has to be between 0 and valueMax
+void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
+  // calculate duty, 4095 from 2 ^ 12 - 1
+  uint32_t duty = (4095 / valueMax) * min(value, valueMax);
+
+  // write duty to LEDC
+  ledcWrite(channel, duty);
+}
+
+// get analog value from SPI
+uint16_t get_spi_value(uint8_t pin) {
+  return 10;
+}
+
+
 /* *******************************************************************
          S E T U P
  ********************************************************************/
@@ -206,9 +240,10 @@ void setup(void) {
   pinMode(GPin_AH, INPUT_PULLUP);
   pinMode(GPin_AL, INPUT_PULLUP);
   pinMode(GPin_ALL, INPUT_PULLUP);
-  pinMode(GPout_GND, OUTPUT);
-
-  digitalWrite(GPout_GND, 0);
+  
+  // we no longer use digital output for GND, but ESP32-GND
+  // pinMode(GPout_GND, OUTPUT);
+  // digitalWrite(GPout_GND, 0);
 
   /* ----End Setup WaterLevel ------------------------------------------ */
   /*=================================================================*/
@@ -264,6 +299,14 @@ void setup(void) {
 
   /*=================================================================*/
   beginCurrentLoopSensor();
+
+  /*==================================================================*/
+  // Prepare analog output
+  // Setup timer and attach timer to a led pin
+  // GZE
+  //ledcSetup(LEDC_CHANNEL_0, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
+  //ledcAttachPin(LED_PIN, LEDC_CHANNEL_0);
+
 
   
 }
@@ -479,6 +522,20 @@ void loop(void) {
     /*=END Send_Reuse_Session =====================================*/
   }
   
+  /*===========================================================*/
+  // GZE
+  // // run analog output 
+  // // set the brightness on LEDC channel 0
+  // ledcAnalogWrite(LEDC_CHANNEL_0, brightness);
+
+  // // change the brightness for next time through the loop:
+  // brightness = brightness + fadeAmount;
+
+  // // reverse the direction of the fading at the ends of the fade:
+  // if (brightness <= 0 || brightness >= 255) {
+  //   fadeAmount = -fadeAmount;
+  // }
+
   delay(99);
 
 } // end void loop()

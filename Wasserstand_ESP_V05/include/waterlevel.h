@@ -55,5 +55,7 @@ extern int    ringADC[50+1];
 extern int wrRingPtr;           // index variable for write buffer
 extern int rdRingPtr;            // position to read out of buffer
 
+uint16_t get_spi_value(uint8_t pin);
+
 
 #endif
