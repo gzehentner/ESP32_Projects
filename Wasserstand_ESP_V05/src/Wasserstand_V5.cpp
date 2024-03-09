@@ -158,6 +158,11 @@ void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
   ledcWrite(channel, duty);
 }
 
+// get analog value from SPI
+uint16_t get_spi_value(uint8_t pin) {
+  return 10;
+}
+
 
 /* *******************************************************************
          S E T U P

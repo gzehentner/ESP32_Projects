@@ -25,7 +25,10 @@
  */
  
 #include <NoiascaCurrentLoop.h>
-#define maxAdc_value 4096 // 12 bit ADC
+#include <waterlevel_defines.h>
+#include <waterlevel.h>
+
+const int maxAdc_value = 2^ADC_BIT;
 
 CurrentLoopSensor::CurrentLoopSensor(byte pin, uint16_t resistor, byte vref, uint16_t maxValue) :
   pin (pin),
@@ -69,7 +72,7 @@ void CurrentLoopSensor::check()
 int CurrentLoopSensor::getAdc()
 {
   // return adc;
-  return analogRead(pin);
+  return GET_ANALOG(pin);
 }
 
 /*
@@ -80,7 +83,7 @@ int CurrentLoopSensor::getValue()
   adc = 0;
   for (byte i = 0; i < measures; i++)
   {
-    adc += analogRead(pin);
+    adc += GET_ANALOG(pin);
     delay(10);
   }
   adc = adc / measures;
@@ -99,7 +102,7 @@ int CurrentLoopSensor::getFilteredAdc()
   adc = 0;
   for (byte i = 0; i < measures; i++)
   {
-    adc += analogRead(pin);
+    adc += GET_ANALOG(pin);
     delay(10);
   }
   adc = adc / measures;
