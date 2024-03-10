@@ -38,6 +38,10 @@
 
 #include <NTPClient.h>    // get time from timeserver
 
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_ADS1X15.h>
+
 #include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
 #include <server.h>
@@ -47,10 +51,16 @@
 #include <NoiascaCurrentLoop.h>   // library for analog measurement
 #include <Current2Waterlevel.h>
 
-
 extern CurrentLoopSensor currentLoopSensor();
 
 WebServer server(80);
+
+// definitions for analog-digital conversion
+#if BOARDTYPE == ESP32
+   TwoWire I2CSensors = TwoWire(0);
+   Adafruit_ADS1115 ads;
+   int16_t adc0;
+#endif
 
 /********************************************************************
          Globals - Variables and constants
@@ -164,9 +174,11 @@ uint16_t get_spi_value(uint8_t pin) {
 }
 
 
-/* *******************************************************************
+/*****************************************************************************************************************
+ *****************************************************************************************************************
          S E T U P
- ********************************************************************/
+ *****************************************************************************************************************
+ *****************************************************************************************************************/
 
 void setup(void) {
   pinMode(led, OUTPUT);
@@ -307,13 +319,33 @@ void setup(void) {
   //ledcSetup(LEDC_CHANNEL_0, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   //ledcAttachPin(LED_PIN, LEDC_CHANNEL_0);
 
+  /*==================================================================*/
+  // prepare I2C interface
+  I2CSensors.begin(I2C_SDA, I2C_SCL, 100000);
 
-  
+  // prepare analog read
+//  ads.begin();
+   // ADS 1115 (0x48 .. 0x4B will be the address)
+  if (!ads.begin(0x48, &I2CSensors))
+  {
+    Serial.println("Couldn't Find ADS 1115");
+    while (1)
+      ;
+  }
+  else
+  {
+    Serial.println("ADS 1115 Found");
+  }
 }
+  /*==================================================================*/
+  
 
-/* *******************************************************************
+/*****************************************************************************************************************
+ *****************************************************************************************************************
          M A I N L O O P
- ********************************************************************/
+ *****************************************************************************************************************
+ *****************************************************************************************************************/
+
 
 void loop(void) {
 
@@ -536,9 +568,27 @@ void loop(void) {
   //   fadeAmount = -fadeAmount;
   // }
 
+  /*=================================================================*/
+  // read analog value via I2C
+  const int loc_maxAdc_value = 0x7FFF;
+  float voltage=0.0;
+
+  adc0 = ads.readADC_SingleEnded(0);
+  Serial.print("Analog input pin 0: ");
+  Serial.println(adc0);
+
+  voltage = adc0 / loc_maxAdc_value * 3.3;
+  Serial.print("Voltage: ");
+  Serial.println(voltage);
+
+  delay(1000);
+
   delay(99);
 
+/*==================================================================================================================================*/
 } // end void loop()
+/*==================================================================================================================================
+  ==================================================================================================================================*/
 
 /* Callback function to get the Email sending status */
 void smtpCallback(SMTP_Status status)
