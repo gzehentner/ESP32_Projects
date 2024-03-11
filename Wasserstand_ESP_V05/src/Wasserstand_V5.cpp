@@ -168,12 +168,6 @@ void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
   ledcWrite(channel, duty);
 }
 
-// get analog value from SPI
-uint16_t get_spi_value(uint8_t pin) {
-  return 10;
-}
-
-
 /*****************************************************************************************************************
  *****************************************************************************************************************
          S E T U P
@@ -311,7 +305,7 @@ void setup(void) {
 
   /*=================================================================*/
   beginCurrentLoopSensor();
-
+  
   /*==================================================================*/
   // Prepare analog output
   // Setup timer and attach timer to a led pin
@@ -322,10 +316,10 @@ void setup(void) {
   /*==================================================================*/
   // prepare I2C interface
   I2CSensors.begin(I2C_SDA, I2C_SCL, 100000);
-
+  
+  /*==================================================================*/
   // prepare analog read
-//  ads.begin();
-   // ADS 1115 (0x48 .. 0x4B will be the address)
+  // ADS 1115 (0x48 .. 0x4B will be the address)
   if (!ads.begin(0x48, &I2CSensors))
   {
     Serial.println("Couldn't Find ADS 1115");
@@ -335,7 +329,12 @@ void setup(void) {
   else
   {
     Serial.println("ADS 1115 Found");
+    ads.setGain(GAIN_ONE);
+      Serial.print("Gain: ");
+  Serial.println(ads.getGain());
   }
+  
+
 }
   /*==================================================================*/
   
@@ -577,7 +576,7 @@ void loop(void) {
   Serial.print("Analog input pin 0: ");
   Serial.println(adc0);
 
-  voltage = adc0 / loc_maxAdc_value * 3.3;
+  voltage = ads.computeVolts(adc0);
   Serial.print("Voltage: ");
   Serial.println(voltage);
 

@@ -9,6 +9,12 @@ Some basic defines for the whole project
 
 #define VERSION "5.0" // the version of this sketch
 
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_ADS1X15.h>
+
+
+
 /* *******************************************************************
          the board settings / die Einstellungen der verschiedenen Boards
  ********************************************************************/
@@ -38,9 +44,9 @@ Some basic defines for the whole project
    #define ADC_BIT 10
    #define Ain_Level 12 
 #else
-   #define GET_ANALOG get_spi_value
-   #define ADC_BIT 15 // only 15 bit for single ended signals
-   #define Ain_Level 12 
+   #define GET_ANALOG ads.readADC_SingleEnded
+   #define ADC_BIT  15  // only 15 bit for single ended signals
+   #define Ain_Level 0  // input = adc0
 
    #define I2C_SDA 14
    #define I2C_SCL 15
