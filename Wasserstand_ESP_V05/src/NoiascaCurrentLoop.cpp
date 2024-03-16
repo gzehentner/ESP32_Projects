@@ -24,19 +24,35 @@
  * 2020-05-08 Version 1.0.0 - initial release
  */
  
+
 #include <NoiascaCurrentLoop.h>
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 
-const int maxAdc_value = 2^ADC_BIT;
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_ADS1X15.h>
+
+#if BOARDTYPE == ESP8266
+  const int maxAdc_value = 0x3FF;   // 10bit ADC
+#else
+  const int maxAdc_value = 0x7FFF;  // 15bit ADC
+  const float mili_volt_per_bit = 0.125 ;  // with gain = 1
+#endif
 
 CurrentLoopSensor::CurrentLoopSensor(byte pin, uint16_t resistor, byte vref, uint16_t maxValue) :
   pin (pin),
   resistor (resistor),
   vref (vref),
   maxValue (maxValue),
-  minAdc (210), // (0.004 * resistor * maxAdc_value / (vref / 10.0)),
-  maxAdc (0.020 * resistor * maxAdc_value / (vref / 10.0))
+  #if BOARDTYPE == ESP8266
+    minAdc (210), // (0.004 * resistor * maxAdc_value / (vref / 10.0)),
+    maxAdc (0.020 * resistor * maxAdc_value / (vref / 10.0))
+  #else
+    minAdc (0.004 * resistor / mili_volt_per_bit * 1000),
+    maxAdc (0.020 * resistor / mili_volt_per_bit * 1000)
+  #endif
+
   {}
 
 int CurrentLoopSensor::begin()
@@ -57,7 +73,7 @@ void CurrentLoopSensor::check()
     Serial.println(F("[Sensor] E:resistor might be to large for your VREF"));
     err++;
   }
-  if (err == 0)
+  if (err == 1)
     Serial.println(F("[Sensor] I:parameters ok, you can remove .check() from setup"));
   else
   {
@@ -71,8 +87,7 @@ void CurrentLoopSensor::check()
  */
 int CurrentLoopSensor::getAdc()
 {
-  // return adc;
-  return GET_ANALOG(pin);
+  return GET_ANALOG(0);
 }
 
 /*

@@ -65,6 +65,7 @@ int firstRun = 1;
   void beginCurrentLoopSensor()
   {
     currentLoopSensor.begin(); // start the sensor 
+//    currentLoopSensor.check();  // check the values and settings
   }
 
   void Current2Waterlevel()

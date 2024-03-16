@@ -36,7 +36,7 @@ int val_ALL;
 extern WebServer server; // declare an instance for the webserver
 
 void handleRoot() {
-  digitalWrite(led, 1);
+  digitalWrite(builtin_led, 1);
   char temp[400];
   int sec = millis() / 1000;
   int min = sec / 60;
@@ -62,11 +62,11 @@ void handleRoot() {
            hr, min % 60, sec % 60
           );
   server.send(200, "text/html", temp);
-  digitalWrite(led, 0);
+  digitalWrite(builtin_led, 0);
 }
 
 void handleNotFound() {
-  digitalWrite(led, 1);
+  digitalWrite(builtin_led, 1);
   String message = "File Not Found\n\n";
   message += "URI: ";
   message += server.uri();
@@ -81,7 +81,7 @@ void handleNotFound() {
   }
 
   server.send(404, "text/plain", message);
-  digitalWrite(led, 0);
+  digitalWrite(builtin_led, 0);
 }
 
 void drawGraph() {

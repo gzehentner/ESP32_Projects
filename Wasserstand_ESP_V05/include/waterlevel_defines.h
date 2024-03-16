@@ -7,7 +7,13 @@ Some basic defines for the whole project
 #ifndef WATERLEVEL_DEFINES_H
 #define WATERLEVEL_DEFINES_H
 
-#define VERSION "5.0" // the version of this sketch
+#define VERSION "5.1" // the version of this sketch
+
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_ADS1X15.h>
+
+
 
 /* *******************************************************************
          the board settings / die Einstellungen der verschiedenen Boards
@@ -23,10 +29,10 @@ Some basic defines for the whole project
 /* Prepare WaterLevel Application */
 
 /* -- Pin-Def -- */
-#define GPin_AHH 16 // rot
+#define GPin_AHH 16  // rot
 #define GPin_AH   2  // orange
-#define GPin_AL  14  // gelb
-#define GPin_ALL 15  // grün
+#define GPin_AL  12  // gelb
+#define GPin_ALL 13  // grün
 
 #if BOARDTYPE == ESP8266
   #define GPout_GND 12
@@ -38,15 +44,22 @@ Some basic defines for the whole project
    #define ADC_BIT 10
    #define Ain_Level 12 
 #else
-   #define GET_ANALOG get_spi_value
-   #define ADC_BIT 14
-   #define Ain_Level 12 
+   #define GET_ANALOG ads.readADC_SingleEnded
+   #define ADC_BIT  15  // only 15 bit for single ended signals
+   #define Ain_Level 0  // input = adc0
+
+   #define I2C_SDA 14
+   #define I2C_SCL 15
+
 #endif
 
 
-#define PWM_OUT 13 // PWM-Output to IO1
+// pin of builtin led
+const int builtin_led = 4;
 
-const int led = 4;
+#define PWM_OUT builtin_led // PWM-Output is set to BUILTIN_LED
+
+
 
 
 /* -- Alarm-Level -- */
@@ -58,7 +71,7 @@ const int led = 4;
 #define Level_ALL 140 // Unterkante KG Rohr
                       // Aktueller Niedrig-Stand Nov 2023 = 99 cm
 
-// #define DEBUG_PRINT_RAW
+#define DEBUG_PRINT_RAW
 #define SIM_VALUES  // use small values for loops to get a fast simulation of firmware
 
 #endif
