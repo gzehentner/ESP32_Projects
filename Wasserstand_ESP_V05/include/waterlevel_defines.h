@@ -7,7 +7,7 @@ Some basic defines for the whole project
 #ifndef WATERLEVEL_DEFINES_H
 #define WATERLEVEL_DEFINES_H
 
-#define VERSION "5.0" // the version of this sketch
+#define VERSION "5.1" // the version of this sketch
 
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
@@ -54,9 +54,12 @@ Some basic defines for the whole project
 #endif
 
 
-#define PWM_OUT 4 // PWM-Output to BUILTIN_LED
+// pin of builtin led
+const int builtin_led = 4;
 
-const int led = 4;
+#define PWM_OUT builtin_led // PWM-Output is set to BUILTIN_LED
+
+
 
 
 /* -- Alarm-Level -- */
@@ -68,7 +71,7 @@ const int led = 4;
 #define Level_ALL 140 // Unterkante KG Rohr
                       // Aktueller Niedrig-Stand Nov 2023 = 99 cm
 
-// #define DEBUG_PRINT_RAW
+#define DEBUG_PRINT_RAW
 #define SIM_VALUES  // use small values for loops to get a fast simulation of firmware
 
 #endif
