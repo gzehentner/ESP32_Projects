@@ -38,9 +38,11 @@
 
 #include <NTPClient.h>    // get time from timeserver
 
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_ADS1X15.h>
+#ifdef DEBUG_PRINT_RAW
+  #include <Wire.h>
+  #include <Adafruit_Sensor.h>
+  #include <Adafruit_ADS1X15.h>
+#endif
 
 #include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
@@ -144,7 +146,7 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 /*  Prepare analog out        */
 /*=================================================================*/
 // use first channel of 16 channels (started from zero)
-#define LEDC_CHANNEL_0     PWM_OUT
+#define LEDC_CHANNEL_0     builtin_led
 
 // use 12 bit precission for LEDC timer
 #define LEDC_TIMER_12_BIT  12
@@ -153,14 +155,14 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 #define LEDC_BASE_FREQ     5000
 
 // fade LED PIN (replace with LED_BUILTIN constant for built-in LED)
-#define LED_PIN            led
+#define LED_PIN            builtin_led
 
 int brightness = 0;    // how bright the LED is
-int fadeAmount = 5;    // how many points to fade the LED by
+int fadeAmount = 1;    // how many points to fade the LED by
 
 // Arduino like analogWrite
 // value has to be between 0 and valueMax
-void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
+void (uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
   // calculate duty, 4095 from 2 ^ 12 - 1
   uint32_t duty = (4095 / valueMax) * min(value, valueMax);
 
@@ -175,7 +177,7 @@ void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
  *****************************************************************************************************************/
 
 void setup(void) {
-  pinMode(led, OUTPUT);
+  pinMode(builtin_led, OUTPUT);
 //  digitalWrite(led, 0);
 
  /*=================================================================*/
@@ -312,6 +314,8 @@ void setup(void) {
   // GZE
   //ledcSetup(LEDC_CHANNEL_0, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   //ledcAttachPin(LED_PIN, LEDC_CHANNEL_0);
+
+  pinMode(LED_PIN, OUTPUT);
 
   /*==================================================================*/
   // prepare I2C interface
@@ -555,20 +559,33 @@ void loop(void) {
   
   /*===========================================================*/
   // GZE
-  // // run analog output 
-  // // set the brightness on LEDC channel 0
-  // ledcAnalogWrite(LEDC_CHANNEL_0, brightness);
+  // run analog output 
+  // set the brightness on LEDC channel 0
+  //ledcAnalogWrite(LEDC_CHANNEL_0, brightness);
 
-  // // change the brightness for next time through the loop:
-  // brightness = brightness + fadeAmount;
+  analogWrite(LED_PIN, brightness+92);
 
-  // // reverse the direction of the fading at the ends of the fade:
-  // if (brightness <= 0 || brightness >= 255) {
-  //   fadeAmount = -fadeAmount;
-  // }
+  // change the brightness for next time through the loop:
+  brightness = brightness + fadeAmount;
 
+  // reverse the direction of the fading at the ends of the fade:
+  if (brightness <= 0 || brightness >= 133-92) {
+    fadeAmount = -fadeAmount;
+  }
+  Serial.print("brightness: ");
+  Serial.println(brightness);
+
+
+  // digitalWrite(LED_PIN, HIGH);
+  // delay(1000);
+  // digitalWrite(LED_PIN, LOW);
+  // delay(1000);
+  
+  #ifdef DEBUG_PRINT_RAW
   /*=================================================================*/
-  // read analog value via I2C
+  // read analog value via I2C for debug
+  // not used in live system
+  //===========================================
   const int loc_maxAdc_value = 0x7FFF;
   float voltage=0.0;
 
@@ -581,6 +598,7 @@ void loop(void) {
   Serial.println(voltage);
 
   delay(1000);
+  #endif
 
   delay(99);
 
