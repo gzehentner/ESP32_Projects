@@ -10,4 +10,15 @@
   void Current2Waterlevel();
   void beginCurrentLoopSensor();
 
+/*=================================*/
+/* calculate PWM duty cycle for simulation of analog value 
+  representing level in mm
+  
+  Input: level Waterlevel [in mm]
+  Return: PWM duty cycle as number with 255 = 100%
+  
+  */
+  float Waterlevel2dutyCycle (float level);
+  
 #endif
+

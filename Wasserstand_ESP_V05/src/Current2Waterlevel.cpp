@@ -155,3 +155,29 @@ int firstRun = 1;
 
   }
   }
+/*=================================*/
+/* calculate PWM duty cycle for simulation of analog value 
+  representing level in mm
+  
+  Input: level Waterlevel [in mm]
+  Return: PWM duty cycle as number with 255 = 100%
+  
+  */
+float Waterlevel2dutyCycle (float level) {
+
+  const float maxPegel =  5.0;  // m
+  const float Imax     = 20.0; // mA
+  const float Imin     =  4.0; // mA
+
+  float Vact     =  0.0;  // actual voltage
+  float Vmax     =  0.0;  // voltage at max Pegel
+
+  Vmax = (((Imax-Imin))               +Imin)/1000.0*resistor;
+  
+  Vact = (((Imax-Imin)/maxPegel*level)+Imin)/1000.0*resistor;;
+
+  Serial.print("Vact: ");Serial.println(Vact);
+  Serial.print("Vmax: ");Serial.println(Vmax);
+  
+  return Vact / Vmax*255.0;
+}

@@ -72,6 +72,6 @@ const int builtin_led = 4;
                       // Aktueller Niedrig-Stand Nov 2023 = 99 cm
 
 #define DEBUG_PRINT_RAW
-#define SIM_VALUES  // use small values for loops to get a fast simulation of firmware
+//#define SIM_VALUES  // use small values for loops to get a fast simulation of firmware
 
 #endif

@@ -157,8 +157,9 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 // fade LED PIN (replace with LED_BUILTIN constant for built-in LED)
 #define LED_PIN            builtin_led
 
-int brightness = 0;    // how bright the LED is
-int fadeAmount = 1;    // how many points to fade the LED by
+float dutycylce = 0;    // how bright the LED is
+float fadeAmount = 0.01;    // how many m to fade the LED by
+float pegel    = Level_AL/100.0;     // waterlevel in m
 
 // Arduino like analogWrite
 // value has to be between 0 and valueMax
@@ -560,26 +561,23 @@ void loop(void) {
   /*===========================================================*/
   // GZE
   // run analog output 
-  // set the brightness on LEDC channel 0
-  //ledcAnalogWrite(LEDC_CHANNEL_0, brightness);
+  // set the dutycylce on LEDC channel 0
+  //ledcAnalogWrite(LEDC_CHANNEL_0, dutycylce);
 
-  analogWrite(LED_PIN, brightness+92);
+  dutycylce = Waterlevel2dutyCycle(pegel);
 
-  // change the brightness for next time through the loop:
-  brightness = brightness + fadeAmount;
+  analogWrite(LED_PIN, dutycylce);
+
+  // change the dutycylce for next time through the loop:
+  // pegel = pegel + fadeAmount;
 
   // reverse the direction of the fading at the ends of the fade:
-  if (brightness <= 0 || brightness >= 133-92) {
+  if (pegel <= Level_ALL/100.0-0.05 || pegel >= Level_AHH/100.0+0.05) {
     fadeAmount = -fadeAmount;
   }
-  Serial.print("brightness: ");
-  Serial.println(brightness);
-
-
-  // digitalWrite(LED_PIN, HIGH);
-  // delay(1000);
-  // digitalWrite(LED_PIN, LOW);
-  // delay(1000);
+  Serial.print("pegel:     "); Serial.println(pegel);
+  Serial.print("dutycylce: "); Serial.println(dutycylce);
+  
   
   #ifdef DEBUG_PRINT_RAW
   /*=================================================================*/
@@ -589,13 +587,12 @@ void loop(void) {
   const int loc_maxAdc_value = 0x7FFF;
   float voltage=0.0;
 
+  Serial.println("=================================");
   adc0 = ads.readADC_SingleEnded(0);
-  Serial.print("Analog input pin 0: ");
-  Serial.println(adc0);
+  Serial.print("Analog input pin 0: "); Serial.println(adc0);
 
-  voltage = ads.computeVolts(adc0);
-  Serial.print("Voltage: ");
-  Serial.println(voltage);
+  voltage = ads.computeVolts(adc0);   
+  Serial.print("Voltage: "); Serial.println(voltage);
 
   delay(1000);
   #endif
