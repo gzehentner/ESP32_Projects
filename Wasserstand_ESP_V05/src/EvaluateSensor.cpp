@@ -155,8 +155,9 @@ int firstRun = 1;
 
   }
   }
-/*=================================*/
-/* calculate PWM duty cycle for simulation of analog value 
+/*================================= 
+  calculate PWM duty cycle for simulation of analog value 
+  ==================================
   representing level in mm
   
   Input: level Waterlevel [in mm]

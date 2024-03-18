@@ -51,7 +51,7 @@
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 #include <NoiascaCurrentLoop.h>   // library for analog measurement
-#include <Current2Waterlevel.h>
+#include <EvaluateSensor.h>
 
 extern CurrentLoopSensor currentLoopSensor();
 
@@ -81,6 +81,12 @@ const char *sendHttpTo = "http://192.168.178.153/d.php"; // the module will send
 int alarmState;    // shows the actual water level
 int alarmStateOld; // previous value of alarmState
 bool executeSendMail = false;
+
+// level switches coming from external box
+int val_AHH;
+int val_AH;
+int val_AL;
+int val_ALL;
 
 /* ============================================================= */
 /* Definition for Send-Mail                                      */
@@ -146,30 +152,30 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 /*  Prepare analog out        */
 /*=================================================================*/
 // use first channel of 16 channels (started from zero)
-#define LEDC_CHANNEL_0     builtin_led
+//#define LEDC_CHANNEL_0     builtin_led
 
 // use 12 bit precission for LEDC timer
-#define LEDC_TIMER_12_BIT  12
+//#define LEDC_TIMER_12_BIT  12
 
 // use 5000 Hz as a LEDC base frequency
-#define LEDC_BASE_FREQ     5000
+//#define LEDC_BASE_FREQ     5000
 
 // fade LED PIN (replace with LED_BUILTIN constant for built-in LED)
 #define LED_PIN            builtin_led
 
-float dutycylce = 0;    // how bright the LED is
-float fadeAmount = 0.01;    // how many m to fade the LED by
-float pegel    = Level_AL/100.0;     // waterlevel in m
+float dutycylce  = 0;              // how bright the LED is
+float fadeAmount = 0.01;           // how many m to fade the LED by
+float pegel      = Level_AL/100.0; // waterlevel in m
 
 // Arduino like analogWrite
 // value has to be between 0 and valueMax
-void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
-  // calculate duty, 4095 from 2 ^ 12 - 1
-  uint32_t duty = (4095 / valueMax) * min(value, valueMax);
+// void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
+//   // calculate duty, 4095 from 2 ^ 12 - 1
+//   uint32_t duty = (4095 / valueMax) * min(value, valueMax);
 
-  // write duty to LEDC
-  ledcWrite(channel, duty);
-}
+//   // write duty to LEDC
+//   ledcWrite(channel, duty);
+// }
 
 /*****************************************************************************************************************
  *****************************************************************************************************************
@@ -558,18 +564,16 @@ void loop(void) {
     /*=END Send_Reuse_Session =====================================*/
   }
   
-  /*===========================================================*/
-  // GZE
-  // run analog output 
-  // set the dutycylce on LEDC channel 0
-  //ledcAnalogWrite(LEDC_CHANNEL_0, dutycylce);
-
+  /*===========================================================
+    simulate changing waterlevel
+   */
+  #ifdef SIM_FADING_LEVEL
   dutycylce = Waterlevel2dutyCycle(pegel);
 
   analogWrite(LED_PIN, dutycylce);
 
   // change the dutycylce for next time through the loop:
-  // pegel = pegel + fadeAmount;
+  pegel = pegel + fadeAmount;
 
   // reverse the direction of the fading at the ends of the fade:
   if (pegel <= Level_ALL/100.0-0.05 || pegel >= Level_AHH/100.0+0.05) {
@@ -577,7 +581,7 @@ void loop(void) {
   }
   Serial.print("pegel:     "); Serial.println(pegel);
   Serial.print("dutycylce: "); Serial.println(dutycylce);
-  
+  #endif // SIM_FADING_LEVEL
   
   #ifdef DEBUG_PRINT_RAW
   /*=================================================================*/
@@ -595,7 +599,7 @@ void loop(void) {
   Serial.print("Voltage: "); Serial.println(voltage);
 
   delay(1000);
-  #endif
+  #endif // DEBUG_PRINT_RAW
 
   delay(99);
 
