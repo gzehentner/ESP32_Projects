@@ -69,6 +69,10 @@ WebServer server(80);
  ********************************************************************/
 
 unsigned long seconds_since_startup = 0;      // current second since startup
+
+unsigned long previousMillis = 0;             // used to determine intervall of ADC measurement
+unsigned long millisNow      = 0;  
+
 const uint16_t ajaxIntervall = 5;             // intervall for AJAX or fetch API call of website in seconds
 uint32_t clientPreviousSs = 0;                // - clientIntervall;  // last second when data was sent to server
 
@@ -151,31 +155,15 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 /*=================================================================*/
 /*  Prepare analog out        */
 /*=================================================================*/
-// use first channel of 16 channels (started from zero)
-//#define LEDC_CHANNEL_0     builtin_led
-
-// use 12 bit precission for LEDC timer
-//#define LEDC_TIMER_12_BIT  12
-
-// use 5000 Hz as a LEDC base frequency
-//#define LEDC_BASE_FREQ     5000
 
 // fade LED PIN (replace with LED_BUILTIN constant for built-in LED)
 #define LED_PIN            builtin_led
 
 float dutycylce  = 0;              // how bright the LED is
-float fadeAmount = 0.01;           // how many m to fade the LED by
+// GZE
+float fadeAmount = 0;
+// float fadeAmount = 0.0001;         // how many m to fade the LED by
 float pegel      = Level_AL/100.0; // waterlevel in m
-
-// Arduino like analogWrite
-// value has to be between 0 and valueMax
-// void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
-//   // calculate duty, 4095 from 2 ^ 12 - 1
-//   uint32_t duty = (4095 / valueMax) * min(value, valueMax);
-
-//   // write duty to LEDC
-//   ledcWrite(channel, duty);
-// }
 
 /*****************************************************************************************************************
  *****************************************************************************************************************
@@ -317,12 +305,7 @@ void setup(void) {
   
   /*==================================================================*/
   // Prepare analog output
-  // Setup timer and attach timer to a led pin
-  // GZE
-  //ledcSetup(LEDC_CHANNEL_0, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
-  //ledcAttachPin(LED_PIN, LEDC_CHANNEL_0);
-
-  pinMode(LED_PIN, OUTPUT);
+    pinMode(LED_PIN, OUTPUT);
 
   /*==================================================================*/
   // prepare I2C interface
@@ -341,9 +324,9 @@ void setup(void) {
   {
     Serial.println("ADS 1115 Found");
     ads.setGain(GAIN_ONE);
-      Serial.print("Gain: ");
+    Serial.print("Gain: ");
   Serial.println(ads.getGain());
-  }
+    }
   
 
 }
@@ -395,91 +378,7 @@ void loop(void) {
   // Get waterlevel out of Current
   Current2Waterlevel();
 
-  // Read in relais status
-  val_AHH = digitalRead(GPin_AHH);
-  val_AH = digitalRead(GPin_AH);
-  val_AL = digitalRead(GPin_AL);
-  val_ALL = digitalRead(GPin_ALL);
-
-  // set alarmState
-  alarmStateOld = alarmState;
-
-  if ((val_AHH == 0) && (val_AH == 0))
-  {
-    alarmState = 5;
-  }
-  else if (val_AH == 0)
-  {
-    alarmState = 4;
-  }
-  else if (val_AL == 1)
-  {
-    alarmState = 3;
-  }
-  else if ((val_AL == 0) && (val_ALL == 1))
-  {
-    alarmState = 2;
-  }
-  else if ((val_ALL == 0))
-  {
-    alarmState = 1;
-  }
-
-  // send mail depending on alarmState
-  String subject;
-  String textMsg;
-  String htmlMsg;
-
-  if (alarmStateOld > 0)
-  { // alarmStateOld == 0 means, it is the first run / dont send mail at the first run
-    if (alarmStateOld < alarmState)
-    { // water level is increasing
-      if (alarmState == 4)
-      {
-        // send warning mail
-        Serial.println(F("warning mail should be sent"));
-        subject = F("Pegel Zehentner -- Warnung ");
-        htmlMsg = F("<p>Wasserstand Zehentner ist in den Warnbereich gestiegen <br>");
-        htmlMsg += F("Pegelstand über die Web-Seite: </p>; // <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
-        executeSendMail = true;
-      }
-      else if (alarmState == 5)
-      {
-        // send alarm mail
-        Serial.println("alarm mail should be sent");
-        subject = F("Pegel Zehentner -- Alarm ");
-        htmlMsg = F("<p>Wasserstand Zehentner ist jetzt im Alarmbareich<br>");
-        htmlMsg += F("es muss umgehend eine Pumpe in Betrieb genommen werden. <br>");
-        htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
-        executeSendMail = true;
-      }
-    }
-    else if (alarmStateOld > alarmState)
-    { // water level is decreasing
-      if (alarmState == 4)
-      {
-        // info that level comes from alarm and goes to warning
-        Serial.println(F("level decreasing, now warning"));
-        subject = F("Pegel Zehentner -- Warnung ");
-        htmlMsg = F("<p>Wasserstand Zehentner ist wieder zurück in den Warnbereich gesunken<br>");
-        htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
-        executeSendMail = true;
-      }
-      else if (alarmState == 3)
-      {
-        // info that level is now ok
-        Serial.println(F("level decreased to OK"));
-        subject = F("Pegel Zehentner -- OK ");
-        htmlMsg = F("<p>Wasserstand Zehentner ist wieder im Normalbereich</p>");
-        executeSendMail = true;
-      }
-    }
-    else if (alarmStateOld == alarmState)
-    {
-      // do nothing
-      executeSendMail = false;
-    }
-  }
+  SetAlarmState_from_relais();
 
   /*=================================================================*/
   /*  code for getting time from NTP       */
@@ -502,8 +401,6 @@ void loop(void) {
 
   /* End getting time and date */
 
-  // set a delay to avoid ESP is busy all the time
-  delay(1);
 
   /*=================================================================*/
   /* Send Email reusing session   */
@@ -579,8 +476,9 @@ void loop(void) {
   if (pegel <= Level_ALL/100.0-0.05 || pegel >= Level_AHH/100.0+0.05) {
     fadeAmount = -fadeAmount;
   }
-  Serial.print("pegel:     "); Serial.println(pegel);
-  Serial.print("dutycylce: "); Serial.println(dutycylce);
+  // Serial.println("===================");
+  // Serial.print("pegel:     "); Serial.println(pegel);
+  //Serial.print("dutycylce: "); Serial.println(dutycylce);
   #endif // SIM_FADING_LEVEL
   
   #ifdef DEBUG_PRINT_RAW
@@ -598,10 +496,7 @@ void loop(void) {
   voltage = ads.computeVolts(adc0);   
   Serial.print("Voltage: "); Serial.println(voltage);
 
-  delay(1000);
   #endif // DEBUG_PRINT_RAW
-
-  delay(99);
 
 /*==================================================================================================================================*/
 } // end void loop()

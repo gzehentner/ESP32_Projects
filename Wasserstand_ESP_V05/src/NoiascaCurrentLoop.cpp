@@ -109,6 +109,20 @@ int CurrentLoopSensor::getValue()
   return  value;
 }
 
+// get the sensor value without filtering --> filtering can be done in calling software
+int CurrentLoopSensor::getValueUnfiltered()
+{
+  adc = 0;
+  adc = GET_ANALOG(pin);
+  
+  //int32_t value = (adc - 186) * 500L / (931 - 186);                          // for 1023*500 we need a long
+  int32_t value = (adc - minAdc) * int32_t(maxValue) / (maxAdc - minAdc);      // for 1023*500 we need a long  // -> pressure
+  if (value > maxValue) value = maxValue;
+  else if (value < 0) value = 0;
+  return  value;
+}
+
+
 /*
    do the measurement and return the ADC value
  */

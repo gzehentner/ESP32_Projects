@@ -5,10 +5,16 @@
 //  Convert to Waterlevel
 //* *******************************************************************
 
-#ifndef Current2Waterlevel_h_
-#define  Current2Waterlevel_h_ 
+#ifndef EvaluateSensor_h_
+#define EvaluateSensor_h_ 
+
+  extern String subject;
+  extern String htmlMsg;
+  
   void Current2Waterlevel();
   void beginCurrentLoopSensor();
+  void ReadRelaisSetErrorLevel();
+  void SetAlarmState_from_relais();
 
 /*=================================*/
 /* calculate PWM duty cycle for simulation of analog value 

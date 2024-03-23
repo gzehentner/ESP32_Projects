@@ -72,7 +72,7 @@ const int builtin_led = 4;
                       // Aktueller Niedrig-Stand Nov 2023 = 99 cm
 
 // #define DEBUG_PRINT_RAW  // read ADS and print value for debug
-// #define SIM_FADING_LEVEL // simulate a changing waterlevel using analog-output
+#define SIM_FADING_LEVEL // simulate a changing waterlevel using analog-output
 
 #define SIM_VALUES  // use small values for loops to get a fast simulation of firmware
 #endif

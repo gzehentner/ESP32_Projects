@@ -29,8 +29,13 @@ int    myValueFilteredAct = 0; // actual result for display in web page
 int    myAdcFiltered    = 0;
 
 int    filterCnt    = 0;       // count loop runs for collecting values for filter
+
+const int  measureInterval = 100; // measurement interval in milliseconds
+
+
 #ifdef SIM_VALUES
-const int  filterCntMax = 10;  // time for myValue * 100 -> 10s  
+const int  filterCntMax = 100;  // time for one filtered value 
+                              // filterCntMax * measureInterval  
 #else
 const int  filterCntMax = 1000; // 3000;  // time for myValue * 100 -> 10s  
 #endif
@@ -58,6 +63,11 @@ int    rdRingPtr = 0;                  // ring buffer read pointer
 
 int firstRun = 1;
 
+// global variables for send mail
+String subject;
+String htmlMsg;
+  
+
 
 /* END Variables for CurrentLoop */
 /*=================================================================*/
@@ -68,93 +78,202 @@ int firstRun = 1;
 //    currentLoopSensor.check();  // check the values and settings
   }
 
+/*=====================================================*/
   void Current2Waterlevel()
-  {
-  // calculate average in interval: filterCntMax * 100us
-  if (filterCnt < filterCntMax) {
-    filterCnt++;
-    myValueFiltered +=  currentLoopSensor.getValue(); // read sensor value into variable
-                                                      // and create a sum for filtering
-    myAdcFiltered   += currentLoopSensor.getFilteredAdc();    // read ADC raw value
-  } else {
-    // else: when a new filtered value is calculated ()
-    filterCnt = 0;
-
-    //write time to ring buffer
-    ringTime [wrRingPtr] = formattedTime;
-
-    // calculate average and write to ring
-    ringValue[wrRingPtr] = myValueFiltered / filterCntMax;  
-    myValueFilteredAct = ringValue[wrRingPtr];  // save actual value for display in home page
-
-    // add ADC raw values to ring buffer
-    ringADC[wrRingPtr]  = myAdcFiltered / filterCntMax;
-
-    // increment write pos
-    if (wrRingPtr<iRingValueMax) {
-      wrRingPtr++;
-    } else  {
-      wrRingPtr = 0;
-    }
-
-    myValueFiltered = 0;
-    myAdcFiltered   = 0;
-
-    graphXValuesTmp = "";                     // start new collection
-    graphYValuesTmp = "";
-    graphYlevelWarnTmp = "";
-    graphYlevelErroTmp= "";
+{
+        // measure time and return, when to early
+    millisNow = millis();
     
-
-    // prepare values for graph
-    // read out ringbuffer and create the vector to display as graph
-    for ( rdRingPtr = wrRingPtr+1; rdRingPtr != wrRingPtr; ){
-      
-      // if there is a valid time set (time="" means there is no value written since last startup)
-      if (ringTime[rdRingPtr] != "") {
-        // fill X values time
-        graphXValuesTmp += "\"";
-        graphXValuesTmp += ringTime[rdRingPtr];
-        graphXValuesTmp += "\", ";
-        // take value and place it to the string for graph
-        graphYValuesTmp += ringValue[rdRingPtr];
-        graphYValuesTmp += ", ";
-        // prepare horizonal lines (warning level)
-        graphYlevelWarnTmp += Level_AH*10; 
-        graphYlevelWarnTmp += ", ";
-        //prepare horizonal lines (error level)
-        graphYlevelErroTmp += Level_AHH*10;
-        graphYlevelErroTmp += ", ";
-      }   
-      
-      if (rdRingPtr<iRingValueMax) {
-            rdRingPtr++;
-          } else {
-            rdRingPtr = 0;
-          }
-
-    }
+    unsigned long millisDiff = millisNow - previousMillis;
     
-    // enclose the generated strings with necessary brakets
-    firstRun = 0;
-    graphXValues  = "const xValues = [";
-    graphXValues += graphXValuesTmp;           // display collected values in graph
-    graphXValues += "];";
+    if (millisDiff <= measureInterval) return; // do nothing
 
-    graphYValues  = "const yValues = [";
-    graphYValues += graphYValuesTmp;
-    graphYValues += "];";
+    previousMillis = millisNow;
 
-    graphYlevelWarn  = "const yLevelWarn = [";
-    graphYlevelWarn += graphYlevelWarnTmp;
-    graphYlevelWarn += "];";
+    // calculate average in interval: filterCntMax * 100us
+    if (filterCnt < filterCntMax) {
+      filterCnt++;
+      myValueFiltered +=  currentLoopSensor.getValueUnfiltered(); // read sensor value into variable
+                                                        // and create a sum for filtering
+      myAdcFiltered   += currentLoopSensor.getAdc();    // read ADC raw value
+    } else {
+      // else: when a new filtered value is calculated ()
+      filterCnt = 0;
+  
+      //write time to ring buffer
+      ringTime [wrRingPtr] = formattedTime;
+  
+      // calculate average and write to ring
+      ringValue[wrRingPtr] = myValueFiltered / filterCntMax;  
+      myValueFilteredAct = ringValue[wrRingPtr];  // save actual value for display in home page
 
-    graphYlevelErro  = "const yLevelErro = [";
-    graphYlevelErro += graphYlevelErroTmp;
-    graphYlevelErro += "];";
-
+      // add ADC raw values to ring buffer
+      ringADC[wrRingPtr]  = myAdcFiltered / filterCntMax;
+  
+      // increment write pos
+      if (wrRingPtr<iRingValueMax) {
+        wrRingPtr++;
+      } else  {
+        wrRingPtr = 0;
+      }
+  
+      myValueFiltered = 0;
+      myAdcFiltered   = 0;
+  
+      graphXValuesTmp = "";                     // start new collection
+      graphYValuesTmp = "";
+      graphYlevelWarnTmp = "";
+      graphYlevelErroTmp= "";
+      
+  
+      // prepare values for graph
+      // read out ringbuffer and create the vector to display as graph
+      for ( rdRingPtr = wrRingPtr+1; rdRingPtr != wrRingPtr; ){
+        
+        // if there is a valid time set (time="" means there is no value written since last startup)
+        if (ringTime[rdRingPtr] != "") {
+          // fill X values time
+          graphXValuesTmp += "\"";
+          graphXValuesTmp += ringTime[rdRingPtr];
+          graphXValuesTmp += "\", ";
+          // take value and place it to the string for graph
+          graphYValuesTmp += ringValue[rdRingPtr];
+          graphYValuesTmp += ", ";
+          // prepare horizonal lines (warning level)
+          graphYlevelWarnTmp += Level_AH*10; 
+          graphYlevelWarnTmp += ", ";
+          //prepare horizonal lines (error level)
+          graphYlevelErroTmp += Level_AHH*10;
+          graphYlevelErroTmp += ", ";
+        }   
+        
+        if (rdRingPtr<iRingValueMax) {
+              rdRingPtr++;
+            } else {
+              rdRingPtr = 0;
+            }
+  
+      }
+      
+      // enclose the generated strings with necessary brakets
+      firstRun = 0;
+      graphXValues  = "const xValues = [";
+      graphXValues += graphXValuesTmp;           // display collected values in graph
+      graphXValues += "];";
+  
+      graphYValues  = "const yValues = [";
+      graphYValues += graphYValuesTmp;
+      graphYValues += "];";
+  
+      graphYlevelWarn  = "const yLevelWarn = [";
+      graphYlevelWarn += graphYlevelWarnTmp;
+      graphYlevelWarn += "];";
+  
+      graphYlevelErro  = "const yLevelErro = [";
+      graphYlevelErro += graphYlevelErroTmp;
+      graphYlevelErro += "];";
+  
+    }
   }
+
+  /*=====================================================*/
+  /*
+    - read out relais status
+    - set alarm stat
+    - prepare email text
+  */
+  void SetAlarmState_from_relais() {
+  /*=====================================================*/
+    //++++++++++++++++++++++
+    // Read in relais status
+    //++++++++++++++++++++++
+    val_AHH = digitalRead(GPin_AHH);
+    val_AH = digitalRead(GPin_AH);
+    val_AL = digitalRead(GPin_AL);
+    val_ALL = digitalRead(GPin_ALL);
+  
+    //++++++++++++++++++++++
+    // set alarmState
+    //++++++++++++++++++++++
+    alarmStateOld = alarmState;
+  
+    if ((val_AHH == 0) && (val_AH == 0))
+    {
+      alarmState = 5;
+    }
+    else if (val_AH == 0)
+    {
+      alarmState = 4;
+    }
+    else if (val_AL == 1)
+    {
+      alarmState = 3;
+    }
+    else if ((val_AL == 0) && (val_ALL == 1))
+    {
+      alarmState = 2;
+    }
+    else if ((val_ALL == 0))
+    {
+      alarmState = 1;
+    }
+  
+    //++++++++++++++++++++++
+    // prepare send mail depending on alarmState
+    //++++++++++++++++++++++
+    if (alarmStateOld > 0)
+    { // alarmStateOld == 0 means, it is the first run / dont send mail at the first run
+      if (alarmStateOld < alarmState)
+      { // water level is increasing
+        if (alarmState == 4)
+        {
+          // send warning mail
+          Serial.println(F("warning mail should be sent"));
+          subject = F("Pegel Zehentner -- Warnung ");
+          htmlMsg = F("<p>Wasserstand Zehentner ist in den Warnbereich gestiegen <br>");
+          htmlMsg += F("Pegelstand über die Web-Seite: </p>; // <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
+          executeSendMail = true;
+        }
+        else if (alarmState == 5)
+        {
+          // send alarm mail
+          Serial.println("alarm mail should be sent");
+          subject = F("Pegel Zehentner -- Alarm ");
+          htmlMsg = F("<p>Wasserstand Zehentner ist jetzt im Alarmbareich<br>");
+          htmlMsg += F("es muss umgehend eine Pumpe in Betrieb genommen werden. <br>");
+          htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
+          executeSendMail = true;
+        }
+      }
+      else if (alarmStateOld > alarmState)
+      { // water level is decreasing
+        if (alarmState == 4)
+        {
+          // info that level comes from alarm and goes to warning
+          Serial.println(F("level decreasing, now warning"));
+          subject = F("Pegel Zehentner -- Warnung ");
+          htmlMsg = F("<p>Wasserstand Zehentner ist wieder zurück in den Warnbereich gesunken<br>");
+          htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
+          executeSendMail = true;
+        }
+        else if (alarmState == 3)
+        {
+          // info that level is now ok
+          Serial.println(F("level decreased to OK"));
+          subject = F("Pegel Zehentner -- OK ");
+          htmlMsg = F("<p>Wasserstand Zehentner ist wieder im Normalbereich</p>");
+          executeSendMail = true;
+        }
+      }
+      else if (alarmStateOld == alarmState)
+      {
+        // do nothing
+        executeSendMail = false;
+      }
+    }
   }
+
+
 /*================================= 
   calculate PWM duty cycle for simulation of analog value 
   ==================================
@@ -177,8 +296,8 @@ float Waterlevel2dutyCycle (float level) {
   
   Vact = (((Imax-Imin)/maxPegel*level)+Imin)/1000.0*resistor;;
 
-  Serial.print("Vact: ");Serial.println(Vact);
-  Serial.print("Vmax: ");Serial.println(Vmax);
+  // Serial.print("Vact: ");Serial.println(Vact);
+  // Serial.print("Vmax: ");Serial.println(Vmax);
   
   return Vact / Vmax*255.0;
 }
