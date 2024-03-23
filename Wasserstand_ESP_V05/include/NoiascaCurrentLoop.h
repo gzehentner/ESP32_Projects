@@ -48,6 +48,7 @@ class CurrentLoopSensor {
     void check();                      // checks if the resistor value fit to the other parameters
     int getAdc();                      // return the previous measured raw ADC value
     int getValue();                    // do the measurement and return the result
+    int getValueUnfiltered();          // do the measurement witout filtering and return the result
     int getFilteredAdc();              // do the measurement and return the filtered ADC
 };
 #endif

@@ -30,7 +30,10 @@ extern bool executeSendMail;
 
 extern int myValueFiltered;   // result of the filtering
 extern int myValueFilteredAct; // actual result for display in web page
-extern int filterCnt;     
+extern int filterCnt;   
+extern unsigned long previousMillis;             // used to determine intervall of ADC measurement
+extern unsigned long millisNow;   
+
 
 extern String graphXValues;      // values for graph
 extern String graphYValues;

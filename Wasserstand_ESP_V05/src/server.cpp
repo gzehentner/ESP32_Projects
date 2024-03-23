@@ -26,12 +26,6 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
-
-int val_AHH;
-int val_AH;
-int val_AL;
-int val_ALL;
-
 //WebServer server(80); // an instance for the webserver
 extern WebServer server; // declare an instance for the webserver
 
