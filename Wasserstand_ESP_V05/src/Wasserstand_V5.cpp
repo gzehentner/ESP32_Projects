@@ -1,61 +1,112 @@
 /*
-   Copyright (c) 2015, Majenko Technologies
-   All rights reserved.
+=============================================
+Wasserstand_V6
+- comming soon
+- merge from V04 and V05: should run for ESP32 and EWP8622
+=============================================
+Wasserstand_V4
 
-   Redistribution and use in source and binary forms, with or without modification,
-   are permitted provided that the following conditions are met:
+Transferred to Visual Studio Code
 
- * * Redistributions of source code must retain the above copyright notice, this
-     list of conditions and the following disclaimer.
+including following features:
+- Wasserstand abfragen anhand von vier Relais Ausgängen
+- Aktiven Bereich anzeigen
+- Hintergrundfarbe abhängig von Warn- oder Alarmlevel
+- Info auf WebSeite anzeigen
+- Beim Wechsel auf einen gefährlichen Zustand und zurück werden Info Mails (Text-Mail) gesendet
 
- * * Redistributions in binary form must reproduce the above copyright notice, this
-     list of conditions and the following disclaimer in the documentation and/or
-     other materials provided with the distribution.
+-----------------------------
+V4.5
+- simulation of changing pegel
+- code for longtime values added
+-   - extra ring buffers
+-   - procedure to display graph
+- some optimizations to save RAM space
+-   - generate strings for graph where it is needed
+-   - return from subprogram releases this RAM space at return
+-   - ringbuffer for time now holds epochtime (unsigned long); conversion into string is done at handleGraph procedure
+-----------------------------
+V4.4
+- code reworked (delete unused variables, separat code into own files)
+-----------------------------
+V4.3
+- Show actual value on main-page
+- Show history of values on page ListFiltered
+-----------------------------
+V4.2
+Display as graph
+------------------------------
+V4.1
+analog functions added
 
- * * Neither the name of Majenko Technologies nor the names of its
-     contributors may be used to endorse or promote products derived from
-     this software without specific prior written permission.
+next steps
+  - show values via Web
+  - 
+------------------------------
+V4.0
+no changes in features. Compiles now without error and warning on vscode
+functions are separated in several source files
 
-   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-   WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-   DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-   ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-   (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-   LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-   ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+------------------------------
+V2.2
+----
+fixed issues:
+- actual date/time is actually not evaluated to avoid crash when sending email --> this has to be fixed next (unset debug_crash to reactivate)
+
+new features implemented
+- HTML Mail
+  - Hyperlink auf die Hauptseite
+
+new features comming soon:
+- HTML Mail mit Farbe
+- Testmail per klick
+
+known issues: OTA download not possible "not enouth space"
+-----------------------------------------------------------
+
+
 */
 
 #include <Arduino.h>
+
+#include <waterlevel_defines.h>
+#include <waterlevel.h>
+
 #include <ESP_Mail_Client.h>
 
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <WebServer.h>
-#include <ESPmDNS.h>
+#if BOARDTYPE == ESP32
+
+  #include <WiFi.h>
+  #include <WiFiClient.h>
+  #include <WebServer.h>
+  #include <ESPmDNS.h>
+
+
+  #ifdef DEBUG_PRINT_RAW
+    #include <Wire.h>
+    #include <Adafruit_Sensor.h>
+    #include <Adafruit_ADS1X15.h>
+  #endif
+
+  WebServer server(80);
+  
+#else
+  #include <ESP8266mDNS.h>  // Bonjour/multicast DNS, finds the device on network by name
+
+#endif
 
 #include <NTPClient.h>    // get time from timeserver
-
-#ifdef DEBUG_PRINT_RAW
-  #include <Wire.h>
-  #include <Adafruit_Sensor.h>
-  #include <Adafruit_ADS1X15.h>
-#endif
 
 #include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
 #include <server.h>
 #include <timeserver.h>
-#include <waterlevel_defines.h>
-#include <waterlevel.h>
 #include <NoiascaCurrentLoop.h>   // library for analog measurement
 #include <EvaluateSensor.h>
 
 extern CurrentLoopSensor currentLoopSensor();
 
-WebServer server(80);
+
 
 // definitions for analog-digital conversion
 #if BOARDTYPE == ESP32
@@ -71,6 +122,7 @@ WebServer server(80);
 unsigned long seconds_since_startup = 0;      // current second since startup
 
 unsigned long previousMillis = 0;             // used to determine intervall of ADC measurement
+unsigned long longtermPreviousMillis = 0;     //
 unsigned long millisNow      = 0;  
 
 const uint16_t ajaxIntervall = 5;             // intervall for AJAX or fetch API call of website in seconds
@@ -86,13 +138,7 @@ int alarmState;    // shows the actual water level
 int alarmStateOld; // previous value of alarmState
 bool executeSendMail = false;
 
-// level switches coming from external box
-int val_AHH;
-int val_AH;
-int val_AL;
-int val_ALL;
-
-/* ============================================================= */
+//* ============================================================= */
 /* Definition for Send-Mail                                      */
 
 /* settings for GMAIL */
@@ -118,6 +164,11 @@ void smtpCallback(SMTP_Status status);
 #include "HeapStat.h"
 HeapStat heapInfo;
 
+extern char _end;
+// extern "C" char *sbrk(int i);
+char *ramstart = (char *)0x20070000;
+char *ramend = (char *)0x20088000;
+
 // const char rootCACert[] PROGMEM = "-----BEGIN CERTIFICATE-----\n"
 //                                   "-----END CERTIFICATE-----\n";
 /* END Definition for Send-Mail                                      */
@@ -141,6 +192,7 @@ const char *password = STAPSK;
 
 String currentDate;   // hold the current date
 String formattedTime; // hold the current time
+unsigned long myEpochTime;
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
@@ -161,8 +213,8 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 float dutycylce  = 0;              // how bright the LED is
 // GZE
-float fadeAmount = 0;
-// float fadeAmount = 0.0001;         // how many m to fade the LED by
+//float fadeAmount = 0;
+float fadeAmount = 0.0001;         // how many m to fade the LED by
 float pegel      = Level_AL/100.0; // waterlevel in m
 
 /*****************************************************************************************************************
@@ -244,10 +296,14 @@ void setup(void) {
   pinMode(GPin_AL, INPUT_PULLUP);
   pinMode(GPin_ALL, INPUT_PULLUP);
   
-  // we no longer use digital output for GND, but ESP32-GND
-  // pinMode(GPout_GND, OUTPUT);
-  // digitalWrite(GPout_GND, 0);
+  // for ESP32 we no longer use digital output for GND, but ESP32-GND
+  #if (BOARDTYPE == ESP8266)
+    pinMode(GPout_GND, OUTPUT);
 
+    digitalWrite(GPout_GND, 0);
+  #endif
+
+  
   /* ----End Setup WaterLevel ------------------------------------------ */
   /*=================================================================*/
 
@@ -258,6 +314,7 @@ void setup(void) {
   server.on("/", handlePage);      // send root page
   server.on("/0.htm", handlePage); // a request can reuse another handler
   server.on("/graph.htm", handleGraph);
+  server.on("/longterm_graph.htm", handleLongtermGraph);
   server.on("/filtered.htm",handleListFiltered);
 
   server.on("/f.css", handleCss); // a stylesheet
@@ -303,31 +360,32 @@ void setup(void) {
   /*=================================================================*/
   beginCurrentLoopSensor();
   
-  /*==================================================================*/
-  // Prepare analog output
-    pinMode(LED_PIN, OUTPUT);
+  #if (BOARDTYPE == ESP32)
+    /*==================================================================*/
+    // Prepare analog output
+      pinMode(LED_PIN, OUTPUT);
 
-  /*==================================================================*/
-  // prepare I2C interface
-  I2CSensors.begin(I2C_SDA, I2C_SCL, 100000);
-  
-  /*==================================================================*/
-  // prepare analog read
-  // ADS 1115 (0x48 .. 0x4B will be the address)
-  if (!ads.begin(0x48, &I2CSensors))
-  {
-    Serial.println("Couldn't Find ADS 1115");
-    while (1)
-      ;
-  }
-  else
-  {
-    Serial.println("ADS 1115 Found");
-    ads.setGain(GAIN_ONE);
-    Serial.print("Gain: ");
-  Serial.println(ads.getGain());
+    /*==================================================================*/
+    // prepare I2C interface
+    I2CSensors.begin(I2C_SDA, I2C_SCL, 100000);
+    
+    /*==================================================================*/
+    // prepare analog read
+    // ADS 1115 (0x48 .. 0x4B will be the address)
+    if (!ads.begin(0x48, &I2CSensors))
+    {
+      Serial.println("Couldn't Find ADS 1115");
+      while (1)
+        ;
     }
-  
+    else
+    {
+      Serial.println("ADS 1115 Found");
+      ads.setGain(GAIN_ONE);
+      Serial.print("Gain: ");
+      Serial.println(ads.getGain());
+    }
+  #endif
 
 }
   /*==================================================================*/
@@ -360,17 +418,6 @@ void loop(void) {
   /* Over the Air UPdate */
   ArduinoOTA.handle(); // OTA Upload via ArduinoIDE
 
-    /*=================================================================*/
-  /* WebClient (not used yet)*/
-
-  seconds_since_startup = millis() / 1000;
-  if (clientIntervall > 0 && (seconds_since_startup - clientPreviousSs) >= clientIntervall)
-  {
-    //   sendPost();
-    clientPreviousSs = seconds_since_startup;
-  }
-  server.handleClient();
-
   /*=================================================================*/
   /* evaluate water level */
   /*=================================================================*/
@@ -385,6 +432,8 @@ void loop(void) {
   timeClient.update();
 
   time_t epochTime = timeClient.getEpochTime();
+
+  myEpochTime = timeClient.getEpochTime();
 
   formattedTime = timeClient.getFormattedTime();
 
@@ -465,9 +514,9 @@ void loop(void) {
     simulate changing waterlevel
    */
   #ifdef SIM_FADING_LEVEL
-  dutycylce = Waterlevel2dutyCycle(pegel);
+  // dutycylce = Waterlevel2dutyCycle(pegel);
 
-  analogWrite(LED_PIN, dutycylce);
+  // analogWrite(LED_PIN, dutycylce);
 
   // change the dutycylce for next time through the loop:
   pegel = pegel + fadeAmount;
@@ -478,25 +527,28 @@ void loop(void) {
   }
   // Serial.println("===================");
   // Serial.print("pegel:     "); Serial.println(pegel);
-  //Serial.print("dutycylce: "); Serial.println(dutycylce);
+  // Serial.print("dutycylce: "); Serial.println(dutycylce);
   #endif // SIM_FADING_LEVEL
   
-  #ifdef DEBUG_PRINT_RAW
-  /*=================================================================*/
-  // read analog value via I2C for debug
-  // not used in live system
-  //===========================================
-  const int loc_maxAdc_value = 0x7FFF;
-  float voltage=0.0;
+  // #ifdef DEBUG_PRINT_RAW
+  // /*=================================================================*/
+  // // read analog value via I2C for debug
+  // // not used in live system
+  // //===========================================
+  // const int loc_maxAdc_value = 0x7FFF;
+  // float voltage=0.0;
 
-  Serial.println("=================================");
-  adc0 = ads.readADC_SingleEnded(0);
-  Serial.print("Analog input pin 0: "); Serial.println(adc0);
+  // Serial.println("=================================");
+  // adc0 = ads.readADC_SingleEnded(0);
+  // Serial.print("Analog input pin 0: "); Serial.println(adc0);
 
-  voltage = ads.computeVolts(adc0);   
-  Serial.print("Voltage: "); Serial.println(voltage);
+  // voltage = ads.computeVolts(adc0);   
+  // Serial.print("Voltage: "); Serial.println(voltage);
 
-  #endif // DEBUG_PRINT_RAW
+  // #endif // DEBUG_PRINT_RAW
+
+  // set a delay to avoid ESP is busy all the time
+  delay(10);
 
 /*==================================================================================================================================*/
 } // end void loop()

@@ -32,31 +32,27 @@ extern int myValueFiltered;   // result of the filtering
 extern int myValueFilteredAct; // actual result for display in web page
 extern int filterCnt;   
 extern unsigned long previousMillis;             // used to determine intervall of ADC measurement
+extern unsigned long longtermPreviousMillis;     // used to determine intervall since last value saved
+
 extern unsigned long millisNow;   
 
+extern unsigned long ringTime[iRingValueMax+1];    // ring buffer for display last 100 values
+extern int    ringValue[iRingValueMax+1];
+extern int    ringADC[iRingValueMax+1];
 
-extern String graphXValues;      // values for graph
-extern String graphYValues;
-extern String graphXValuesTmp;      
-extern String graphYValuesTmp;
-extern String graphYlevelWarn;
-extern String graphYlevelErro;
-extern String graphYlevelWarnTmp;
-extern String graphYlevelErroTmp;
-
-extern const int iRingValueMax;
-
-#ifdef SIM_VALUES
-extern String ringTime[10+1];    // ring buffer for display last 100 values
-extern int    ringValue[10+1];
-extern int    ringADC[10+1];
-#else
-extern String ringTime[50+1];    // ring buffer for display last 100 values
-extern int    ringValue[50+1];
-extern int    ringADC[50+1];
-#endif
 extern int wrRingPtr;           // index variable for write buffer
 extern int rdRingPtr;            // position to read out of buffer
+
+// longterm 
+extern unsigned long ringLongtermTime [iLongtermRingValueMax +1];
+extern int    ringLongtermValue[iLongtermRingValueMax +1];     // ring buffer for display last 50 values
+
+extern int    wrLongtermRingPtr;                  // ring buffer write pointer 
+extern int    rdLongtermRingPtr;                  // ring buffer read pointer 
+
+// GZE
+extern float pegel; // waterlevel in m
+
 
 // definitions for analog-digital conversion
    #if BOARDTYPE == ESP32

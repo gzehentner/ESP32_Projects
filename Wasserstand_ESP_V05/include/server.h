@@ -6,11 +6,12 @@ Include file for web-server things
 #ifndef SERVER_H
 #define SERVER_H
 
-// #include <WiFi.h>
-// #include <WiFiClient.h>
-//#include <WebServer.h>
-// #include <ESPmDNS.h>
+#include <waterlevel_defines.h>
 
+#if BOARDTYPE == ESP8266
+    #include <ESP8266WebServer.h> // for the webserver
+    extern ESP8266WebServer server; // declare an instance for the webserver
+#endif
 
 //extern WebServer server; // declare an instance for the webserver
 
@@ -41,7 +42,22 @@ void handleListFiltered();
 void handleGraph();
 /* =======================================*/
 
+/* =======================================*/
+/* print graph for longterm values*/
+void handleLongtermGraph();
+/* =======================================*/
+
+/* =======================================*/
+/* print both graph longterm and shortterm*/
+void handleBothGraph();
+/* =======================================*/
+
+#if BOARDTYPE == ESP32
+/* =======================================*/
 void drawGraph();
+/* =======================================*/
+#endif
+
 
 /* =======================================*/
 // output of stylesheet
