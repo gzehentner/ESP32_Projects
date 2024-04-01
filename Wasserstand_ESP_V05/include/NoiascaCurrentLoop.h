@@ -36,7 +36,8 @@ class CurrentLoopSensor {
     const byte pin;                    // the pin
     const uint16_t resistor;           // Ohm of pulldown resistor
     const uint16_t vref;               // Reference Voltage * 10
-    const byte measures = 10;          // keep in mind 1023 * measures has to fit in an int (time to new value: 10ms * 10)
+    const byte measures = 1;           // keep in mind 1023 * measures has to fit in an int (time to new value: 10ms * 10)
+    // const byte measures = 10;          // keep in mind 1023 * measures has to fit in an int (time to new value: 10ms * 10)
     const int maxValue;                // the maximum value the sensor can measure
     const int minAdc;                  // precalculation of minimum value of ADC
     const int maxAdc;                  // precalculation of maximum value of ADC

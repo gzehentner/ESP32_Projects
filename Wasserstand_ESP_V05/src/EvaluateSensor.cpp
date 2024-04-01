@@ -33,35 +33,23 @@ int    filterCnt    = 0;       // count loop runs for collecting values for filt
 const int  measureInterval = 100; // measurement interval in milliseconds
 
 
-#ifdef SIM_VALUES
-const int  filterCntMax = 100;  // time for one filtered value 
-                              // filterCntMax * measureInterval  
-#else
-const int  filterCntMax = 1000; // 3000;  // time for myValue * 100 -> 10s  
-#endif
+unsigned long millisDiff;
+unsigned long longtermMillisDiff;
 
-String graphXValues = "";     // values for graph (displayed)
-String graphYValues = "";
-String graphXValuesTmp = "";     // values for graph (background)
-String graphYValuesTmp = "";
-String graphYlevelWarn = "";
-String graphYlevelErro = "";
-String graphYlevelWarnTmp = "";
-String graphYlevelErroTmp = "";
-
-// defines for ring buffer
-#ifdef SIM_VALUES
-const int iRingValueMax = 10;
-#else
-const int iRingValueMax = 50;
-#endif
-String ringTime [iRingValueMax+1];
-int    ringValue[iRingValueMax+1];     // ring buffer for display last 50 values
-int    ringADC  [iRingValueMax+1];     // ring buffer for display last 50 adc values
+// shortterm 
+unsigned long ringTime [iRingValueMax +1];
+int    ringValue[iRingValueMax +1];     // ring buffer for display last 50 values
+// int    ringADC  [iRingValueMax +1];     // ring buffer for display last 50 adc values
 int    wrRingPtr = 0;                  // ring buffer write pointer 
 int    rdRingPtr = 0;                  // ring buffer read pointer 
 
-int firstRun = 1;
+// longterm 
+unsigned long ringLongtermTime [iLongtermRingValueMax +1];
+int    ringLongtermValue[iLongtermRingValueMax +1];     // ring buffer for display last 50 values
+int    wrLongtermRingPtr = 0;                  // ring buffer write pointer 
+int    rdLongtermRingPtr = 0;                  // ring buffer read pointer 
+
+//int firstRun = 1;
 
 // global variables for send mail
 String subject;
@@ -84,8 +72,10 @@ String htmlMsg;
         // measure time and return, when to early
     millisNow = millis();
     
-    unsigned long millisDiff = millisNow - previousMillis;
-    
+    millisDiff = millisNow - previousMillis;
+    longtermMillisDiff = millisNow - longtermPreviousMillis;
+
+    // when it is too early, do nothing
     if (millisDiff <= measureInterval) return; // do nothing
 
     previousMillis = millisNow;
@@ -93,87 +83,69 @@ String htmlMsg;
     // calculate average in interval: filterCntMax * 100us
     if (filterCnt < filterCntMax) {
       filterCnt++;
+    #ifdef SIM_FADING_LEVEL
+      myValueFiltered += pegel*1000;
+    #else
       myValueFiltered +=  currentLoopSensor.getValueUnfiltered(); // read sensor value into variable
                                                         // and create a sum for filtering
+    #endif
       myAdcFiltered   += currentLoopSensor.getAdc();    // read ADC raw value
     } else {
       // else: when a new filtered value is calculated ()
       filterCnt = 0;
   
-      //write time to ring buffer
-      ringTime [wrRingPtr] = formattedTime;
-  
-      // calculate average and write to ring
-      ringValue[wrRingPtr] = myValueFiltered / filterCntMax;  
-      myValueFilteredAct = ringValue[wrRingPtr];  // save actual value for display in home page
+    // calculate average
+    myValueFilteredAct = myValueFiltered / filterCntMax;     
+    
+    /*=========================================*/
+    /*=========================================*/
+    /* handle shortterm values */
+    /*=========================================*/
 
-      // add ADC raw values to ring buffer
-      ringADC[wrRingPtr]  = myAdcFiltered / filterCntMax;
-  
-      // increment write pos
-      if (wrRingPtr<iRingValueMax) {
-        wrRingPtr++;
-      } else  {
-        wrRingPtr = 0;
-      }
-  
-      myValueFiltered = 0;
-      myAdcFiltered   = 0;
-  
-      graphXValuesTmp = "";                     // start new collection
-      graphYValuesTmp = "";
-      graphYlevelWarnTmp = "";
-      graphYlevelErroTmp= "";
-      
-  
-      // prepare values for graph
-      // read out ringbuffer and create the vector to display as graph
-      for ( rdRingPtr = wrRingPtr+1; rdRingPtr != wrRingPtr; ){
-        
-        // if there is a valid time set (time="" means there is no value written since last startup)
-        if (ringTime[rdRingPtr] != "") {
-          // fill X values time
-          graphXValuesTmp += "\"";
-          graphXValuesTmp += ringTime[rdRingPtr];
-          graphXValuesTmp += "\", ";
-          // take value and place it to the string for graph
-          graphYValuesTmp += ringValue[rdRingPtr];
-          graphYValuesTmp += ", ";
-          // prepare horizonal lines (warning level)
-          graphYlevelWarnTmp += Level_AH*10; 
-          graphYlevelWarnTmp += ", ";
-          //prepare horizonal lines (error level)
-          graphYlevelErroTmp += Level_AHH*10;
-          graphYlevelErroTmp += ", ";
-        }   
-        
-        if (rdRingPtr<iRingValueMax) {
-              rdRingPtr++;
-            } else {
-              rdRingPtr = 0;
-            }
-  
-      }
-      
-      // enclose the generated strings with necessary brakets
-      firstRun = 0;
-      graphXValues  = "const xValues = [";
-      graphXValues += graphXValuesTmp;           // display collected values in graph
-      graphXValues += "];";
-  
-      graphYValues  = "const yValues = [";
-      graphYValues += graphYValuesTmp;
-      graphYValues += "];";
-  
-      graphYlevelWarn  = "const yLevelWarn = [";
-      graphYlevelWarn += graphYlevelWarnTmp;
-      graphYlevelWarn += "];";
-  
-      graphYlevelErro  = "const yLevelErro = [";
-      graphYlevelErro += graphYlevelErroTmp;
-      graphYlevelErro += "];";
-  
+    // write time to ring buffer
+    ringTime [wrRingPtr] = myEpochTime;
+
+    // write shortterm value to ring buffer
+    ringValue[wrRingPtr] = myValueFilteredAct;  
+
+    // add ADC raw values to ring buffer
+    // ringADC[wrRingPtr]  = myAdcFiltered / filterCntMax;
+
+    // increment write pos
+    if (wrRingPtr<iRingValueMax) {
+      wrRingPtr++;
+    } else  {
+      wrRingPtr = 0;
     }
+
+    /*=========================================*/
+    /*=========================================*/
+    /* handle longterm values */
+    /*=========================================*/
+    if (longtermMillisDiff > longtermInterval) 
+    {
+      longtermPreviousMillis = millisNow;
+
+      // write time to ring buffer
+      ringLongtermTime [wrLongtermRingPtr] = myEpochTime;
+
+      // write shortterm value to ring buffer
+      ringLongtermValue[wrLongtermRingPtr] = myValueFilteredAct;  
+
+      // increment write pos
+      if (wrLongtermRingPtr < iLongtermRingValueMax) {
+        wrLongtermRingPtr++;
+      } else  {
+        wrLongtermRingPtr = 0;
+      }
+    }
+
+
+
+    /*=========================================*/
+    myValueFiltered = 0;
+    myAdcFiltered   = 0;
+  }
   }
 
   /*=====================================================*/

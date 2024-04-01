@@ -12,54 +12,93 @@
 //
 
 #include <Arduino.h>
-
-// for Send-Mail
-// #include <ESP_Mail_Client.h>
-
 #include <timeserver.h>
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 
-#include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <WebServer.h>
-#include <ESPmDNS.h>
+#if (BOARDTYPE == ESP32)
+  // for Send-Mail
+  // #include <ESP_Mail_Client.h>
 
-//WebServer server(80); // an instance for the webserver
-extern WebServer server; // declare an instance for the webserver
+  #include <WiFi.h>
+  #include <WiFiClient.h>
+  #include <WebServer.h>
+  #include <ESPmDNS.h>
 
-void handleRoot() {
-  digitalWrite(builtin_led, 1);
-  char temp[400];
-  int sec = millis() / 1000;
-  int min = sec / 60;
-  int hr = min / 60;
+  //WebServer server(80); // an instance for the webserver
+  extern WebServer server; // declare an instance for the webserver
 
-  snprintf(temp, 400,
+#else // BOARDTYPE == ESP8266)
+  // for Send-Mail
+  #include <ESP_Mail_Client.h>
 
-           "<html>\
-  <head>\
-    <meta http-equiv='refresh' content='5'/>\
-    <title>ESP32 Demo</title>\
-    <style>\
-      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-    </style>\
-  </head>\
-  <body>\
-    <h1>Hello from ESP32!</h1>\
-    <p>Uptime: %02d:%02d:%02d</p>\
-    <img src=\"/test.svg\" />\
-  </body>\
-</html>",
+  #include <ESP8266WiFi.h>
+  #include <WiFiClient.h>
+  #include <ESP8266WebServer.h>  // for the webserver
+  #include <ESP8266HTTPClient.h> // for the webclient https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266HTTPClient
+  #include <ESP8266mDNS.h>       // Bonjour/multicast DNS, finds the device on network by name
+  #include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
 
-           hr, min % 60, sec % 60
-          );
-  server.send(200, "text/html", temp);
-  digitalWrite(builtin_led, 0);
+  #include <NTPClient.h> // get time from timeserver
+  #include <WiFiUdp.h>
+
+  ESP8266WebServer server(80); // an instance for the webserver
+
+#endif
+
+int val_AHH;
+int val_AH;
+int val_AL;
+int val_ALL;
+int firstRun = 1;
+
+String formatTime(unsigned long rawTime) {
+  
+  unsigned long hours = (rawTime % 86400L) / 3600;
+  String hoursStr = hours < 10 ? "0" + String(hours) : String(hours);
+
+  unsigned long minutes = (rawTime % 3600) / 60;
+  String minuteStr = minutes < 10 ? "0" + String(minutes) : String(minutes);
+
+  unsigned long seconds = rawTime % 60;
+  String secondStr = seconds < 10 ? "0" + String(seconds) : String(seconds);
+
+  return hoursStr + ":" + minuteStr + ":" + secondStr;
 }
 
+// void handleRoot() {
+//   digitalWrite(builtin_led, 1);
+//   char temp[400];
+//   int sec = millis() / 1000;
+//   int min = sec / 60;
+//   int hr = min / 60;
+
+//   snprintf(temp, 400,
+
+//            "<html>\
+//   <head>\
+//     <meta http-equiv='refresh' content='5'/>\
+//     <title>ESP32 Demo</title>\
+//     <style>\
+//       body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
+//     </style>\
+//   </head>\
+//   <body>\
+//     <h1>Hello from ESP32!</h1>\
+//     <p>Uptime: %02d:%02d:%02d</p>\
+//     <img src=\"/test.svg\" />\
+//   </body>\
+// </html>",
+
+//            hr, min % 60, sec % 60
+//           );
+//   server.send(200, "text/html", temp);
+//   digitalWrite(builtin_led, 0);
+// }
+
+/* =======================================*/
 void handleNotFound() {
+/* =======================================*/
   digitalWrite(builtin_led, 1);
   String message = "File Not Found\n\n";
   message += "URI: ";
@@ -78,23 +117,23 @@ void handleNotFound() {
   digitalWrite(builtin_led, 0);
 }
 
-void drawGraph() {
-  String out = "";
-  char temp[100];
-  out += "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"400\" height=\"150\">\n";
-  out += "<rect width=\"400\" height=\"150\" fill=\"rgb(250, 230, 210)\" stroke-width=\"1\" stroke=\"rgb(0, 0, 0)\" />\n";
-  out += "<g stroke=\"black\">\n";
-  int y = rand() % 130;
-  for (int x = 10; x < 390; x += 10) {
-    int y2 = rand() % 130;
-    sprintf(temp, "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke-width=\"1\" />\n", x, 140 - y, x + 10, 140 - y2);
-    out += temp;
-    y = y2;
-  }
-  out += "</g>\n</svg>\n";
+// void drawGraph() {
+//   String out = "";
+//   char temp[100];
+//   out += "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"400\" height=\"150\">\n";
+//   out += "<rect width=\"400\" height=\"150\" fill=\"rgb(250, 230, 210)\" stroke-width=\"1\" stroke=\"rgb(0, 0, 0)\" />\n";
+//   out += "<g stroke=\"black\">\n";
+//   int y = rand() % 130;
+//   for (int x = 10; x < 390; x += 10) {
+//     int y2 = rand() % 130;
+//     sprintf(temp, "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke-width=\"1\" />\n", x, 140 - y, x + 10, 140 - y2);
+//     out += temp;
+//     y = y2;
+//   }
+//   out += "</g>\n</svg>\n";
 
-  server.send(200, "image/svg+xml", out);
-}
+//   server.send(200, "image/svg+xml", out);
+// }
 
 // /* =======================================*/
 // void handleNotFound()
@@ -142,7 +181,7 @@ void addTop(String &message)
   message += F("<body>");
   message += F("<header><h1>" TXT_BOARDNAME " - Board " TXT_BOARDID "</h1>");
   message += F("<nav> <a href=\"/\">[Home]</a> <a href=\"filtered.htm\">[Value History]</a>" 
-               "<a href=\"graph.htm\">[Graph]</a> </nav></header>"
+               "<a href=\"longterm_graph.htm\">[Longterm Graph]</a>" "<a href=\"graph.htm\">[Shorterm Graph]</a> </nav></header>"
                "<main>");
 }
 
@@ -319,62 +358,139 @@ void handleListFiltered()
 /* =======================================*/
 {
   String message = "";
+  int iLine = iRingValueMax;
+  const int maxLine = 100;
+
   addTop(message);
 
+  //---------------------
+  // shortterm values
+  //---------------------
   message += F("<article>"
                "<h2>Wasserstand Zehentner Teisendorf</h2>" 
-               "<p>Index ");
+               "<p>Shortterm values<br>Index ");
   message += filterCnt;             
   message += "<br> </p>";
 
   // create header of table
   message += "<pre>rdRingPtr  Time     Value ADC <br>";
   
-  // read out ringbuffer and display values
-    for ( rdRingPtr = wrRingPtr+1; rdRingPtr != wrRingPtr; ){
-
-      // align values 
-      if (rdRingPtr<10) {
-        //message += " &nbsp";
-      }
+  // read out ringbuffer and display values, but not more than maxLine lines
+  for ( rdRingPtr = wrRingPtr+1; (rdRingPtr != wrRingPtr); ){
+    // print only the last lines
+    if (iLine <= maxLine) {
       message += rdRingPtr;
       message += "       ";
-      message += ringTime[rdRingPtr];
+      message += formatTime(ringTime[rdRingPtr]);
       message += "  ";
       message += ringValue[rdRingPtr];
-      message += "  ";
-      message += ringADC[rdRingPtr];
+      // message += ringADC[rdRingPtr];
       message += "<br>";
+    }
 
-      if (rdRingPtr<iRingValueMax) {
+    if (rdRingPtr<iRingValueMax) {
+      rdRingPtr++;
+    } else {
+      rdRingPtr = 0;
+    }
+    iLine--;
+    
+  }
+  message += F("</pre></article>");
+
+  //---------------------
+  // longterm values
+  //---------------------
+  message += F("<article>"
+              "<h2>Wasserstand Zehentner Teisendorf</h2>" 
+              "<p>Longtterm values<br>Index ");
+  message += filterCnt;             
+  message += "<br> </p>";
+
+  // create header of table
+  message += "<pre>rdRingPtr  Time     Value <br>";
+  
+  // read out ringbuffer and display values, but not more than maxLine lines
+  iLine = iLongtermRingValueMax;
+  for ( rdLongtermRingPtr = wrLongtermRingPtr+1; (rdLongtermRingPtr != wrLongtermRingPtr); ){
+
+    // print only the last lines
+    if (iLine <= maxLine) {
+      message += rdLongtermRingPtr;
+      message += "       ";
+      message += formatTime(ringLongtermTime[rdLongtermRingPtr]);
+      message += "  ";
+      message += ringLongtermValue[rdLongtermRingPtr];
+      message += "<br>";
+    }
+    if (rdLongtermRingPtr<iLongtermRingValueMax) {
+      rdLongtermRingPtr++;
+    } else {
+      rdLongtermRingPtr = 0;
+    }
+    iLine--;
+
+  }
+  message += F("</pre></article><br>");
+
+  addBottom(message);
+  server.send(200, "text/html", message);
+
+}
+/* =======================================*/
+/* print both graph longterm and shortterm*/
+void handleGraph()
+/* =======================================*/
+{
+  String graphXValues = "";     // values for graph (displayed)
+  String graphYValues = "";
+  int noValues = 0;
+
+  // prepare values for graph
+  graphXValues  = "const xValues = [";
+  graphYValues  = "const yValues = [";
+
+
+  // read out ringbuffer and create the vector to display as graph
+  for ( rdRingPtr = wrRingPtr+1; rdRingPtr != wrRingPtr; ){
+    
+    // if there is a valid time set (time="" means there is no value written since last startup)
+    if (ringTime[rdRingPtr] != 0) {
+      // fill X values time
+      graphXValues += "\"";
+      graphXValues += formatTime(ringTime[rdRingPtr]);
+      graphXValues += "\", ";
+      // take value and place it to the string for graph
+      graphYValues += ringValue[rdRingPtr];
+      graphYValues += ", ";
+      noValues ++;
+    }   
+    
+    if (rdRingPtr<iRingValueMax) {
         rdRingPtr++;
       } else {
         rdRingPtr = 0;
       }
-
     }
-    message += F("</pre></article><br>");
+  
+    // enclose the generated strings with necessary brakets
+    firstRun = 0;
+    graphXValues += "];";
+    graphYValues += "];";
 
-  addBottom(message);
-  server.send(200, "text/html", message);
-}
-/* =======================================*/
-/* print graph*/
-void handleGraph()
-/* =======================================*/
-{
+
   String message;
   addTop(message);
 
 
   message += F("<article>"
                "<h2>Wasserstand Zehentner Teisendorf</h2>" 
-               "<p>Line Graph<br> </p> "); 
+               "<p>Line Graph -- Shortterm values<br> </p> "); 
 
   message += "<br>filterCnt= ";
   message += filterCnt;
 
-  // print when a new value arrieves
+  // print when a new value arrives
   message += F("<br><br>  Zeit: ");
   message += formattedTime;
   message += F("   Wasserstand aktuell: ");
@@ -385,15 +501,28 @@ void handleGraph()
                " src=\"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js\">"
                "</script>";
   
-  message += "<canvas id=\"myChart\" style=\"width:100%;max-width:700px\"></canvas>";
+  message += "<body><canvas id=\"Shortterm_chart\" style=\"width:100%;max-width:700px\"></canvas>";
   
   message += "<script>";
   message += graphXValues; 
   message += graphYValues; 
-  message += graphYlevelWarn;
-  message += graphYlevelErro;
+
+  message += "const graphYlevelWarn = [];";
+  message += "generateWarnData(\"";
+  message += Level_AH*10;
+  message += "\",0,";
+  message += noValues;
+  message +=",1);";
+
+  message += "const graphYlevelErro = [];";
+  message += "generateErroData(\"";
+  message += Level_AHH*10;
+  message += "\",0,";
+  message += noValues;
+  message +=",1);";
   
-  message +=  "new Chart(\"myChart\", {";
+
+  message +=  "new Chart(\"Shortterm_chart\", {";
   message +=  " type: \"line\",";
   message +=  " data: {";
   message +=  "   labels: xValues,";
@@ -412,7 +541,7 @@ void handleGraph()
   message +=  "     label: \"Warnschwelle: ";
   message +=  Level_AH;
   message +=  "0 mm\",";
-  message +=  "     data: yLevelWarn";
+  message +=  "     data: graphYlevelWarn";
   message +=  "     },{";
   message +=  "     fill: false,";
   message +=  "     lineTension: 0,";
@@ -421,7 +550,7 @@ void handleGraph()
   message +=  "     label: \"Alarmschwelle: ";
   message +=  Level_AHH;
   message +=  "0 mm\",";
-  message +=  "     data: yLevelErro";
+  message +=  "     data: graphYlevelErro";
   message +=  "   }]";
   message +=  " },";
   message +=  " options: {";
@@ -435,14 +564,178 @@ void handleGraph()
   message +=  "   }";
   message +=  " }";
   message +=  " });";
-
-  message +=  "</script>";
-
-  // message +=  "</body>";
-  //message +=  "</html>";
-  
+  message +=  " function generateWarnData(value, i1, i2, step = 1) {";
+  message +=  "     for (let x = i1; x <= i2; x += step) {";
+  message +=  "       xValues.push(x);";
+  message +=  "       graphYlevelWarn.push(eval(value));";
+  message +=  "     }";
+  message +=  "   }";
+  message +=  " function generateErroData(value, i1, i2, step = 1) {";
+  message +=  "     for (let x = i1; x <= i2; x += step) {";
+  message +=  "       xValues.push(x);";
+  message +=  "       graphYlevelErro.push(eval(value));";
+  message +=  "     }";
+  message +=  "   }";
+  message +=  "</script></body>";
+            
   addBottom(message);
   server.send(200, "text/html", message);
+
+  graphXValues = "";                     // erase all values
+  graphYValues = "";
+    
+}
+
+/* =======================================*/
+/* print graph longterm*/
+void handleLongtermGraph()
+
+/* =======================================*/
+{
+  String graphLongtermXValues = "";     // values for graph (displayed)
+  String graphLongtermYValues = "";
+  int noValues = 0;
+
+  // prepare values for graph
+  graphLongtermXValues  = "const xValues = [";
+  graphLongtermYValues  = "const yValues = [";
+
+
+  // read out ringbuffer and create the vector to display as graph
+  for ( rdLongtermRingPtr = wrLongtermRingPtr+1; rdLongtermRingPtr != wrLongtermRingPtr; ){
+    
+    // if there is a valid time set (time="" means there is no value written since last startup)
+    if (ringLongtermTime[rdLongtermRingPtr] != 0) {
+      // fill X values time
+      graphLongtermXValues += "\"";
+      graphLongtermXValues += formatTime(ringLongtermTime[rdLongtermRingPtr]);
+      graphLongtermXValues += "\", ";
+      // take value and place it to the string for graph
+      graphLongtermYValues += ringLongtermValue[rdLongtermRingPtr];
+      graphLongtermYValues += ", ";
+      noValues ++;
+    }   
+    
+    if (rdLongtermRingPtr<iLongtermRingValueMax) {
+        rdLongtermRingPtr++;
+      } else {
+        rdLongtermRingPtr = 0;
+      }
+    }
+  
+    // enclose the generated strings with necessary brakets
+    firstRun = 0;
+    graphLongtermXValues += "];";
+    graphLongtermYValues += "];";
+
+
+  
+  String message;
+  addTop(message);
+
+
+  message += F("<article>"
+               "<h2>Wasserstand Zehentner Teisendorf</h2>" 
+               "<p>Line Graph<br> - Longterm values </p> "); 
+
+  message += "<br>filterCnt= ";
+  message += filterCnt;
+
+  // print when a new value arrives
+  message += F("<br><br>  Zeit: ");
+  message += formattedTime;
+  message += F("   Wasserstand aktuell: ");
+  message += myValueFilteredAct;
+  message += "</article>";
+
+  message += "<script"
+               " src=\"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js\">"
+               "</script>";
+  
+  /* handle longterm */
+  message += "<body><canvas id=\"Longterm_chart\" style=\"width:100%;max-width:700px\"></canvas>";
+
+  message += "<script>";
+  message += graphLongtermXValues; 
+  message += graphLongtermYValues; 
+  
+  message += "const graphYlevelWarn = [];";
+  message += "generateWarnData(\"";
+  message += Level_AH*10;
+  message += "\",0,";
+  message += noValues;
+  message +=",1);";
+
+  message += "const graphYlevelErro = [];";
+  message += "generateErroData(\"";
+  message += Level_AHH*10;
+  message += "\",0,";
+  message += noValues;
+  message +=",1);";
+  
+
+  message +=  "new Chart(\"Longterm_chart\", {";
+  message +=  " type: \"line\",";
+  message +=  " data: {";
+  message +=  "   labels: xValues,";
+  message +=  "   datasets: [{";
+  message +=  "     fill: false,";
+  message +=  "     lineTension: 0,";
+  message +=  "     backgroundColor: \"rgba(0,0,255,1.0)\",";
+  message +=  "     borderColor: \"rgba(0,0,255,0.5)\",";
+  message +=  "     label: \"Wasserstand [mm]\",";
+  message +=  "     data: yValues";
+  message +=  "     },{";
+  message +=  "     fill: false,";
+  message +=  "     lineTension: 0,";
+  message +=  "     backgroundColor: \"rgba(0,255,0,0)\",";
+  message +=  "     borderColor: \"rgba(0,255,0,0.3)\",";
+  message +=  "     label: \"Warnschwelle: ";
+  message +=  Level_AH;
+  message +=  "0 mm\",";
+  message +=  "     data: graphYlevelWarn";
+  message +=  "     },{";
+  message +=  "     fill: false,";
+  message +=  "     lineTension: 0,";
+  message +=  "     backgroundColor: \"rgba(255,0,0,0)\",";
+  message +=  "     borderColor: \"rgba(255,0,0,0.3)\",";
+  message +=  "     label: \"Alarmschwelle: ";
+  message +=  Level_AHH;
+  message +=  "0 mm\",";
+  message +=  "     data: graphYlevelErro";
+  message +=  "   }]";
+  message +=  " },";
+  message +=  " options: {";
+  message +=  "   title: {";
+  message +=  "   display: false,";
+  message +=  "   text: \"Wasserstand in mm\"";
+  message +=  "   },";
+  message +=  "   legend: {display: true, text: \"Wasserstand \"},";
+  message +=  "   scales: {";
+  message +=  "     yAxes: [{ticks: {min: 1000, max:2000}}]";
+  message +=  "   }";
+  message +=  " }";
+  message +=  " });";
+  message +=  " function generateWarnData(value, i1, i2, step = 1) {";
+  message +=  "     for (let x = i1; x <= i2; x += step) {";
+  message +=  "       xValues.push(x);";
+  message +=  "       graphYlevelWarn.push(eval(value));";
+  message +=  "     }";
+  message +=  "   }";
+  message +=  " function generateErroData(value, i1, i2, step = 1) {";
+  message +=  "     for (let x = i1; x <= i2; x += step) {";
+  message +=  "       xValues.push(x);";
+  message +=  "       graphYlevelErro.push(eval(value));";
+  message +=  "     }";
+  message +=  "   }";
+  message +=  "</script></body>";
+
+  addBottom(message);
+  server.send(200, "text/html", message);
+  
+  graphLongtermXValues = "";                     // erase all values
+  graphLongtermYValues = "";
+
 }
 
 /* =======================================*/
