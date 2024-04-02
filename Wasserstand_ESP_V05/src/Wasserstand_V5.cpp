@@ -212,10 +212,13 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 #define LED_PIN            builtin_led
 
 float dutycylce  = 0;              // how bright the LED is
-// GZE
-//float fadeAmount = 0;
+
 float fadeAmount = 0.0001;         // how many m to fade the LED by
 float pegel      = Level_AL/100.0; // waterlevel in m
+
+
+unsigned long previousMillisMemoryStatePrint;
+unsigned long WaitingTimeMemoryStatePrint = 1000;
 
 /*****************************************************************************************************************
  *****************************************************************************************************************
@@ -256,10 +259,17 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  if (MDNS.begin("esp32")) {
-    Serial.println("MDNS responder started");
-  }
-
+  #if (BOARDTYPE == ESP32)
+    if (MDNS.begin("esp32")) {
+      Serial.println("MDNS responder started");
+    }
+    #else
+    {
+      if (MDNS.begin("esp8266"))
+        Serial.println(F("MDNS responder started"));
+      }
+    }
+  #endif
   /*=================================================================*/
   // /* Prepare SendMail */
 
@@ -546,6 +556,17 @@ void loop(void) {
   // Serial.print("Voltage: "); Serial.println(voltage);
 
   // #endif // DEBUG_PRINT_RAW
+
+
+  if (millis() - previousMillisMemoryStatePrint > WaitingTimeMemoryStatePrint)
+  {
+    Serial.println(formattedTime);
+    heapInfo.collect();
+    heapInfo.print();
+    
+    previousMillisMemoryStatePrint = millis();
+  }
+
 
   // set a delay to avoid ESP is busy all the time
   delay(10);
