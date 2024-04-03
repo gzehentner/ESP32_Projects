@@ -232,7 +232,7 @@ void setup(void) {
 
  /*=================================================================*/
   /* setup serial  and connect to WLAN */
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println(F("\n" TXT_BOARDNAME "\nVersion: " VERSION " Board " TXT_BOARDID " "));
   Serial.print(__DATE__);
   Serial.print(F(" "));

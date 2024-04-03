@@ -418,10 +418,10 @@ void handleListFiltered()
     if (iLine <= maxLine) {
       message += rdLongtermRingPtr;
       message += "       ";
-      message += formatTime(ringLongtermTime[rdLongtermRingPtr]);
-      message += "  ";
+     message += formatTime(ringLongtermTime[rdLongtermRingPtr]);
+  message += "  ";
       message += ringLongtermValue[rdLongtermRingPtr];
-      message += "<br>";
+       message += "<br>";
     }
     if (rdLongtermRingPtr<iLongtermRingValueMax) {
       rdLongtermRingPtr++;
