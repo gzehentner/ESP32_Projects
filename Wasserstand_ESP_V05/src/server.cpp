@@ -357,11 +357,25 @@ void handlePage()
 void handleListFiltered()
 /* =======================================*/
 {
+  // what string length do we need?
+  //   listing shortterm 
+  //   - per line 25
+  //   - 100 lines
+  //   listing longterm
+  //   - per line 25
+  //   - 120 lines
+  //  sum: 550 character without header and footer
+  // 1 - message length: 513
+  // 2 - message length: 3909
+  
   String message = "";
-  int iLine = iRingValueMax;
-  const int maxLine = 100;
 
-  addTop(message);
+  int iLine = iRingValueMax;
+
+ addTop(message);
+
+  Serial.print("1 - message length: "); 
+  Serial.println(message.length());
 
   //---------------------
   // shortterm values
@@ -375,10 +389,10 @@ void handleListFiltered()
   // create header of table
   message += "<pre>rdRingPtr  Time     Value ADC <br>";
   
-  // read out ringbuffer and display values, but not more than maxLine lines
+  // read out ringbuffer and display values, but not more than maxLines lines
   for ( rdRingPtr = wrRingPtr+1; (rdRingPtr != wrRingPtr); ){
     // print only the last lines
-    if (iLine <= maxLine) {
+    if (iLine <= maxLines) {
       message += rdRingPtr;
       message += "       ";
       message += formatTime(ringTime[rdRingPtr]);
@@ -410,12 +424,12 @@ void handleListFiltered()
   // create header of table
   message += "<pre>rdRingPtr  Time     Value <br>";
   
-  // read out ringbuffer and display values, but not more than maxLine lines
+  // read out ringbuffer and display values, but not more than maxLines lines
   iLine = iLongtermRingValueMax;
   for ( rdLongtermRingPtr = wrLongtermRingPtr+1; (rdLongtermRingPtr != wrLongtermRingPtr); ){
 
     // print only the last lines
-    if (iLine <= maxLine) {
+    if (iLine <= maxLines) {
       message += rdLongtermRingPtr;
       message += "       ";
      message += formatTime(ringLongtermTime[rdLongtermRingPtr]);
@@ -435,7 +449,9 @@ void handleListFiltered()
 
   addBottom(message);
   server.send(200, "text/html", message);
-
+  
+  Serial.print("2 - message length: "); 
+  Serial.println(message.length());
 }
 /* =======================================*/
 /* print both graph longterm and shortterm*/
@@ -445,6 +461,7 @@ void handleGraph()
   String graphXValues = "";     // values for graph (displayed)
   String graphYValues = "";
   int noValues = 0;
+  int iPoint = iRingValueMax;
 
   // prepare values for graph
   graphXValues  = "const xValues = [";
@@ -456,21 +473,23 @@ void handleGraph()
     
     // if there is a valid time set (time="" means there is no value written since last startup)
     if (ringTime[rdRingPtr] != 0) {
-      // fill X values time
-      graphXValues += "\"";
-      graphXValues += formatTime(ringTime[rdRingPtr]);
-      graphXValues += "\", ";
-      // take value and place it to the string for graph
-      graphYValues += ringValue[rdRingPtr];
-      graphYValues += ", ";
-      noValues ++;
-    }   
-    
-    if (rdRingPtr<iRingValueMax) {
-        rdRingPtr++;
-      } else {
-        rdRingPtr = 0;
+      if (iPoint <= maxPoints) {
+        // fill X values time
+        graphXValues += "\"";
+        graphXValues += formatTime(ringTime[rdRingPtr]);
+        graphXValues += "\", ";
+        // take value and place it to the string for graph
+        graphYValues += ringValue[rdRingPtr];
+        graphYValues += ", ";
+        noValues ++;
       }
+    }
+    if (rdRingPtr<iRingValueMax) {
+      rdRingPtr++;
+    } else {
+      rdRingPtr = 0;
+    }
+    iPoint--;  
     }
   
     // enclose the generated strings with necessary brakets
@@ -595,6 +614,7 @@ void handleLongtermGraph()
   String graphLongtermXValues = "";     // values for graph (displayed)
   String graphLongtermYValues = "";
   int noValues = 0;
+  int iPoint = iLongtermRingValueMax;
 
   // prepare values for graph
   graphLongtermXValues  = "const xValues = [";
@@ -606,21 +626,25 @@ void handleLongtermGraph()
     
     // if there is a valid time set (time="" means there is no value written since last startup)
     if (ringLongtermTime[rdLongtermRingPtr] != 0) {
-      // fill X values time
-      graphLongtermXValues += "\"";
-      graphLongtermXValues += formatTime(ringLongtermTime[rdLongtermRingPtr]);
-      graphLongtermXValues += "\", ";
-      // take value and place it to the string for graph
-      graphLongtermYValues += ringLongtermValue[rdLongtermRingPtr];
-      graphLongtermYValues += ", ";
-      noValues ++;
-    }   
-    
+      if (iPoint <= maxPoints) {
+
+        // fill X values time
+        graphLongtermXValues += "\"";
+        graphLongtermXValues += formatTime(ringLongtermTime[rdLongtermRingPtr]);
+        graphLongtermXValues += "\", ";
+        // take value and place it to the string for graph
+        graphLongtermYValues += ringLongtermValue[rdLongtermRingPtr];
+        graphLongtermYValues += ", ";
+        noValues ++;
+      }   
+    }
     if (rdLongtermRingPtr<iLongtermRingValueMax) {
-        rdLongtermRingPtr++;
-      } else {
-        rdLongtermRingPtr = 0;
-      }
+      rdLongtermRingPtr++;
+    } else {
+      rdLongtermRingPtr = 0;
+    }
+    iPoint--;  
+
     }
   
     // enclose the generated strings with necessary brakets

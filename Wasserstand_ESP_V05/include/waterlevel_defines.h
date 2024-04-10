@@ -86,9 +86,12 @@ Some basic defines for the whole project
   #define SIM_VALUES  // use small values for loops to get a fast simulation of firmware
   #define SIM_FADING_LEVEL
 
-  // length of shortterm ring buffer
-  #define iRingValueMax  100 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
-  #define iLongtermRingValueMax 120 // 370 // one value a day, buffer for one year (now we have four values a day so we have one month)
+  // length of ring buffer
+  #define iRingValueMax  100 // 50 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
+  #define iLongtermRingValueMax 120 // 10// 120 // 370 // one value a day, buffer for one year (now we have four values a day so we have one month)
+  // maximum lines to be printed and points in graph
+  const int maxLines = 10;
+  const int maxPoints = 10;
 
   #ifdef SIM_VALUES
     const int  filterCntMax = 10;        // time for myvalue: measureInterval * filterCntMax  
@@ -108,6 +111,7 @@ Some basic defines for the whole project
                         // Aktueller Niedrig-Stand Nov 2023 = 99 cm
 
   // #define DEBUG_PRINT_RAW  // read ADS and print value for debug
+  // #define DEBUG_PRINT_HEAP
   #define SIM_FADING_LEVEL // simulate a changing waterlevel using analog-output
 
   #define SIM_VALUES  // use small values for loops to get a fast simulation of firmware

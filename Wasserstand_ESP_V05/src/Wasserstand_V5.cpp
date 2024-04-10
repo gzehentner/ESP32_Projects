@@ -165,7 +165,7 @@ void smtpCallback(SMTP_Status status);
 HeapStat heapInfo;
 
 extern char _end;
-// extern "C" char *sbrk(int i);
+// GZE extern "C" char *sbrk(int i);
 char *ramstart = (char *)0x20070000;
 char *ramend = (char *)0x20088000;
 
@@ -558,15 +558,17 @@ void loop(void) {
   // #endif // DEBUG_PRINT_RAW
 
 
-  if (millis() - previousMillisMemoryStatePrint > WaitingTimeMemoryStatePrint)
-  {
-    Serial.println(formattedTime);
-    heapInfo.collect();
-    heapInfo.print();
-    
-    previousMillisMemoryStatePrint = millis();
-  }
-
+  
+  #ifdef DEBUG_PRINT_HEAP
+    if (millis() - previousMillisMemoryStatePrint > WaitingTimeMemoryStatePrint)
+    {
+      Serial.println(formattedTime);
+      heapInfo.collect();
+      heapInfo.print();
+      
+      previousMillisMemoryStatePrint = millis();
+    }
+  #endif
 
   // set a delay to avoid ESP is busy all the time
   delay(10);
