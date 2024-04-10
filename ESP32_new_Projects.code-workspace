@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "Wasserstand_ESP_V05"
+		},
+		{
+			"path": "ESPAsyncWebServer"
 		}
 	]
 }
