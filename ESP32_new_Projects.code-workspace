@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "ESPAsyncWebServer"
+		},
+		{
+			"path": "../../Arduino_Projects/von Kai"
 		}
 	]
 }
