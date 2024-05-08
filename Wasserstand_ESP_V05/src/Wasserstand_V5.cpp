@@ -99,6 +99,9 @@ known issues: OTA download not possible "not enouth space"
 
 #include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
+#include "soc/soc.h"            // disable brownout detector
+#include "soc/rtc_cntl_reg.h"   // disable brownout detector
+
 #include <server.h>
 #include <timeserver.h>
 #include <NoiascaCurrentLoop.h>   // library for analog measurement
@@ -229,6 +232,8 @@ unsigned long WaitingTimeMemoryStatePrint = 1000;
  *****************************************************************************************************************/
 
 void setup(void) {
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
+
   pinMode(builtin_led, OUTPUT);
 //  digitalWrite(led, 0);
 
