@@ -28,6 +28,8 @@ extern int alarmState;    // shows the actual water level
 extern int alarmStateOld; // previous value of alarmState
 extern bool executeSendMail;
 
+extern int sendTestAlarm; 
+
 extern int myValueFiltered;   // result of the filtering
 extern int myValueFilteredAct; // actual result for display in web page
 extern int filterCnt;   

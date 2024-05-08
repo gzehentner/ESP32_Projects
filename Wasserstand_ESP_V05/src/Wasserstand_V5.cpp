@@ -134,9 +134,11 @@ const char *sendHttpTo = "http://192.168.178.153/d.php"; // the module will send
 // int inByte = 0;
 // int incomingByte = 0; // for incoming serial data
 
-int alarmState;    // shows the actual water level
-int alarmStateOld; // previous value of alarmState
+int alarmState    = 0;    // shows the actual water level
+int alarmStateOld = 0; // previous value of alarmState
 bool executeSendMail = false;
+
+int sendTestAlarm = 1000;
 
 //* ============================================================= */
 /* Definition for Send-Mail                                      */
@@ -477,7 +479,7 @@ void loop(void) {
 
     message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL);
 
-    // htmlMsg already set by Waterlevel
+    // htmlMsg already set by Evaluate Sensor
     message.html.content = htmlMsg;
     message.text.content = F("");
 
@@ -508,7 +510,7 @@ void loop(void) {
           Serial.println(F("Connected with no Auth."));
       }
     }
-
+    
     if (!MailClient.sendMail(&smtp, &message, false))
       MailClient.printf("Error, Status Code: %d, Error Code: %d, Reason: %s\n", smtp.statusCode(), smtp.errorCode(), smtp.errorReason().c_str());
 
@@ -540,22 +542,22 @@ void loop(void) {
   // Serial.print("dutycylce: "); Serial.println(dutycylce);
   #endif // SIM_FADING_LEVEL
   
-  // #ifdef DEBUG_PRINT_RAW
-  // /*=================================================================*/
-  // // read analog value via I2C for debug
-  // // not used in live system
-  // //===========================================
-  // const int loc_maxAdc_value = 0x7FFF;
-  // float voltage=0.0;
+  #ifdef DEBUG_PRINT_RAW
+    /*=================================================================*/
+    // read analog value via I2C for debug
+    // not used in live system
+    //===========================================
+    const int loc_maxAdc_value = 0x7FFF;
+    float voltage=0.0;
 
-  // Serial.println("=================================");
-  // adc0 = ads.readADC_SingleEnded(0);
-  // Serial.print("Analog input pin 0: "); Serial.println(adc0);
+    Serial.println("=================================");
+    adc0 = ads.readADC_Differential_0_1();
+    Serial.print("Analog input pin 0: "); Serial.println(adc0);
 
   // voltage = ads.computeVolts(adc0);   
   // Serial.print("Voltage: "); Serial.println(voltage);
 
-  // #endif // DEBUG_PRINT_RAW
+   #endif // DEBUG_PRINT_RAW
 
 
   

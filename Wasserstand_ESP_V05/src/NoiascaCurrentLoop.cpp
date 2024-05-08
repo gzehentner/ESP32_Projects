@@ -86,7 +86,7 @@ void CurrentLoopSensor::check()
  */
 int CurrentLoopSensor::getAdc()
 {
-  return GET_ANALOG(0);
+  return GET_ANALOG;
 }
 
 /*
@@ -97,7 +97,7 @@ int CurrentLoopSensor::getValue()
   adc = 0;
   for (byte i = 0; i < measures; i++)
   {
-    adc += GET_ANALOG(pin);
+    adc += GET_ANALOG;
     // delay(10);
   }
   adc = adc / measures;
@@ -112,7 +112,7 @@ int CurrentLoopSensor::getValue()
 int CurrentLoopSensor::getValueUnfiltered()
 {
   adc = 0;
-  adc = GET_ANALOG(pin);
+  adc = GET_ANALOG;
   
   //int32_t value = (adc - 186) * 500L / (931 - 186);                          // for 1023*500 we need a long
   int32_t value = (adc - minAdc) * int32_t(maxValue) / (maxAdc - minAdc);      // for 1023*500 we need a long  // -> pressure
@@ -130,8 +130,8 @@ int CurrentLoopSensor::getFilteredAdc()
   adc = 0;
   for (byte i = 0; i < measures; i++)
   {
-    adc += GET_ANALOG(pin);
-    // only one measure; filtering is down on the upper side
+    adc += GET_ANALOG;
+    // only one measure; filtering is done on the upper side
     // delay(10);
   }
   adc = adc / measures;

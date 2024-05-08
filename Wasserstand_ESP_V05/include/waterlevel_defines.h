@@ -41,9 +41,12 @@ Some basic defines for the whole project
     #define GPout_GND 12
   #endif
 
+  #define DEBUG_VOLT_MULT 44
+  // #define DEBUG_VOLT_MULT 1
+
   // definitions for analog-digital conversion
   #if BOARDTYPE == ESP8266
-    #define GET_ANALOG analogRead
+    #define GET_ANALOG analogRead(pin)
     #define ADC_BIT 10
     #define Ain_Level 12 
     #define PWM_OUT 1 // PWM-Output to IO1
@@ -52,7 +55,7 @@ Some basic defines for the whole project
     #define BLUE_LED builtin_led
     
   #else // BOARDTYPE == ESP32
-    #define GET_ANALOG ads.readADC_SingleEnded
+    #define GET_ANALOG ads.readADC_Differential_0_1() * DEBUG_VOLT_MULT
     #define ADC_BIT  15  // only 15 bit for single ended signals
     #define Ain_Level 0  // input = adc0
 
@@ -74,17 +77,11 @@ Some basic defines for the whole project
   #define Level_ALL 140 // Unterkante KG Rohr
                         // Aktueller Niedrig-Stand Nov 2023 = 99 cm
 
-  // #define Level_AHH 190 // Oberkante Schacht = 197cm
-  // #define Level_AH 185  // Zwischenstand
-  // #define Level_AL 180
-  // #define Level_ALL 145 // Unterkante KG Rohr
-  //                       // Aktueler Niedrig-Stand Nov 2023 = 105cm
-
-
-
-  #define DEBUG_PRINT_RAW
-  #define SIM_VALUES  // use small values for loops to get a fast simulation of firmware
-  #define SIM_FADING_LEVEL
+  // #define DEBUG_PRINT_HEAP
+  
+  // #define DEBUG_PRINT_RAW  // print raw vaoltage values without calculating current values; used for debug ADC function
+  // #define SIM_VALUES  // use small values for loops to get a fast simulation of firmware
+  // #define SIM_FADING_LEVEL  // generate a fading value for analog input to simulate funkctions without an external electronic
 
   // length of ring buffer
   #define iRingValueMax  100 // 50 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
@@ -110,9 +107,4 @@ Some basic defines for the whole project
   #define Level_ALL 140 // Unterkante KG Rohr
                         // Aktueller Niedrig-Stand Nov 2023 = 99 cm
 
-  // #define DEBUG_PRINT_RAW  // read ADS and print value for debug
-  // #define DEBUG_PRINT_HEAP
-  #define SIM_FADING_LEVEL // simulate a changing waterlevel using analog-output
-
-  #define SIM_VALUES  // use small values for loops to get a fast simulation of firmware
 #endif
