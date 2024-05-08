@@ -160,10 +160,10 @@ String htmlMsg;
     // Read in relais status
     //++++++++++++++++++++++
     val_AHH = digitalRead(GPin_AHH);
-    val_AH = digitalRead(GPin_AH);
-    val_AL = digitalRead(GPin_AL);
+    val_AH =  digitalRead(GPin_AH);
+    val_AL =  digitalRead(GPin_AL);
     val_ALL = digitalRead(GPin_ALL);
-  
+
     //++++++++++++++++++++++
     // set alarmState
     //++++++++++++++++++++++

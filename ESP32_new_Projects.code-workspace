@@ -4,10 +4,8 @@
 			"path": "Wasserstand_ESP_V05"
 		},
 		{
-			"path": "ESPAsyncWebServer"
-		},
-		{
-			"path": "../../Arduino_Projects/von Kai"
+
+			"path": "ESP32_WebServer"
 		}
 	]
 }
