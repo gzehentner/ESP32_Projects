@@ -32,10 +32,12 @@ Some basic defines for the whole project
   /* Prepare WaterLevel Application */
 
   /* -- Pin-Def -- */
-  #define GPin_AHH 16  // rot
-  #define GPin_AH   2  // orange
-  #define GPin_AL  12  // gelb
-  #define GPin_ALL 13  // grün
+
+  // #define GPin_AHH 16  // grün  <-- wenn low, dann kein Mail Fehler
+  #define GPin_AHH 13  // grau <-- we have to use GPIO13, because problems with 16 and internal-pullup
+  #define GPin_AH   2  // blau
+  #define GPin_AL  12  // violett
+  // #define GPin_ALL 13  // grau <-- ALL is not tested, because we need the pin for AHH
 
   #if BOARDTYPE == ESP8266
     #define GPout_GND 12
@@ -63,19 +65,10 @@ Some basic defines for the whole project
     #define I2C_SCL 15
 
     // pin of builtin led
-    const int builtin_led = 4;
+    // const int builtin_led = 4;
 
-    #define PWM_OUT builtin_led // PWM-Output is set to BUILTIN_LED
+   //  #define PWM_OUT builtin_led // PWM-Output is set to BUILTIN_LED
   #endif
-
-  /* -- Alarm-Level -- */
-  // Pegel wurde verändert, hängt um 6cm höher
-  // --> Werte korrigieren
-  #define Level_AHH 185 // Oberkante Schacht = 191cm
-  #define Level_AH  170  // Warnschwelle
-  #define Level_AL  155
-  #define Level_ALL 140 // Unterkante KG Rohr
-                        // Aktueller Niedrig-Stand Nov 2023 = 99 cm
 
   // #define DEBUG_PRINT_HEAP
   

@@ -214,7 +214,7 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 /*=================================================================*/
 
 // fade LED PIN (replace with LED_BUILTIN constant for built-in LED)
-#define LED_PIN            builtin_led
+// #define LED_PIN            builtin_led
 
 float dutycylce  = 0;              // how bright the LED is
 
@@ -234,7 +234,7 @@ unsigned long WaitingTimeMemoryStatePrint = 1000;
 void setup(void) {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
 
-  pinMode(builtin_led, OUTPUT);
+  // pinMode(builtin_led, OUTPUT);
 //  digitalWrite(led, 0);
 
  /*=================================================================*/
@@ -311,7 +311,7 @@ void setup(void) {
   pinMode(GPin_AHH, INPUT_PULLUP);
   pinMode(GPin_AH, INPUT_PULLUP);
   pinMode(GPin_AL, INPUT_PULLUP);
-  pinMode(GPin_ALL, INPUT_PULLUP);
+  // pinMode(GPin_ALL, INPUT_PULLUP);
   
   // for ESP32 we no longer use digital output for GND, but ESP32-GND
   #if (BOARDTYPE == ESP8266)
@@ -380,7 +380,7 @@ void setup(void) {
   #if (BOARDTYPE == ESP32)
     /*==================================================================*/
     // Prepare analog output
-      pinMode(LED_PIN, OUTPUT);
+    //  pinMode(LED_PIN, OUTPUT);
 
     /*==================================================================*/
     // prepare I2C interface
