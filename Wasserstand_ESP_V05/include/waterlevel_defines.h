@@ -42,6 +42,7 @@ Some basic defines for the whole project
   // #define GPin_AL  12  // gelb    // lila
   // #define GPin_ALL 13  // grün    // grau
 
+
   #if BOARDTYPE == ESP8266
     #define GPout_GND 12
   #endif
@@ -68,9 +69,9 @@ Some basic defines for the whole project
     #define I2C_SCL 15
 
     // pin of builtin led
-    const int builtin_led = 4;
+    // const int builtin_led = 4;
 
-    #define PWM_OUT builtin_led // PWM-Output is set to BUILTIN_LED
+   //  #define PWM_OUT builtin_led // PWM-Output is set to BUILTIN_LED
   #endif
 
   // #define DEBUG_PRINT_HEAP

@@ -107,7 +107,7 @@ String formatTime(unsigned long rawTime) {
 /* =======================================*/
 void handleNotFound() {
 /* =======================================*/
-  digitalWrite(builtin_led, 1);
+  // digitalWrite(builtin_led, 1);
   String message = "File Not Found\n\n";
   message += "URI: ";
   message += server.uri();
@@ -122,7 +122,7 @@ void handleNotFound() {
   }
 
   server.send(404, "text/plain", message);
-  digitalWrite(builtin_led, 0);
+  // digitalWrite(builtin_led, 0);
 }
 
 // void drawGraph() {
@@ -295,16 +295,16 @@ void handlePage()
     message += F("--");
   }
   message += F("</span><br>");
-  message += F("Level Alarm   low:  <span id='val_ALL'>");
-  if (val_ALL == 0)
-  {
-    message += F("active");
-  }
-  else
-  {
-    message += F("--");
-  }
-  message += F("</span><br>");
+  // message += F("Level Alarm   low:  <span id='val_ALL'>");
+  // if (val_ALL == 0)
+  // {
+  //   message += F("active");
+  // }
+  // else
+  // {
+  //   message += F("--");
+  // }
+  // message += F("</span><br>");
   message += F("</pre></article>");
 
   message += F("<article>"
@@ -859,8 +859,8 @@ void handleJson()
   message += digitalRead(GPin_AH);
   message += (F(",\"val_AL\":"));
   message += digitalRead(GPin_AL);
-  message += (F(",\"val_ALL\":"));
-  message += digitalRead(GPin_ALL);
+  //message += (F(",\"val_ALL\":"));
+  //message += digitalRead(GPin_ALL);
   message += (F("}"));                           // End of JSON
   server.send(200, "application/json", message); // set MIME type https://www.ietf.org/rfc/rfc4627.txt
 }
