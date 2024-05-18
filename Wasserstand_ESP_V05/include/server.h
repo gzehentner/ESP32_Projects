@@ -13,6 +13,13 @@ Include file for web-server things
     extern ESP8266WebServer server; // declare an instance for the webserver
 #endif
 
+extern int debugLevelSwitches;
+
+extern int simVal_AHH;
+extern int simVal_AH ;
+extern int simVal_AL ;
+extern int simVal_ALL;
+
 //extern WebServer server; // declare an instance for the webserver
 
 void handleRoot();
@@ -72,5 +79,7 @@ void handleJson();
 // Output: a fetch API / JavaScript
 // a function in the JavaScript uses fetch API to request a JSON file from the webserver and updates the values on the page if the object names and ID are the same
 void handleJs();
+
+void handleCommand();
 
 #endif

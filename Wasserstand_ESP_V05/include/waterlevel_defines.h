@@ -31,13 +31,17 @@ Some basic defines for the whole project
   /*=================================================================*/
   /* Prepare WaterLevel Application */
 
-  /* -- Pin-Def -- */
+  /* -- Pin-Def -- */  // D160    // Board159
+  #define GPin_AL  16  // rot     // grün
+  #define GPin_ALL  2  // orange  // blau
+  #define GPin_AHH 12  // gelb    // lila
+  #define GPin_AH  13  // grün    // grau
 
-  // #define GPin_AHH 16  // grün  <-- wenn low, dann kein Mail Fehler
-  #define GPin_AHH 13  // grau <-- we have to use GPIO13, because problems with 16 and internal-pullup
-  #define GPin_AH   2  // blau
-  #define GPin_AL  12  // violett
-  // #define GPin_ALL 13  // grau <-- ALL is not tested, because we need the pin for AHH
+  // #define GPin_AHH 16  // rot     // grün
+  // #define GPin_AH   2  // orange  // blau
+  // #define GPin_AL  12  // gelb    // lila
+  // #define GPin_ALL 13  // grün    // grau
+
 
   #if BOARDTYPE == ESP8266
     #define GPout_GND 12
@@ -99,5 +103,10 @@ Some basic defines for the whole project
   #define Level_AL  155
   #define Level_ALL 140 // Unterkante KG Rohr
                         // Aktueller Niedrig-Stand Nov 2023 = 99 cm
+
+  // defines for client example
+  #define OUTPUT1_PIN GPin_AHH
+  #define OUTPUT2_PIN GPin_AH 
+  #define BUTTON1_PIN 19
 
 #endif
