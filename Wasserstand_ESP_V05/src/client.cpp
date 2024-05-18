@@ -1,7 +1,23 @@
 /* *******************************************************************
    Webclient
    ***************************************************************** */
-/* Used later
+#include <Arduino.h>
+#include <waterlevel_defines.h>
+#include <waterlevel.h>
+
+#if (BOARDTYPE == ESP32)
+  // for Send-Mail
+  // #include <ESP_Mail_Client.h>
+
+  #include <WiFi.h>
+  #include <WiFiClient.h>
+  #include <HTTPClient.h>
+  #include <WebServer.h>
+  #include <ESPmDNS.h>
+
+#else // BOARDTYPE == ESP8266)
+   Achtung! noch nicht ausprogrammiert
+#endif
 
 void sendPost()
 // send data as POST to another webserver
@@ -16,16 +32,24 @@ void sendPost()
   strcpy(message, "board=");                               // Append chars
   strcat(message, TXT_BOARDID);
 
-  strcat(message, "&vcc=");                                // Append integers
-  itoa(ESP.getVcc(), val, 10);
+  strcat(message, "&debug level switches=");
+  itoa(debugLevelSwitches, val, 10);
   strcat(message, val);
 
-  strcat(message, "&output1=");
-  itoa(digitalRead(OUTPUT1_PIN), val, 10);
+  strcat(message, "&AHH=");
+  itoa(digitalRead(GPin_AHH), val, 10);
   strcat(message, val);
 
-  strcat(message, "&output2=");
-  itoa(digitalRead(OUTPUT2_PIN), val, 10);
+  strcat(message, "&AH=");
+  itoa(digitalRead(GPin_AH), val, 10);
+  strcat(message, val);
+
+  strcat(message, "&AL=");
+  itoa(digitalRead(GPin_AL), val, 10);
+  strcat(message, val);
+
+  strcat(message, "&ALL=");
+  itoa(digitalRead(GPin_ALL), val, 10);
   strcat(message, val);
 
   strcat(message, "&button1=");
@@ -46,7 +70,7 @@ void sendPost()
 
   client.end();  //Close connection
 }
-*/
+
 
 /*
 void sendPost_V2()

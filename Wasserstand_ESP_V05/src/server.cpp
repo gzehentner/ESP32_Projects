@@ -50,7 +50,15 @@ int val_AHH;
 int val_AH;
 int val_AL;
 int val_ALL;
+
+int simVal_AHH = 0;
+int simVal_AH  = 0;
+int simVal_AL  = 0;
+int simVal_ALL = 0;
+
 int firstRun = 1;
+
+int debugLevelSwitches=0;
 
 String formatTime(unsigned long rawTime) {
   
@@ -346,6 +354,44 @@ void handlePage()
   message += myValueFilteredAct;
 
   message += F("</article>");
+
+  message += F("<article>\n"
+  "<h2>Simulate</h2>\n" 
+  "<p>Enable Simulation and switch relais outputs "
+  "Click to toggle the output.</p>\n");
+  if (debugLevelSwitches) 
+  {
+    message += F("<p class='on'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
+  } else {
+    message += F("<p class='off'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
+  }
+  if (simVal_AHH) 
+  {
+  message += F("<p class='on'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
+  }
+  if (simVal_AH) 
+  {
+  message += F("<p class='on'><a href='c.php?toggle=2' target='i'>AH </a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=2' target='i'>AH </a></p>\n");
+  }
+  if (simVal_AL) 
+  {
+  message += F("<p class='on'><a href='c.php?toggle=3' target='i'>AL </a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=3' target='i'>AL </a></p>\n");
+  }
+  if (simVal_ALL) 
+  {
+  message += F("<p class='on'><a href='c.php?toggle=4' target='i'>ALL</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=4' target='i'>ALL</a></p>\n");
+  }
+  message += F("<p class='off'><a href='c.php?toggle=5' target='i'>LED</a></p>\n"
+  "<iframe name='i' style='display:none' ></iframe>\n" // hack to keep the button press in the window
+  "</article>\n");
 
   addBottom(message);
   server.send(200, "text/html", message);
@@ -788,9 +834,9 @@ void handleCss()
               "nav a{color:dimgrey;padding:10px;text-decoration:none}"
               "nav a:hover{text-decoration:underline}"
               "nav p{margin:0px;padding:0px}"
-              ".on, .off{margin-top:0;margin-bottom:0.2em;margin-left:4em;font-size:1.4em;background-color:#C0C0C0;border-style:solid;border-radius:10px;border-style:outset;width:5em;height:1.5em;text-decoration:none;text-align:center}"
-              ".on{border-color:green}"
-              ".off{border-color:red}"
+              ".on, .off{color:white;margin-top:0;margin-bottom:0.2em;margin-left:4em;font-size:1.4em;border-style:solid;border-radius:10px;border-style:outset;width:5em;height:1.5em;text-decoration:none;text-align:center}"
+              ".on{background-color:green;border-color:green}"
+              ".off{background-color:red;border-color:red}"
               "message_ok  {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:green ;width:19em;text-align:center}"
               "message_warn{color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:orange;width:19em;text-align:center}"
               "message_err {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:red   ;width:19em;text-align:center}");
@@ -854,6 +900,110 @@ void handleJs()
   server.send(200, "text/javascript", message);
 }
 
+void handleCommand()
+{
+
+  int tempVal = 0;
+
+  // receive command and handle accordingly
+  Serial.println(F("D223 handleCommand"));
+  for (uint8_t i = 0; i < server.args(); i++)
+  {
+    Serial.print(server.argName(i));
+    Serial.print(F(": "));
+    Serial.println(server.arg(i));
+  }
+  if (server.argName(0) == "toggle") // the parameter which was sent to this server
+  {
+    if (server.arg(0) == "a") // the value for that parameter
+    {
+      Serial.println(F("D232 toggle debug switch"));
+
+      if (debugLevelSwitches == 1)
+      { // toggle: if the pin was on - switch it of and vice versa
+        debugLevelSwitches=0;
+      }
+      else
+      {
+        debugLevelSwitches=1;
+      }
+      Serial.print("debugLevelSwitch now ");
+      Serial.println(debugLevelSwitches);
+    }
+    if (server.arg(0) == "1") // the value for that parameter
+    {
+      Serial.println(F("D232 toggle ahh"));
+
+      if (simVal_AHH = digitalRead(GPin_AHH))
+      { // toggle: if the pin was on - switch it of and vice versa
+        digitalWrite(GPin_AHH, LOW);
+      }
+      else
+      {
+        digitalWrite(GPin_AHH, HIGH);
+      }
+    }
+    if (server.arg(0) == "2") // the value for that parameter
+    {
+      Serial.println(F("D232 toggle ah"));
+      if (simVal_AH  = digitalRead(GPin_AH))
+      {
+        digitalWrite(GPin_AH, LOW);
+        Serial.println("AH is now low");
+      }
+      else
+      {
+        Serial.println("AH is now high");
+        digitalWrite(GPin_AH, HIGH);
+      }
+    }
+    if (server.arg(0) == "3") // the value for that parameter
+    {
+      Serial.println(F("D232 toggle al"));
+
+      if (simVal_AL  = digitalRead(GPin_AL))
+      { // toggle: if the pin was on - switch it of and vice versa
+        digitalWrite(GPin_AL, LOW);
+      }
+      else
+      {
+        digitalWrite(GPin_AL, HIGH);
+      }
+    }
+    if (server.arg(0) == "4") // the value for that parameter
+    {
+      Serial.println(F("D232 toggle all"));
+      if (simVal_ALL = digitalRead(GPin_ALL))
+      {
+        digitalWrite(GPin_ALL, LOW);
+      }
+      else
+      {
+        digitalWrite(GPin_ALL, HIGH);
+      }
+    }
+    if (server.arg(0) == "5") // the value for that parameter(led))
+    {
+      Serial.println(F("D232 toggle LED"));
+      if (digitalRead(builtin_led))
+      { // toggle: if the pin was on - switch it of and vice versa
+        digitalWrite(builtin_led, LOW);
+      }
+      else
+      {
+        digitalWrite(builtin_led, HIGH);
+      }
+    }
+  }
+  else if (server.argName(0) == "CMD" && server.arg(0) == "RESET") // Example how to reset the module. Just send ?CMD=RESET
+  {
+    Serial.println(F("D238 will reset"));
+    ESP.restart();
+  }
+  server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
+}
+
+//}
 /*
 =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*==*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=**=
 ========== end of including server.cpp

@@ -110,6 +110,8 @@ known issues: OTA download not possible "not enouth space"
 extern CurrentLoopSensor currentLoopSensor();
 
 
+#include <client.h>
+
 
 // definitions for analog-digital conversion
 #if BOARDTYPE == ESP32
@@ -142,6 +144,8 @@ int alarmStateOld = 0; // previous value of alarmState
 bool executeSendMail = false;
 
 int sendTestAlarm = 1000;
+
+int debugLevelSwitches_old = 0;
 
 //* ============================================================= */
 /* Definition for Send-Mail                                      */
@@ -309,9 +313,10 @@ void setup(void) {
   // prepare relais input / output
 
   pinMode(GPin_AHH, INPUT_PULLUP);
-  pinMode(GPin_AH, INPUT_PULLUP);
-  pinMode(GPin_AL, INPUT_PULLUP);
+  pinMode(GPin_AH,  INPUT_PULLUP);
+  pinMode(GPin_AL,  INPUT_PULLUP);
   pinMode(GPin_ALL, INPUT_PULLUP);
+
   
   // for ESP32 we no longer use digital output for GND, but ESP32-GND
   #if (BOARDTYPE == ESP8266)
@@ -338,7 +343,7 @@ void setup(void) {
   server.on("/j.js", handleJs);   // javscript based on fetch API to update the page
   // server.on("/j.js",  handleAjax);             // a javascript to handle AJAX/JSON update of the page  https://werner.rothschopf.net/201809_arduino_esp8266_server_client_2_ajax.htm
   server.on("/json", handleJson);    // send data in JSON format
-                                     //  server.on("/c.php", handleCommand);            // process commands
+  server.on("/c.php", handleCommand);            // process commands
                                      //  server.on("/favicon.ico", handle204);          // process commands
   server.onNotFound(handleNotFound); // show a typical HTTP Error 404 page
 
@@ -419,13 +424,36 @@ void loop(void) {
 
   delay(2);//allow the cpu to switch to other tasks
 
+  if (debugLevelSwitches != debugLevelSwitches_old) {
+    if (debugLevelSwitches) {
+      pinMode(GPin_AHH, OUTPUT);
+      pinMode(GPin_AH,  OUTPUT);
+      pinMode(GPin_AL,  OUTPUT);
+      pinMode(GPin_ALL, OUTPUT);
+      
+      digitalWrite(GPin_AHH, HIGH);
+      digitalWrite(GPin_AH , HIGH);
+      digitalWrite(GPin_AL , HIGH);
+      digitalWrite(GPin_ALL, HIGH);
+      Serial.println("debug level enabled");
+    } else {
+      pinMode(GPin_AHH, INPUT_PULLUP);
+      pinMode(GPin_AH,  INPUT_PULLUP);
+      pinMode(GPin_AL, INPUT_PULLUP);
+      pinMode(GPin_ALL, INPUT_PULLUP);
+      Serial.println("debug level disabled");
+    }
+  }
+  debugLevelSwitches_old = debugLevelSwitches;
+
+
   /*=================================================================*/
-  /* WebClient (not used yet)*/
+  /* WebClient */
 
   seconds_since_startup = millis() / 1000;
   if (clientIntervall > 0 && (seconds_since_startup - clientPreviousSs) >= clientIntervall)
   {
-    //   sendPost();
+    sendPost();
     clientPreviousSs = seconds_since_startup;
   }
   server.handleClient();
@@ -472,30 +500,37 @@ void loop(void) {
   /* Send Email reusing session   */
   /*=================================================================*/
 
+  // if (false)
   if (executeSendMail)
   {
     executeSendMail = false;
 
+    Serial.println("GZE: 1 Email");
     SMTP_Message message;
+    Serial.println("GZE: 1b Email");
 
     message.sender.name = F("Pegel Zehentner");
     message.sender.email = AUTHOR_EMAIL;
     message.subject = subject;
+    Serial.println("GZE: 2 Email");
 
     message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL);
 
     // htmlMsg already set by Evaluate Sensor
     message.html.content = htmlMsg;
     message.text.content = F("");
+    Serial.println("GZE: 3 Email");
 
     Serial.println();
     Serial.println(F("Sending Email..."));
 
     if (!smtp.isLoggedIn())
     {
-      /* Set the TCP response read timeout in seconds */
-      // smtp.setTCPTimeout(10);
+      Serial.println("GZE: Starting log into smtp");
 
+      /* Set the TCP response read timeout in seconds */
+      smtp.setTCPTimeout(10);
+      
       if (!smtp.connect(&config))
       {
         MailClient.printf("Connection error, Status Code: %d, Error Code: %d, Reason: %s\n", smtp.statusCode(), smtp.errorCode(), smtp.errorReason().c_str());

@@ -31,11 +31,16 @@ Some basic defines for the whole project
   /*=================================================================*/
   /* Prepare WaterLevel Application */
 
-  /* -- Pin-Def -- */
-  #define GPin_AHH 16  // rot
-  #define GPin_AH   2  // orange
-  #define GPin_AL  12  // gelb
-  #define GPin_ALL 13  // grün
+  /* -- Pin-Def -- */  // D160    // Board159
+  #define GPin_AL  16  // rot     // grün
+  #define GPin_ALL  2  // orange  // blau
+  #define GPin_AHH 12  // gelb    // lila
+  #define GPin_AH  13  // grün    // grau
+
+  // #define GPin_AHH 16  // rot     // grün
+  // #define GPin_AH   2  // orange  // blau
+  // #define GPin_AL  12  // gelb    // lila
+  // #define GPin_ALL 13  // grün    // grau
 
   #if BOARDTYPE == ESP8266
     #define GPout_GND 12
@@ -68,15 +73,6 @@ Some basic defines for the whole project
     #define PWM_OUT builtin_led // PWM-Output is set to BUILTIN_LED
   #endif
 
-  /* -- Alarm-Level -- */
-  // Pegel wurde verändert, hängt um 6cm höher
-  // --> Werte korrigieren
-  #define Level_AHH 185 // Oberkante Schacht = 191cm
-  #define Level_AH  170  // Warnschwelle
-  #define Level_AL  155
-  #define Level_ALL 140 // Unterkante KG Rohr
-                        // Aktueller Niedrig-Stand Nov 2023 = 99 cm
-
   // #define DEBUG_PRINT_HEAP
   
   // #define DEBUG_PRINT_RAW  // print raw vaoltage values without calculating current values; used for debug ADC function
@@ -106,5 +102,10 @@ Some basic defines for the whole project
   #define Level_AL  155
   #define Level_ALL 140 // Unterkante KG Rohr
                         // Aktueller Niedrig-Stand Nov 2023 = 99 cm
+
+  // defines for client example
+  #define OUTPUT1_PIN GPin_AHH
+  #define OUTPUT2_PIN GPin_AH 
+  #define BUTTON1_PIN 19
 
 #endif
