@@ -312,10 +312,14 @@ void setup(void) {
 
   // prepare relais input / output
 
+// GZE debug: no pullup for PIN 2, 12, 13
   pinMode(GPin_AHH, INPUT_PULLUP);
   pinMode(GPin_AH,  INPUT_PULLUP);
+  
+  // for test pullup enabled
   pinMode(GPin_AL,  INPUT_PULLUP);
-  pinMode(GPin_ALL, INPUT_PULLUP);
+  //pinMode(GPin_ALL, INPUT_PULLUP);
+
 
   // for ESP32 we no longer use digital output for GND, but ESP32-GND
   #if (BOARDTYPE == ESP8266)

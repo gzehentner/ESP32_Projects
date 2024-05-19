@@ -31,17 +31,16 @@ Some basic defines for the whole project
   /*=================================================================*/
   /* Prepare WaterLevel Application */
 
-  /* -- Pin-Def -- */  // D160    // Board159
-  #define GPin_AL  16  // rot     // grün
-  #define GPin_ALL  2  // orange  // blau
-  #define GPin_AHH 12  // gelb    // lila
-  #define GPin_AH  13  // grün    // grau
-
   // #define GPin_AHH 16  // rot     // grün
   // #define GPin_AH   2  // orange  // blau
   // #define GPin_AL  12  // gelb    // lila
   // #define GPin_ALL 13  // grün    // grau
 
+  /* -- Pin-Def -- */  // Board159
+  #define GPin_AHH  2  // blau
+  #define GPin_AH  13  // grau
+  #define GPin_AL  12  // lila
+  #define GPin_ALL 16  // grün
 
   #if BOARDTYPE == ESP8266
     #define GPout_GND 12
@@ -105,8 +104,8 @@ Some basic defines for the whole project
                         // Aktueller Niedrig-Stand Nov 2023 = 99 cm
 
   // defines for client example
-  #define OUTPUT1_PIN GPin_AHH
-  #define OUTPUT2_PIN GPin_AH 
+  // #define OUTPUT1_PIN GPin_AHH
+  // #define OUTPUT2_PIN GPin_AH 
   #define BUTTON1_PIN 19
 
 #endif

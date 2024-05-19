@@ -295,16 +295,16 @@ void handlePage()
     message += F("--");
   }
   message += F("</span><br>");
-  // message += F("Level Alarm   low:  <span id='val_ALL'>");
-  // if (val_ALL == 0)
-  // {
-  //   message += F("active");
-  // }
-  // else
-  // {
-  //   message += F("--");
-  // }
-  // message += F("</span><br>");
+  message += F("Level Alarm   low:  <span id='val_ALL'>");
+  if (val_ALL == 0)
+  {
+    message += F("active");
+  }
+  else
+  {
+    message += F("--");
+  }
+  message += F("</span><br>");
   message += F("</pre></article>");
 
   message += F("<article>"
@@ -859,8 +859,8 @@ void handleJson()
   message += digitalRead(GPin_AH);
   message += (F(",\"val_AL\":"));
   message += digitalRead(GPin_AL);
-  //message += (F(",\"val_ALL\":"));
-  //message += digitalRead(GPin_ALL);
+  message += (F(",\"val_ALL\":"));
+  message += digitalRead(GPin_ALL);
   message += (F("}"));                           // End of JSON
   server.send(200, "application/json", message); // set MIME type https://www.ietf.org/rfc/rfc4627.txt
 }
@@ -985,14 +985,14 @@ void handleCommand()
     if (server.arg(0) == "5") // the value for that parameter(led))
     {
       Serial.println(F("D232 toggle LED"));
-      if (digitalRead(builtin_led))
-      { // toggle: if the pin was on - switch it of and vice versa
-        digitalWrite(builtin_led, LOW);
-      }
-      else
-      {
-        digitalWrite(builtin_led, HIGH);
-      }
+      // if (digitalRead(builtin_led))
+      // { // toggle: if the pin was on - switch it of and vice versa
+      //   digitalWrite(builtin_led, LOW);
+      // }
+      // else
+      // {
+      //   digitalWrite(builtin_led, HIGH);
+      // }
     }
   }
   else if (server.argName(0) == "CMD" && server.arg(0) == "RESET") // Example how to reset the module. Just send ?CMD=RESET
