@@ -95,7 +95,9 @@ known issues: OTA download not possible "not enouth space"
 
 #endif
 
-#include <NTPClient.h>    // get time from timeserver
+// use time.h from Arduino.h 
+#include "time.h"                   // for time() ctime()
+// #include "esp_sntp.h"
 
 #include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
@@ -196,15 +198,73 @@ const char *ssid = STASSID;
 const char *password = STAPSK;
 
 /*=================================================================*/
-/* Variables to connect to timeserver   */
-/* Define NTP Client to get time */
+/* ===========   prepare timeserver =================*/
 
+/* Configuration of NTP */
+#define MY_NTP_SERVER "at.pool.ntp.org"           
+#define MY_TZ "CET-1CEST,M3.5.0/02,M10.5.0/03"  
+
+
+/* Globals */
+time_t now;                         // this are the seconds since Epoch (1970) - UTC
+tm tmX;                              // the structure tm holds time information in a more convenient way
+
+// declare global variables
 String currentDate;   // hold the current date
 String formattedTime; // hold the current time
-unsigned long myEpochTime;
+
+
+void showTime() {
+  time(&now);                       // read the current time
+  localtime_r(&now, &tmX);           // update the structure tm with the current time
+  Serial.print("year:");
+  Serial.print(tmX.tm_year + 1900);  // years since 1900
+  Serial.print("\tmonth:");
+  Serial.print(tmX.tm_mon + 1);      // January = 0 (!)
+  Serial.print("\tday:");
+  Serial.print(tmX.tm_mday);         // day of month
+  Serial.print("\thour:");
+  Serial.print(tmX.tm_hour);         // hours since midnight  0-23
+  Serial.print("\tmin:");
+  Serial.print(tmX.tm_min);          // minutes after the hour  0-59
+  Serial.print("\tsec:");
+  Serial.print(tmX.tm_sec);          // seconds after the minute  0-61*
+  Serial.print("\twday");
+  Serial.print(tmX.tm_wday);         // days since Sunday 0-6
+  if (tmX.tm_isdst == 1)             // Daylight Saving Time flag
+    Serial.print("\tDST");
+  else
+    Serial.print("\tstandard");
+  Serial.println();
+}
+
+void showTimeAlternative() {
+  time_t now;                       // this are the seconds since Epoch (1970) - UTC
+  tm tmL;                            // the structure tm holds time information in a more convenient way
+  time(&now);                       // read the current time
+  localtime_r(&now, &tmL);           // update the structure tm with the current time
+  char buffer[42] {0};              // a buffer large enough to hold your output
+  strftime (buffer, sizeof(buffer), "%H:%M", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
+  Serial.println(buffer);
+}
+
+void getFormattedDateAndTime()
+{
+  time_t now;                       // this are the seconds since Epoch (1970) - UTC
+  tm tmL;                           // the structure tm holds time information in a more convenient way
+  time(&now);                       // read the current time
+  localtime_r(&now, &tmL);          // update the structure tm with the current time
+  
+  char buffer[42] {0};              // a buffer large enough to hold your output
+  strftime (buffer, sizeof(buffer), "%H:%M:%S", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
+  formattedTime = buffer;
+
+  strftime (buffer, sizeof(buffer), "%F", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
+  currentDate = buffer;
+
+}
 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 /* End Timeserver */
 
@@ -296,29 +356,27 @@ void setup(void) {
 
   config.login.user_domain = F("127.0.0.1");
 
-  /*
-  Set the NTP config time
-  For times east of the Prime Meridian use 0-12
-  For times west of the Prime Meridian add 12 to the offset.
-  Ex. American/Denver GMT would be -6. 6 + 12 = 18
-  See https://en.wikipedia.org/wiki/Time_zone for a list of the GMT/UTC timezone offsets
-  */
-  config.time.ntp_server = F("pool.ntp.org,time.nist.gov");
-  config.time.gmt_offset = 1;
-  config.time.day_light_offset = 1;
+
+  #ifdef ARDUINO_ARCH_ESP32
+    // ESP32 seems to be a little more complex:
+    configTime(0, 0, MY_NTP_SERVER);  // 0, 0 because we will use TZ in the next line
+    setenv("TZ", MY_TZ, 1);            // Set environment variable with your time zone
+    tzset();
+  #else
+    // ESP8266
+    configTime(MY_TZ, MY_NTP_SERVER);    // --> for the ESP8266 only
+  #endif
+
 
   /*=================================================================*/
   /* Prepare WaterLevel Application */
 
   // prepare relais input / output
 
-// GZE debug: no pullup for PIN 2, 12, 13
   pinMode(GPin_AHH, INPUT_PULLUP);
   pinMode(GPin_AH,  INPUT_PULLUP);
-  
-  // for test pullup enabled
   pinMode(GPin_AL,  INPUT_PULLUP);
-  //pinMode(GPin_ALL, INPUT_PULLUP);
+
 
 
   // for ESP32 we no longer use digital output for GND, but ESP32-GND
@@ -371,17 +429,7 @@ void setup(void) {
 
 
 
-  /*=================================================================*/
-  /* Initialize a NTPClient to get time */
-
-  timeClient.begin();
-  // Set offset time in seconds to adjust for your timezone, for example:
-  // GMT +1 = 3600
-  // GMT +8 = 28800
-  // GMT -1 = -3600
-  // GMT 0 = 0
-  timeClient.setTimeOffset(3600);
-
+  
   /*=================================================================*/
   beginCurrentLoopSensor();
   
@@ -410,6 +458,12 @@ void setup(void) {
       Serial.print("Gain: ");
       Serial.println(ads.getGain());
     }
+
+    // PSRAM?
+    log_d("Total heap: %d", ESP.getHeapSize());
+    log_d("Free heap: %d", ESP.getFreeHeap());
+    log_d("Total PSRAM: %d", ESP.getPsramSize());
+    log_d("Free PSRAM: %d", ESP.getFreePsram());
   #endif
 
 }
@@ -477,25 +531,7 @@ void loop(void) {
 
   /*=================================================================*/
   /*  code for getting time from NTP       */
-  timeClient.update();
-
-  time_t epochTime = timeClient.getEpochTime();
-
-  myEpochTime = timeClient.getEpochTime();
-
-  formattedTime = timeClient.getFormattedTime();
-
-  // Get a time structure
-  struct tm *ptm = gmtime((time_t *)&epochTime);
-
-  int monthDay = ptm->tm_mday;
-  int currentMonth = ptm->tm_mon + 1;
-  int currentYear = ptm->tm_year + 1900;
-
-  // Print complete date:
-  currentDate = String(currentYear) + "-" + String(currentMonth) + "-" + String(monthDay);
-
-
+  getFormattedDateAndTime();
   /* End getting time and date */
 
 
@@ -506,31 +542,25 @@ void loop(void) {
   // if (false)
   if (executeSendMail)
   {
-    executeSendMail = false;
+     executeSendMail = false;
 
-    Serial.println("GZE: 1 Email");
     SMTP_Message message;
-    Serial.println("GZE: 1b Email");
 
     message.sender.name = F("Pegel Zehentner");
     message.sender.email = AUTHOR_EMAIL;
     message.subject = subject;
-    Serial.println("GZE: 2 Email");
 
     message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL);
 
     // htmlMsg already set by Evaluate Sensor
     message.html.content = htmlMsg;
     message.text.content = F("");
-    Serial.println("GZE: 3 Email");
 
     Serial.println();
     Serial.println(F("Sending Email..."));
 
     if (!smtp.isLoggedIn())
     {
-      Serial.println("GZE: Starting log into smtp");
-
       /* Set the TCP response read timeout in seconds */
       smtp.setTCPTimeout(10);
       
@@ -617,8 +647,8 @@ void loop(void) {
 
   // set a delay to avoid ESP is busy all the time
   delay(10);
-
-/*==================================================================================================================================*/
+  
+  /*==================================================================================================================================*/
 } // end void loop()
 /*==================================================================================================================================
   ==================================================================================================================================*/

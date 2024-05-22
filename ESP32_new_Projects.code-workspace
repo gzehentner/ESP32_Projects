@@ -1,11 +1,14 @@
 {
 	"folders": [
 		{
-			"path": "Wasserstand_ESP_V05"
+			"path": "ESP32_WebServer"
 		},
 		{
-
-			"path": "ESP32_WebServer"
+			"name": "NTP_DST",
+			"path": "NTP_DST"
+		},
+		{
+			"path": "Wasserstand_ESP_V05"
 		}
 	]
 }

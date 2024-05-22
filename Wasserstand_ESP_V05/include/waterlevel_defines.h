@@ -37,10 +37,10 @@ Some basic defines for the whole project
   // #define GPin_ALL 13  // grün    // grau
 
   /* -- Pin-Def -- */  // Board159
-  #define GPin_AHH  2  // blau
-  #define GPin_AH  13  // grau
-  #define GPin_AL  12  // lila
-  #define GPin_ALL 16  // grün
+  #define GPin_AHH  2  // blau   rot
+  #define GPin_AH  13  // grau   grün
+  #define GPin_AL  12  // lila   gelb
+  #define GPin_ALL 16  // grün   orange
 
   #if BOARDTYPE == ESP8266
     #define GPout_GND 12
