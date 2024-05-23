@@ -60,20 +60,6 @@ int firstRun = 1;
 
 int debugLevelSwitches=0;
 
-String formatTime(unsigned long rawTime) {
-  
-  unsigned long hours = (rawTime % 86400L) / 3600;
-  String hoursStr = hours < 10 ? "0" + String(hours) : String(hours);
-
-  unsigned long minutes = (rawTime % 3600) / 60;
-  String minuteStr = minutes < 10 ? "0" + String(minutes) : String(minutes);
-
-  unsigned long seconds = rawTime % 60;
-  String secondStr = seconds < 10 ? "0" + String(seconds) : String(seconds);
-
-  return hoursStr + ":" + minuteStr + ":" + secondStr;
-}
-
 // void handleRoot() {
 //   digitalWrite(builtin_led, 1);
 //   char temp[400];
@@ -416,6 +402,8 @@ void handleListFiltered()
   // 2 - message length: 3909
   
   String message = "";
+  message.reserve(7000);
+
   String formattedTimeL= "";
   String formattedDateL= "";
 
@@ -514,7 +502,11 @@ void handleGraph()
 /* =======================================*/
 {
   String graphXValues = "";     // values for graph (displayed)
+  graphXValues.reserve(1500);
+
   String graphYValues = "";
+  graphYValues.reserve(800);
+
   String formattedTimeL= "";
   String formattedDateL= "";
 
@@ -557,8 +549,14 @@ void handleGraph()
     graphXValues += "];";
     graphYValues += "];";
 
+    Serial.print("graphXValues: "); 
+    Serial.println(graphXValues.length());
+    Serial.print("graphYValues: "); 
+    Serial.println(graphYValues.length());
+
 
   String message;
+  message.reserve(5000);
   addTop(message);
 
 
@@ -658,7 +656,12 @@ void handleGraph()
   message +=  "</script></body>";
             
   addBottom(message);
+
+  Serial.print("message: "); 
+  Serial.println(message.length());
+
   server.send(200, "text/html", message);
+
 
   graphXValues = "";                     // erase all values
   graphYValues = "";
@@ -672,7 +675,11 @@ void handleLongtermGraph()
 /* =======================================*/
 {
   String graphLongtermXValues = "";     // values for graph (displayed)
+  graphLongtermXValues.reserve(1500);
+
   String graphLongtermYValues = "";
+  graphLongtermYValues.reserve(800);
+
   String formattedTimeL= "";
   String formattedDateL= "";
 
@@ -718,9 +725,16 @@ void handleLongtermGraph()
     graphLongtermXValues += "];";
     graphLongtermYValues += "];";
 
+  Serial.print("graphLongtermXValues: "); 
+  Serial.println(graphLongtermXValues.length());
+  Serial.print("graphLongtermYValues: "); 
+  Serial.println(graphLongtermYValues.length());
+
 
   
   String message;
+  message.reserve(5000);
+
   addTop(message);
 
 
@@ -821,6 +835,10 @@ void handleLongtermGraph()
   message +=  "</script></body>";
 
   addBottom(message);
+
+  Serial.print("message: "); 
+  Serial.println(message.length());
+
   server.send(200, "text/html", message);
   
   graphLongtermXValues = "";                     // erase all values

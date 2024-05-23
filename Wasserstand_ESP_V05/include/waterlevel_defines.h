@@ -97,8 +97,8 @@ Some basic defines for the whole project
   #define iRingValueMax  100 // 50 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
   #define iLongtermRingValueMax 120 // 10// 120 // 370 // one value a day, buffer for one year (now we have four values a day so we have one month)
   // maximum lines to be printed and points in graph
-  const int maxLines = 10;
-  const int maxPoints = 10;
+  const int maxLines  = 100;
+  const int maxPoints = 100;
 
   #ifdef SIM_VALUES
     const int  filterCntMax = 10;        // time for myvalue: measureInterval * filterCntMax  
