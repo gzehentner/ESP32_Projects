@@ -103,7 +103,7 @@ String htmlMsg="";
     /*=========================================*/
 
     // write time to ring buffer
-    ringTime [wrRingPtr] = now; // myEpochTime;
+    ringTime [wrRingPtr] = epochTime; // myEpochTime;
 
     // write shortterm value to ring buffer
     ringValue[wrRingPtr] = myValueFilteredAct;  
@@ -127,7 +127,7 @@ String htmlMsg="";
       longtermPreviousMillis = millisNow;
 
       // write time to ring buffer
-      ringLongtermTime [wrLongtermRingPtr] = now; // myEpochTime;
+      ringLongtermTime [wrLongtermRingPtr] = epochTime; // myEpochTime;
 
       // write shortterm value to ring buffer
       ringLongtermValue[wrLongtermRingPtr] = myValueFilteredAct;  
@@ -167,7 +167,7 @@ String htmlMsg="";
     val_AHH = digitalRead(GPin_AHH);
     val_AH =  digitalRead(GPin_AH);
     val_AL =  digitalRead(GPin_AL);
-    val_ALL = digitalRead(GPin_ALL);
+    // val_ALL = digitalRead(GPin_ALL);
 
     //++++++++++++++++++++++
     // set alarmState
@@ -186,14 +186,14 @@ String htmlMsg="";
     {
       alarmState = 3;
     }
-    else if ((val_AL == 0) && (val_ALL == 1))
+    else if ((val_AL == 0) ) //&& (val_ALL == 1))
     {
       alarmState = 2;
     }
-    else if ((val_ALL == 0))
-    {
-      alarmState = 1;
-    }
+    // else if ((val_ALL == 0))
+    // {
+    //   alarmState = 1;
+    // }
   
     //++++++++++++++++++++++
     // prepare send mail depending on alarmState

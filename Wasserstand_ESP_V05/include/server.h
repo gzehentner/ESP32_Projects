@@ -59,7 +59,8 @@ void handleLongtermGraph();
 void handleBothGraph();
 /* =======================================*/
 
-#if BOARDTYPE == ESP32
+#ifdef ARDUINO_ARCH_ESP32
+
 /* =======================================*/
 void drawGraph();
 /* =======================================*/

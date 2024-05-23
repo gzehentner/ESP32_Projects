@@ -16,7 +16,7 @@
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 
-#if (BOARDTYPE == ESP32)
+  #ifdef ARDUINO_ARCH_ESP32
   // for Send-Mail
   // #include <ESP_Mail_Client.h>
 
@@ -49,12 +49,12 @@
 int val_AHH;
 int val_AH;
 int val_AL;
-int val_ALL;
+// int val_ALL;
 
 int simVal_AHH = 0;
 int simVal_AH  = 0;
 int simVal_AL  = 0;
-int simVal_ALL = 0;
+// int simVal_ALL = 0;
 
 int firstRun = 1;
 
@@ -295,16 +295,16 @@ void handlePage()
     message += F("--");
   }
   message += F("</span><br>");
-  message += F("Level Alarm   low:  <span id='val_ALL'>");
-  if (val_ALL == 0)
-  {
-    message += F("active");
-  }
-  else
-  {
-    message += F("--");
-  }
-  message += F("</span><br>");
+  // message += F("Level Alarm   low:  <span id='val_ALL'>");
+  // if (val_ALL == 0)
+  // {
+  //   message += F("active");
+  // }
+  // else
+  // {
+  //   message += F("--");
+  // }
+  // message += F("</span><br>");
   message += F("</pre></article>");
 
   message += F("<article>"
@@ -333,19 +333,20 @@ void handlePage()
   }
   else if (alarmState == 2)
   {
-    message += F("<message_ok> Wasserstand ist zwischen ");
-    message += Level_ALL;
-    message += F(" und ");
+    message += F("<message_ok>   Wasserstand &lt; ");
+    // message += F("<message_ok> Wasserstand ist zwischen ");
+    // message += Level_ALL;
+    // message += F(" und ");
     message += Level_AL;
 
     message += F("<br></message_ok>");
   }
-  else if (alarmState == 1)
-  {
-    message += F("<message_ok>   Wasserstand &lt; ");
-    message += Level_ALL;
-    message += F("<br></message_ok>");
-  }
+  // else if (alarmState == 1)
+  // {
+  //   message += F("<message_ok>   Wasserstand &lt; ");
+  //   message += Level_ALL;
+  //   message += F("<br></message_ok>");
+  // }
 
   // print when a new value arrieves
   message += F("<br><br>  Zeit: ");
@@ -383,12 +384,12 @@ void handlePage()
   } else {
   message += F("<p class='off'><a href='c.php?toggle=3' target='i'>AL </a></p>\n");
   }
-  if (simVal_ALL) 
-  {
-  message += F("<p class='on'><a href='c.php?toggle=4' target='i'>ALL</a></p>\n");
-  } else {
-  message += F("<p class='off'><a href='c.php?toggle=4' target='i'>ALL</a></p>\n");
-  }
+  // if (simVal_ALL) 
+  // {
+  // message += F("<p class='on'><a href='c.php?toggle=4' target='i'>ALL</a></p>\n");
+  // } else {
+  // message += F("<p class='off'><a href='c.php?toggle=4' target='i'>ALL</a></p>\n");
+  // }
   message += F("<p class='off'><a href='c.php?toggle=5' target='i'>LED</a></p>\n"
   "<iframe name='i' style='display:none' ></iframe>\n" // hack to keep the button press in the window
   "</article>\n");
@@ -415,10 +416,12 @@ void handleListFiltered()
   // 2 - message length: 3909
   
   String message = "";
+  String formattedTimeL= "";
+  String formattedDateL= "";
 
   int iLine = iRingValueMax;
 
- addTop(message);
+  addTop(message);
 
   Serial.print("1 - message length: "); 
   Serial.println(message.length());
@@ -441,7 +444,10 @@ void handleListFiltered()
     if (iLine <= maxLines) {
       message += rdRingPtr;
       message += "       ";
-      message += formatTime(ringTime[rdRingPtr]);
+
+      formatDateAndTime(formattedTimeL, formattedDateL, ringTime[rdRingPtr]);
+      message += formattedTimeL;
+
       message += "  ";
       message += ringValue[rdRingPtr];
       // message += ringADC[rdRingPtr];
@@ -478,8 +484,11 @@ void handleListFiltered()
     if (iLine <= maxLines) {
       message += rdLongtermRingPtr;
       message += "       ";
-     message += formatTime(ringLongtermTime[rdLongtermRingPtr]);
-  message += "  ";
+      
+      formatDateAndTime(formattedTimeL, formattedDateL, ringLongtermTime[rdLongtermRingPtr]);
+      message += formattedTimeL;
+      
+      message += "  ";
       message += ringLongtermValue[rdLongtermRingPtr];
        message += "<br>";
     }
@@ -506,6 +515,9 @@ void handleGraph()
 {
   String graphXValues = "";     // values for graph (displayed)
   String graphYValues = "";
+  String formattedTimeL= "";
+  String formattedDateL= "";
+
   int noValues = 0;
   int iPoint = iRingValueMax;
 
@@ -522,7 +534,9 @@ void handleGraph()
       if (iPoint <= maxPoints) {
         // fill X values time
         graphXValues += "\"";
-        graphXValues += formatTime(ringTime[rdRingPtr]);
+        formatDateAndTime(formattedTimeL, formattedDateL, ringTime[rdRingPtr]);
+        graphXValues += formattedTimeL;
+
         graphXValues += "\", ";
         // take value and place it to the string for graph
         graphYValues += ringValue[rdRingPtr];
@@ -659,6 +673,9 @@ void handleLongtermGraph()
 {
   String graphLongtermXValues = "";     // values for graph (displayed)
   String graphLongtermYValues = "";
+  String formattedTimeL= "";
+  String formattedDateL= "";
+
   int noValues = 0;
   int iPoint = iLongtermRingValueMax;
 
@@ -676,7 +693,10 @@ void handleLongtermGraph()
 
         // fill X values time
         graphLongtermXValues += "\"";
-        graphLongtermXValues += formatTime(ringLongtermTime[rdLongtermRingPtr]);
+
+        formatDateAndTime(formattedTimeL, formattedDateL, ringLongtermTime[rdLongtermRingPtr]);
+        graphLongtermXValues += formattedTimeL;
+
         graphLongtermXValues += "\", ";
         // take value and place it to the string for graph
         graphLongtermYValues += ringLongtermValue[rdLongtermRingPtr];
@@ -859,8 +879,8 @@ void handleJson()
   message += digitalRead(GPin_AH);
   message += (F(",\"val_AL\":"));
   message += digitalRead(GPin_AL);
-  message += (F(",\"val_ALL\":"));
-  message += digitalRead(GPin_ALL);
+  // message += (F(",\"val_ALL\":"));
+  // message += digitalRead(GPin_ALL);
   message += (F("}"));                           // End of JSON
   server.send(200, "application/json", message); // set MIME type https://www.ietf.org/rfc/rfc4627.txt
 }
@@ -927,8 +947,6 @@ void handleCommand()
       {
         debugLevelSwitches=1;
       }
-      Serial.print("debugLevelSwitch now ");
-      Serial.println(debugLevelSwitches);
     }
     if (server.arg(0) == "1") // the value for that parameter
     {
@@ -949,11 +967,9 @@ void handleCommand()
       if (simVal_AH  = digitalRead(GPin_AH))
       {
         digitalWrite(GPin_AH, LOW);
-        Serial.println("AH is now low");
       }
       else
       {
-        Serial.println("AH is now high");
         digitalWrite(GPin_AH, HIGH);
       }
     }
@@ -973,26 +989,26 @@ void handleCommand()
     if (server.arg(0) == "4") // the value for that parameter
     {
       Serial.println(F("D232 toggle all"));
-      if (simVal_ALL = digitalRead(GPin_ALL))
-      {
-        digitalWrite(GPin_ALL, LOW);
-      }
-      else
-      {
-        digitalWrite(GPin_ALL, HIGH);
-      }
+      // if (simVal_ALL = digitalRead(GPin_ALL))
+      // {
+      //   digitalWrite(GPin_ALL, LOW);
+      // }
+      // else
+      // {
+      //   digitalWrite(GPin_ALL, HIGH);
+      // }
     }
     if (server.arg(0) == "5") // the value for that parameter(led))
     {
       Serial.println(F("D232 toggle LED"));
-      // if (digitalRead(builtin_led))
-      // { // toggle: if the pin was on - switch it of and vice versa
-      //   digitalWrite(builtin_led, LOW);
-      // }
-      // else
-      // {
-      //   digitalWrite(builtin_led, HIGH);
-      // }
+      if (digitalRead(builtin_led))
+      { // toggle: if the pin was on - switch it of and vice versa
+        digitalWrite(builtin_led, LOW);
+      }
+      else
+      {
+        digitalWrite(builtin_led, HIGH);
+      }
     }
   }
   else if (server.argName(0) == "CMD" && server.arg(0) == "RESET") // Example how to reset the module. Just send ?CMD=RESET

@@ -5,7 +5,7 @@
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 
-#if (BOARDTYPE == ESP32)
+  #ifdef ARDUINO_ARCH_ESP32
   // for Send-Mail
   // #include <ESP_Mail_Client.h>
 
@@ -48,13 +48,13 @@ void sendPost()
   itoa(digitalRead(GPin_AL), val, 10);
   strcat(message, val);
 
-  strcat(message, "&ALL=");
-  itoa(digitalRead(GPin_ALL), val, 10);
-  strcat(message, val);
+  // strcat(message, "&ALL=");
+  // itoa(digitalRead(GPin_ALL), val, 10);
+  // strcat(message, val);
 
-  strcat(message, "&button1=");
-  itoa(digitalRead(BUTTON1_PIN), val, 10);
-  strcat(message, val);
+  // strcat(message, "&button1=");
+  // itoa(digitalRead(BUTTON1_PIN), val, 10);
+  // strcat(message, val);
 
   float example = 1234.5678;                               // example how to append floats to the message
   strcat(message, "&float=");

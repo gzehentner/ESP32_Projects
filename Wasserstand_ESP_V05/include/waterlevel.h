@@ -28,8 +28,6 @@ extern int alarmState;    // shows the actual water level
 extern int alarmStateOld; // previous value of alarmState
 extern bool executeSendMail;
 
-extern int sendTestAlarm; 
-
 extern int myValueFiltered;   // result of the filtering
 extern int myValueFilteredAct; // actual result for display in web page
 extern int filterCnt;   
@@ -57,7 +55,7 @@ extern float pegel; // waterlevel in m
 
 
 // definitions for analog-digital conversion
-   #if BOARDTYPE == ESP32
+  #ifdef ARDUINO_ARCH_ESP32
      extern TwoWire I2CSensors;
      extern Adafruit_ADS1115 ads;
    #endif
