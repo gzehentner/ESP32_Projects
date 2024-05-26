@@ -52,9 +52,9 @@ int    rdLongtermRingPtr = 0;                  // ring buffer read pointer
 //int firstRun = 1;
 
 // global variables for send mail
-String subject;
-String htmlMsg;
-  
+String subject="";
+String htmlMsg="";
+
 
 
 /* END Variables for CurrentLoop */
@@ -103,7 +103,7 @@ String htmlMsg;
     /*=========================================*/
 
     // write time to ring buffer
-    ringTime [wrRingPtr] = myEpochTime;
+    ringTime [wrRingPtr] = epochTime; // myEpochTime;
 
     // write shortterm value to ring buffer
     ringValue[wrRingPtr] = myValueFilteredAct;  
@@ -127,7 +127,7 @@ String htmlMsg;
       longtermPreviousMillis = millisNow;
 
       // write time to ring buffer
-      ringLongtermTime [wrLongtermRingPtr] = myEpochTime;
+      ringLongtermTime [wrLongtermRingPtr] = epochTime; // myEpochTime;
 
       // write shortterm value to ring buffer
       ringLongtermValue[wrLongtermRingPtr] = myValueFilteredAct;  
@@ -156,6 +156,11 @@ String htmlMsg;
   */
   void SetAlarmState_from_relais() {
   /*=====================================================*/
+
+    // reserve enough space for strings
+    subject.reserve(50);
+    htmlMsg.reserve(200);
+
     //++++++++++++++++++++++
     // Read in relais status
     //++++++++++++++++++++++
@@ -181,14 +186,14 @@ String htmlMsg;
     {
       alarmState = 3;
     }
-    else if ((val_AL == 0) && (val_ALL == 1))
+    else if ((val_AL == 0) ) //&& (val_ALL == 1))
     {
       alarmState = 2;
     }
-    else if ((val_ALL == 0))
-    {
-      alarmState = 1;
-    }
+    // else if ((val_ALL == 0))
+    // {
+    //   alarmState = 1;
+    // }
   
     //++++++++++++++++++++++
     // prepare send mail depending on alarmState

@@ -74,7 +74,8 @@ known issues: OTA download not possible "not enouth space"
 
 #include <ESP_Mail_Client.h>
 
-#if BOARDTYPE == ESP32
+#ifdef ARDUINO_ARCH_ESP32
+// #if BOARDTYPE == ESP32
 
   #include <WiFi.h>
   #include <WiFiClient.h>
@@ -95,7 +96,8 @@ known issues: OTA download not possible "not enouth space"
 
 #endif
 
-#include <NTPClient.h>    // get time from timeserver
+// use time.h from Arduino.h 
+#include "time.h"                   // for time() ctime()
 
 #include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
@@ -114,7 +116,7 @@ extern CurrentLoopSensor currentLoopSensor();
 
 
 // definitions for analog-digital conversion
-#if BOARDTYPE == ESP32
+#ifdef ARDUINO_ARCH_ESP32
    TwoWire I2CSensors = TwoWire(0);
    Adafruit_ADS1115 ads;
    int16_t adc0;
@@ -136,14 +138,9 @@ uint32_t clientPreviousSs = 0;                // - clientIntervall;  // last sec
 const uint16_t clientIntervall = 0;                      // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
 const char *sendHttpTo = "http://192.168.178.153/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
 
-// int inByte = 0;
-// int incomingByte = 0; // for incoming serial data
-
 int alarmState    = 0;    // shows the actual water level
 int alarmStateOld = 0; // previous value of alarmState
 bool executeSendMail = false;
-
-int sendTestAlarm = 1000;
 
 int debugLevelSwitches_old = 0;
 
@@ -160,7 +157,11 @@ int debugLevelSwitches_old = 0;
 #define AUTHOR_PASSWORD "lwecoyvlkmordnly"
 
 /* Recipient email address */
-#define RECIPIENT_EMAIL "gzehentner@web.de"
+#ifdef isLiveSystem
+  #define RECIPIENT_EMAIL "gzehentner@web.de"
+#else
+  #define RECIPIENT_EMAIL "gzehentner@t-online.de"
+#endif
 
 /* Declare the global used SMTPSession object for SMTP transport */
 SMTPSession smtp;
@@ -196,15 +197,93 @@ const char *ssid = STASSID;
 const char *password = STAPSK;
 
 /*=================================================================*/
-/* Variables to connect to timeserver   */
-/* Define NTP Client to get time */
+/* ===========   prepare timeserver =================*/
 
+/* Configuration of NTP */
+#define MY_NTP_SERVER "at.pool.ntp.org"           
+#define MY_TZ "CET-1CEST,M3.5.0/02,M10.5.0/03"  
+
+
+/* Globals */
+time_t epochTime;                         // this are the seconds since Epoch (1970) - UTC
+
+// declare global variables
 String currentDate;   // hold the current date
 String formattedTime; // hold the current time
-unsigned long myEpochTime;
+
+
+void showTime() {
+  tm tmL;
+  time(&epochTime);                       // read the current time
+  localtime_r(&epochTime, &tmL);           // update the structure tm with the current time
+  Serial.print("year:");
+  Serial.print(tmL.tm_year + 1900);  // years since 1900
+  Serial.print("\tmonth:");
+  Serial.print(tmL.tm_mon + 1);      // January = 0 (!)
+  Serial.print("\tday:");
+  Serial.print(tmL.tm_mday);         // day of month
+  Serial.print("\thour:");
+  Serial.print(tmL.tm_hour);         // hours since midnight  0-23
+  Serial.print("\tmin:");
+  Serial.print(tmL.tm_min);          // minutes after the hour  0-59
+  Serial.print("\tsec:");
+  Serial.print(tmL.tm_sec);          // seconds after the minute  0-61*
+  Serial.print("\twday");
+  Serial.print(tmL.tm_wday);         // days since Sunday 0-6
+  if (tmL.tm_isdst == 1)             // Daylight Saving Time flag
+    Serial.print("\tDST");
+  else
+    Serial.print("\tstandard");
+  Serial.println();
+}
+
+void showTimeAlternative() {
+  //time_t epochTime;                       // this are the seconds since Epoch (1970) - UTC
+  tm tmL;                            // the structure tm holds time information in a more convenient way
+  time(&epochTime);                       // read the current time
+  localtime_r(&epochTime, &tmL);           // update the structure tm with the current time
+  char buffer[42] {0};              // a buffer large enough to hold your output
+  strftime (buffer, sizeof(buffer), "%H:%M", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
+  Serial.println(buffer);
+}
+
+// void getFormattedDateAndTime()
+// {
+//   //time_t epochTime;                       // this are the seconds since Epoch (1970) - UTC
+//   tm tmL;                           // the structure tm holds time information in a more convenient way
+//   time(&epochTime);                       // read the current time
+//   localtime_r(&epochTime, &tmL);          // update the structure tm with the current time
+  
+//   char buffer[42] {0};              // a buffer large enough to hold your output
+//   strftime (buffer, sizeof(buffer), "%H:%M:%S", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
+//   formattedTime = buffer;
+
+//   strftime (buffer, sizeof(buffer), "%F", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
+//   currentDate = buffer;
+
+// }
+
+void getEpochTime(time_t &epochTime)
+{
+  time(&epochTime);                       // read the current time
+}
+
+void formatDateAndTime(String &formattedTime, String &formattedDate, time_t epochTime)
+{
+  //time_t epochTime;                       // this are the seconds since Epoch (1970) - UTC
+  tm tmL;                           // the structure tm holds time information in a more convenient way
+  localtime_r(&epochTime, &tmL);          // update the structure tm with the current time
+  
+  char buffer[42] {0};              // a buffer large enough to hold your output
+  strftime (buffer, sizeof(buffer), "%H:%M:%S", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
+  formattedTime = buffer;
+
+  strftime (buffer, sizeof(buffer), "%F", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
+  formattedDate = buffer;
+
+}
 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 /* End Timeserver */
 
@@ -229,6 +308,9 @@ float pegel      = Level_AL/100.0; // waterlevel in m
 unsigned long previousMillisMemoryStatePrint;
 unsigned long WaitingTimeMemoryStatePrint = 1000;
 
+unsigned long previousMillis_halfSecondAction;
+unsigned long halfSecond;
+
 /*****************************************************************************************************************
  *****************************************************************************************************************
          S E T U P
@@ -238,10 +320,9 @@ unsigned long WaitingTimeMemoryStatePrint = 1000;
 void setup(void) {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
 
-  // pinMode(builtin_led, OUTPUT);
-//  digitalWrite(led, 0);
+  pinMode(builtin_led, OUTPUT);
 
- /*=================================================================*/
+  /*=================================================================*/
   /* setup serial  and connect to WLAN */
   Serial.begin(115200);
   Serial.println(F("\n" TXT_BOARDNAME "\nVersion: " VERSION " Board " TXT_BOARDID " "));
@@ -270,7 +351,8 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  #if (BOARDTYPE == ESP32)
+  #ifdef ARDUINO_ARCH_ESP32
+
     if (MDNS.begin("esp32")) {
       Serial.println("MDNS responder started");
     }
@@ -296,16 +378,17 @@ void setup(void) {
 
   config.login.user_domain = F("127.0.0.1");
 
-  /*
-  Set the NTP config time
-  For times east of the Prime Meridian use 0-12
-  For times west of the Prime Meridian add 12 to the offset.
-  Ex. American/Denver GMT would be -6. 6 + 12 = 18
-  See https://en.wikipedia.org/wiki/Time_zone for a list of the GMT/UTC timezone offsets
-  */
-  config.time.ntp_server = F("pool.ntp.org,time.nist.gov");
-  config.time.gmt_offset = 1;
-  config.time.day_light_offset = 1;
+
+  #ifdef ARDUINO_ARCH_ESP32
+    // ESP32 seems to be a little more complex:
+    configTime(0, 0, MY_NTP_SERVER);  // 0, 0 because we will use TZ in the next line
+    setenv("TZ", MY_TZ, 1);            // Set environment variable with your time zone
+    tzset();
+  #else
+    // ESP8266
+    configTime(MY_TZ, MY_NTP_SERVER);    // --> for the ESP8266 only
+  #endif
+
 
   /*=================================================================*/
   /* Prepare WaterLevel Application */
@@ -315,7 +398,8 @@ void setup(void) {
   pinMode(GPin_AHH, INPUT_PULLUP);
   pinMode(GPin_AH,  INPUT_PULLUP);
   pinMode(GPin_AL,  INPUT_PULLUP);
-  pinMode(GPin_ALL, INPUT_PULLUP);
+
+
 
   // for ESP32 we no longer use digital output for GND, but ESP32-GND
   #if (BOARDTYPE == ESP8266)
@@ -367,21 +451,11 @@ void setup(void) {
 
 
 
-  /*=================================================================*/
-  /* Initialize a NTPClient to get time */
-
-  timeClient.begin();
-  // Set offset time in seconds to adjust for your timezone, for example:
-  // GMT +1 = 3600
-  // GMT +8 = 28800
-  // GMT -1 = -3600
-  // GMT 0 = 0
-  timeClient.setTimeOffset(3600);
-
+  
   /*=================================================================*/
   beginCurrentLoopSensor();
   
-  #if (BOARDTYPE == ESP32)
+  #ifdef ARDUINO_ARCH_ESP32
     /*==================================================================*/
     // Prepare analog output
     //  pinMode(LED_PIN, OUTPUT);
@@ -406,6 +480,12 @@ void setup(void) {
       Serial.print("Gain: ");
       Serial.println(ads.getGain());
     }
+
+    // PSRAM?
+    log_d("Total heap: %d", ESP.getHeapSize());
+    log_d("Free heap: %d", ESP.getFreeHeap());
+    log_d("Total PSRAM: %d", ESP.getPsramSize());
+    log_d("Free PSRAM: %d", ESP.getFreePsram());
   #endif
 
 }
@@ -421,6 +501,20 @@ void setup(void) {
 
 void loop(void) {
 
+  // actions triggered every 500 ms
+  if (millis() - previousMillis_halfSecondAction > halfSecond)
+  {
+
+    /*=================================================================*/
+    /*  code for getting time from NTP       */
+    getEpochTime(epochTime);
+    formatDateAndTime(formattedTime, currentDate,epochTime);
+    /* End getting time and date */
+    
+    previousMillis_halfSecondAction = millis();
+  }
+
+
   delay(2);//allow the cpu to switch to other tasks
 
   if (debugLevelSwitches != debugLevelSwitches_old) {
@@ -428,18 +522,15 @@ void loop(void) {
       pinMode(GPin_AHH, OUTPUT);
       pinMode(GPin_AH,  OUTPUT);
       pinMode(GPin_AL,  OUTPUT);
-      pinMode(GPin_ALL, OUTPUT);
       
       digitalWrite(GPin_AHH, HIGH);
       digitalWrite(GPin_AH , HIGH);
       digitalWrite(GPin_AL , HIGH);
-      digitalWrite(GPin_ALL, HIGH);
       Serial.println("debug level enabled");
     } else {
       pinMode(GPin_AHH, INPUT_PULLUP);
       pinMode(GPin_AH,  INPUT_PULLUP);
       pinMode(GPin_AL, INPUT_PULLUP);
-      pinMode(GPin_ALL, INPUT_PULLUP);
       Serial.println("debug level disabled");
     }
   }
@@ -472,61 +563,30 @@ void loop(void) {
   SetAlarmState_from_relais();
 
   /*=================================================================*/
-  /*  code for getting time from NTP       */
-  timeClient.update();
-
-  time_t epochTime = timeClient.getEpochTime();
-
-  myEpochTime = timeClient.getEpochTime();
-
-  formattedTime = timeClient.getFormattedTime();
-
-  // Get a time structure
-  struct tm *ptm = gmtime((time_t *)&epochTime);
-
-  int monthDay = ptm->tm_mday;
-  int currentMonth = ptm->tm_mon + 1;
-  int currentYear = ptm->tm_year + 1900;
-
-  // Print complete date:
-  currentDate = String(currentYear) + "-" + String(currentMonth) + "-" + String(monthDay);
-
-
-  /* End getting time and date */
-
-
-  /*=================================================================*/
   /* Send Email reusing session   */
   /*=================================================================*/
 
-  // if (false)
   if (executeSendMail)
   {
-    executeSendMail = false;
+     executeSendMail = false;
 
-    Serial.println("GZE: 1 Email");
     SMTP_Message message;
-    Serial.println("GZE: 1b Email");
 
     message.sender.name = F("Pegel Zehentner");
     message.sender.email = AUTHOR_EMAIL;
     message.subject = subject;
-    Serial.println("GZE: 2 Email");
 
     message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL);
 
     // htmlMsg already set by Evaluate Sensor
     message.html.content = htmlMsg;
     message.text.content = F("");
-    Serial.println("GZE: 3 Email");
 
     Serial.println();
     Serial.println(F("Sending Email..."));
 
     if (!smtp.isLoggedIn())
     {
-      Serial.println("GZE: Starting log into smtp");
-
       /* Set the TCP response read timeout in seconds */
       smtp.setTCPTimeout(10);
       
@@ -565,20 +625,13 @@ void loop(void) {
     simulate changing waterlevel
    */
   #ifdef SIM_FADING_LEVEL
-  // dutycylce = Waterlevel2dutyCycle(pegel);
+    // change the dutycylce for next time through the loop:
+    pegel = pegel + fadeAmount;
 
-  // analogWrite(LED_PIN, dutycylce);
-
-  // change the dutycylce for next time through the loop:
-  pegel = pegel + fadeAmount;
-
-  // reverse the direction of the fading at the ends of the fade:
-  if (pegel <= Level_ALL/100.0-0.05 || pegel >= Level_AHH/100.0+0.05) {
-    fadeAmount = -fadeAmount;
-  }
-  // Serial.println("===================");
-  // Serial.print("pegel:     "); Serial.println(pegel);
-  // Serial.print("dutycylce: "); Serial.println(dutycylce);
+    // reverse the direction of the fading at the ends of the fade:
+    if (pegel <= Level_ALL/100.0-0.05 || pegel >= Level_AHH/100.0+0.05) {
+      fadeAmount = -fadeAmount;
+    }
   #endif // SIM_FADING_LEVEL
   
   #ifdef DEBUG_PRINT_RAW
