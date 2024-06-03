@@ -16,7 +16,7 @@
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 
-  #ifdef ARDUINO_ARCH_ESP32
+#ifdef ARDUINO_ARCH_ESP32
   // for Send-Mail
   // #include <ESP_Mail_Client.h>
 
@@ -605,7 +605,8 @@ void handleGraph()
   message +=  "   labels: xValues,";
   message +=  "   datasets: [{";
   message +=  "     fill: false,";
-  message +=  "     lineTension: 0,";
+  message +=  "     lineTension: 1,";
+  message +=  "     pointRadius: 2,";
   message +=  "     backgroundColor: \"rgba(0,0,255,1.0)\",";
   message +=  "     borderColor: \"rgba(0,0,255,0.5)\",";
   message +=  "     label: \"Wasserstand [mm]\",";
@@ -613,6 +614,7 @@ void handleGraph()
   message +=  "     },{";
   message +=  "     fill: false,";
   message +=  "     lineTension: 0,";
+  message +=  "     pointRadius: 0,";
   message +=  "     backgroundColor: \"rgba(0,255,0,0)\",";
   message +=  "     borderColor: \"rgba(0,255,0,0.3)\",";
   message +=  "     label: \"Warnschwelle: ";
@@ -622,6 +624,7 @@ void handleGraph()
   message +=  "     },{";
   message +=  "     fill: false,";
   message +=  "     lineTension: 0,";
+  message +=  "     pointRadius: 0,";
   message +=  "     backgroundColor: \"rgba(255,0,0,0)\",";
   message +=  "     borderColor: \"rgba(255,0,0,0.3)\",";
   message +=  "     label: \"Alarmschwelle: ";
@@ -643,13 +646,13 @@ void handleGraph()
   message +=  " });";
   message +=  " function generateWarnData(value, i1, i2, step = 1) {";
   message +=  "     for (let x = i1; x <= i2; x += step) {";
-  message +=  "       xValues.push(x);";
+  message +=  "       ;";
   message +=  "       graphYlevelWarn.push(eval(value));";
   message +=  "     }";
   message +=  "   }";
   message +=  " function generateErroData(value, i1, i2, step = 1) {";
   message +=  "     for (let x = i1; x <= i2; x += step) {";
-  message +=  "       xValues.push(x);";
+  message +=  "       ;";
   message +=  "       graphYlevelErro.push(eval(value));";
   message +=  "     }";
   message +=  "   }";
@@ -784,7 +787,8 @@ void handleLongtermGraph()
   message +=  "   labels: xValues,";
   message +=  "   datasets: [{";
   message +=  "     fill: false,";
-  message +=  "     lineTension: 0,";
+  message +=  "     lineTension: 1,";
+  message +=  "     pointRadius: 2,";
   message +=  "     backgroundColor: \"rgba(0,0,255,1.0)\",";
   message +=  "     borderColor: \"rgba(0,0,255,0.5)\",";
   message +=  "     label: \"Wasserstand [mm]\",";
@@ -792,6 +796,7 @@ void handleLongtermGraph()
   message +=  "     },{";
   message +=  "     fill: false,";
   message +=  "     lineTension: 0,";
+  message +=  "     pointRadius: 0,";
   message +=  "     backgroundColor: \"rgba(0,255,0,0)\",";
   message +=  "     borderColor: \"rgba(0,255,0,0.3)\",";
   message +=  "     label: \"Warnschwelle: ";
@@ -801,6 +806,7 @@ void handleLongtermGraph()
   message +=  "     },{";
   message +=  "     fill: false,";
   message +=  "     lineTension: 0,";
+  message +=  "     pointRadius: 0,";
   message +=  "     backgroundColor: \"rgba(255,0,0,0)\",";
   message +=  "     borderColor: \"rgba(255,0,0,0.3)\",";
   message +=  "     label: \"Alarmschwelle: ";
@@ -822,13 +828,13 @@ void handleLongtermGraph()
   message +=  " });";
   message +=  " function generateWarnData(value, i1, i2, step = 1) {";
   message +=  "     for (let x = i1; x <= i2; x += step) {";
-  message +=  "       xValues.push(x);";
+  message +=  "       ;";
   message +=  "       graphYlevelWarn.push(eval(value));";
   message +=  "     }";
   message +=  "   }";
   message +=  " function generateErroData(value, i1, i2, step = 1) {";
   message +=  "     for (let x = i1; x <= i2; x += step) {";
-  message +=  "       xValues.push(x);";
+  message +=  "       ;";
   message +=  "       graphYlevelErro.push(eval(value));";
   message +=  "     }";
   message +=  "   }";

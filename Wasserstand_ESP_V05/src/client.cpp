@@ -5,7 +5,7 @@
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 
-  #ifdef ARDUINO_ARCH_ESP32
+#ifdef ARDUINO_ARCH_ESP32
   // for Send-Mail
   // #include <ESP_Mail_Client.h>
 

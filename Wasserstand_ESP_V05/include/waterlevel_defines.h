@@ -9,7 +9,7 @@ Some basic defines for the whole project
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "5.2" // the version of this sketch
+  #define VERSION "5.3" // the version of this sketch
 
   
 
@@ -90,7 +90,7 @@ Some basic defines for the whole project
   
     // #define DEBUG_PRINT_RAW  // print raw voltage values without calculating current values; used for debug ADC function
     #define SIM_VALUES  // use small values for loops to get a fast simulation of firmware
-    #define SIM_FADING_LEVEL  // generate a fading value for analog input to simulate funkctions without an external electronic
+    // #define SIM_FADING_LEVEL  // generate a fading value for analog input to simulate funkctions without an external electronic
   #endif
 
   // length of ring buffer
@@ -101,7 +101,8 @@ Some basic defines for the whole project
   const int maxPoints = 100;
 
   #ifdef SIM_VALUES
-    const int  filterCntMax = 10;        // time for myvalue: measureInterval * filterCntMax  
+  //  const int  filterCntMax = 1;  //  GZE: zum Test ganz ohne Filter!!       // time for myvalue: measureInterval * filterCntMax  
+  const int  filterCntMax = 10;        // time for myvalue: measureInterval * filterCntMax  
     const unsigned long  longtermInterval = 10000;  // time between two saved values in ms
   #else
     const int  filterCntMax = 1800; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes

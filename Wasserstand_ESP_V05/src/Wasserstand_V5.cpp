@@ -1,8 +1,12 @@
 /*
 =============================================
-Wasserstand_V6
-- comming soon
-- merge from V04 and V05: should run for ESP32 and EWP8622
+Wasserstand_V5
+V5.3
+- runs OK on ESP32
+- some bugs fixed 
+  - crash with sending mail
+  - crash because overload of string
+next step: adapt to ESP 8266
 =============================================
 Wasserstand_V4
 
@@ -318,7 +322,7 @@ unsigned long halfSecond;
  *****************************************************************************************************************/
 
 void setup(void) {
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
+ // WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
 
   pinMode(builtin_led, OUTPUT);
 
