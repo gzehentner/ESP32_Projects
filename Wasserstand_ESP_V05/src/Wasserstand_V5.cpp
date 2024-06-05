@@ -105,8 +105,10 @@ known issues: OTA download not possible "not enouth space"
 
 #include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
-#include "soc/soc.h"            // disable brownout detector
-#include "soc/rtc_cntl_reg.h"   // disable brownout detector
+#ifdef ARDUINO_ARCH_ESP32
+  #include "soc/soc.h"            // disable brownout detector
+  #include "soc/rtc_cntl_reg.h"   // disable brownout detector
+#endif
 
 #include <server.h>
 #include <timeserver.h>
@@ -322,7 +324,9 @@ unsigned long halfSecond;
  *****************************************************************************************************************/
 
 void setup(void) {
- // WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
+   #ifdef ARDUINO_ARCH_ESP32
+     // WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
+   #endif
 
   pinMode(builtin_led, OUTPUT);
 

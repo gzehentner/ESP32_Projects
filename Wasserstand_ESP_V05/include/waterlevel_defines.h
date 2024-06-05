@@ -94,11 +94,11 @@ Some basic defines for the whole project
   #endif
 
   // length of ring buffer
-  #define iRingValueMax  100 // 50 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
+  #define iRingValueMax  1000 // 50 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
   #define iLongtermRingValueMax 120 // 10// 120 // 370 // one value a day, buffer for one year (now we have four values a day so we have one month)
   // maximum lines to be printed and points in graph
-  const int maxLines  = 100;
-  const int maxPoints = 100;
+  const int maxLines  = 1000;
+  const int maxPoints = 1000;
 
   #ifdef SIM_VALUES
   //  const int  filterCntMax = 1;  //  GZE: zum Test ganz ohne Filter!!       // time for myvalue: measureInterval * filterCntMax  
