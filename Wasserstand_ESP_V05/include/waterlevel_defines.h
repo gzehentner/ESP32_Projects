@@ -58,7 +58,7 @@ Some basic defines for the whole project
   #ifndef isLiveSystem
     // Testpad with external poti to simulate sensor needs a factor to be in working range
     //    for life system factor has to be 1
-    #define DEBUG_VOLT_MULT 44
+    #define DEBUG_VOLT_MULT 1
   #else
     #define DEBUG_VOLT_MULT 1
   #endif
