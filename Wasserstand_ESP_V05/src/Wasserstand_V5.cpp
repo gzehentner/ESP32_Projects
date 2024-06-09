@@ -117,6 +117,9 @@ known issues: OTA download not possible "not enouth space"
 
   #include <ESP_Mail_Client.h>
   #include <ESP8266mDNS.h>  // Bonjour/multicast DNS, finds the device on network by name
+  #include <NTPClient.h>    // get time from timeserver
+  #include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
+
 
   // use time.h from Arduino.h 
   #include "time.h"                   // for time() ctime()
