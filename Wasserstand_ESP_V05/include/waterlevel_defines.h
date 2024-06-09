@@ -3,7 +3,6 @@
 Some basic defines for the whole project
 
 */
-
 // #define isLiveSystem;
 
 #ifndef WATERLEVEL_DEFINES_H

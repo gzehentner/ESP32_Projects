@@ -16,11 +16,10 @@
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 
-  #ifdef ARDUINO_ARCH_ESP32
-  // for Send-Mail
-  // #include <ESP_Mail_Client.h>
+  #if (BOARDTYPE == ESP32)
 
   #include <WiFi.h>
+  #include <ESP_Mail_Client.h>
   #include <WiFiClient.h>
   #include <WebServer.h>
   #include <ESPmDNS.h>
@@ -33,16 +32,19 @@
   #include <ESP_Mail_Client.h>
 
   #include <ESP8266WiFi.h>
+  #include <ESP8266mDNS.h>       // Bonjour/multicast DNS, finds the device on network by name
+  
   #include <WiFiClient.h>
+  
   #include <ESP8266WebServer.h>  // for the webserver
   #include <ESP8266HTTPClient.h> // for the webclient https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266HTTPClient
-  #include <ESP8266mDNS.h>       // Bonjour/multicast DNS, finds the device on network by name
   #include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
 
   #include <NTPClient.h> // get time from timeserver
   #include <WiFiUdp.h>
 
   ESP8266WebServer server(80); // an instance for the webserver
+ 
 
 #endif
 
@@ -60,36 +62,37 @@ int firstRun = 1;
 
 int debugLevelSwitches=0;
 
-// void handleRoot() {
-//   digitalWrite(builtin_led, 1);
-//   char temp[400];
-//   int sec = millis() / 1000;
-//   int min = sec / 60;
-//   int hr = min / 60;
+/*
+void handleRoot() {
+  digitalWrite(builtin_led, 1);
+  char temp[400];
+  int sec = millis() / 1000;
+  int min = sec / 60;
+  int hr = min / 60;
 
-//   snprintf(temp, 400,
+  snprintf(temp, 400,
 
-//            "<html>\
-//   <head>\
-//     <meta http-equiv='refresh' content='5'/>\
-//     <title>ESP32 Demo</title>\
-//     <style>\
-//       body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-//     </style>\
-//   </head>\
-//   <body>\
-//     <h1>Hello from ESP32!</h1>\
-//     <p>Uptime: %02d:%02d:%02d</p>\
-//     <img src=\"/test.svg\" />\
-//   </body>\
-// </html>",
+           "<html>\
+  <head>\
+    <meta http-equiv='refresh' content='5'/>\
+    <title>ESP32 Demo</title>\
+    <style>\
+      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
+    </style>\
+  </head>\
+  <body>\
+    <h1>Hello from ESP32!</h1>\
+    <p>Uptime: %02d:%02d:%02d</p>\
+    <img src=\"/test.svg\" />\
+  </body>\
+</html>",
 
-//            hr, min % 60, sec % 60
-//           );
-//   server.send(200, "text/html", temp);
-//   digitalWrite(builtin_led, 0);
-// }
-
+           hr, min % 60, sec % 60
+          );
+  server.send(200, "text/html", temp);
+  digitalWrite(builtin_led, 0);
+}
+*/
 /* =======================================*/
 void handleNotFound() {
 /* =======================================*/
@@ -970,7 +973,7 @@ void handleCommand()
     {
       Serial.println(F("D232 toggle ahh"));
 
-      if (simVal_AHH = digitalRead(GPin_AHH))
+      if (simVal_AHH == digitalRead(GPin_AHH))
       { // toggle: if the pin was on - switch it of and vice versa
         digitalWrite(GPin_AHH, LOW);
       }
@@ -982,7 +985,7 @@ void handleCommand()
     if (server.arg(0) == "2") // the value for that parameter
     {
       Serial.println(F("D232 toggle ah"));
-      if (simVal_AH  = digitalRead(GPin_AH))
+      if (simVal_AH  == digitalRead(GPin_AH))
       {
         digitalWrite(GPin_AH, LOW);
       }
@@ -995,7 +998,7 @@ void handleCommand()
     {
       Serial.println(F("D232 toggle al"));
 
-      if (simVal_AL  = digitalRead(GPin_AL))
+      if (simVal_AL  == digitalRead(GPin_AL))
       { // toggle: if the pin was on - switch it of and vice versa
         digitalWrite(GPin_AL, LOW);
       }
@@ -1036,6 +1039,7 @@ void handleCommand()
   }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
+
 
 //}
 /*

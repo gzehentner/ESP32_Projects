@@ -5,9 +5,9 @@
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 
-  #ifdef ARDUINO_ARCH_ESP32
+  #if BOARDTYPE == ESP32
   // for Send-Mail
-  // #include <ESP_Mail_Client.h>
+  #include <ESP_Mail_Client.h>
 
   #include <WiFi.h>
   #include <WiFiClient.h>
@@ -16,59 +16,62 @@
   #include <ESPmDNS.h>
 
 #else // BOARDTYPE == ESP8266)
-   Achtung! noch nicht ausprogrammiert
+   // Achtung! noch nicht ausprogrammiert
+   #include <ESP_Mail_Client.h>
+   #include <ESP8266HTTPClient.h>                             // for the webclient https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266HTTPClient
 #endif
 
 void sendPost()
 // send data as POST to another webserver
 // V3 no Arduino String class for sending data
 {
-  WiFiClient wificlient;
-  HTTPClient client;
-  const size_t MESSAGE_SIZE_MAX = 300;                     // maximum bytes for Message Buffer
-  char message[MESSAGE_SIZE_MAX];                          // the temporary sending message - html body
-  char val[32];                                            // buffer to convert floats and integers before appending
 
-  strcpy(message, "board=");                               // Append chars
-  strcat(message, TXT_BOARDID);
+WiFiClient wificlient;
+HTTPClient client;
+const size_t MESSAGE_SIZE_MAX = 300;                     // maximum bytes for Message Buffer
+char message[MESSAGE_SIZE_MAX];                          // the temporary sending message - html body
+char val[32];                                            // buffer to convert floats and integers before appending
 
-  strcat(message, "&debug level switches=");
-  itoa(debugLevelSwitches, val, 10);
-  strcat(message, val);
+strcpy(message, "board=");                               // Append chars
+strcat(message, TXT_BOARDID);
 
-  strcat(message, "&AHH=");
-  itoa(digitalRead(GPin_AHH), val, 10);
-  strcat(message, val);
+strcat(message, "&debug level switches=");
+itoa(debugLevelSwitches, val, 10);
+strcat(message, val);
 
-  strcat(message, "&AH=");
-  itoa(digitalRead(GPin_AH), val, 10);
-  strcat(message, val);
+strcat(message, "&AHH=");
+itoa(digitalRead(GPin_AHH), val, 10);
+strcat(message, val);
 
-  strcat(message, "&AL=");
-  itoa(digitalRead(GPin_AL), val, 10);
-  strcat(message, val);
+strcat(message, "&AH=");
+itoa(digitalRead(GPin_AH), val, 10);
+strcat(message, val);
 
-  // strcat(message, "&ALL=");
-  // itoa(digitalRead(GPin_ALL), val, 10);
-  // strcat(message, val);
+strcat(message, "&AL=");
+itoa(digitalRead(GPin_AL), val, 10);
+strcat(message, val);
 
-  // strcat(message, "&button1=");
-  // itoa(digitalRead(BUTTON1_PIN), val, 10);
-  // strcat(message, val);
+// strcat(message, "&ALL=");
+// itoa(digitalRead(GPin_ALL), val, 10);
+// strcat(message, val);
 
-  float example = 1234.5678;                               // example how to append floats to the message
-  strcat(message, "&float=");
-  dtostrf(example, 6, 2, val);
-  strcat(message, val);
+// strcat(message, "&button1=");
+// itoa(digitalRead(BUTTON1_PIN), val, 10);
+// strcat(message, val);
 
-  client.begin(wificlient, sendHttpTo);                                        // Specify request destination
-  client.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Specify content-type header
-  int httpCode = client.POST(message);                                         // Send the request
-  client.writeToStream(&Serial);                                               // Debug only: Output of received data
-  Serial.print(F("\nhttpCode: "));                                             
-  Serial.println(httpCode);                                                    // Print HTTP return code
+float example = 1234.5678;                               // example how to append floats to the message
+strcat(message, "&float=");
+dtostrf(example, 6, 2, val);
+strcat(message, val);
 
-  client.end();  //Close connection
+client.begin(wificlient, sendHttpTo);                                        // Specify request destination
+client.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Specify content-type header
+int httpCode = client.POST(message);                                         // Send the request
+client.writeToStream(&Serial);                                               // Debug only: Output of received data
+Serial.print(F("\nhttpCode: "));                                             
+Serial.println(httpCode);                                                    // Print HTTP return code
+
+client.end();  //Close connection
 }
 
 
