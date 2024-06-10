@@ -16,11 +16,10 @@
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 
-#ifdef ARDUINO_ARCH_ESP32
-  // for Send-Mail
-  // #include <ESP_Mail_Client.h>
+  #if (BOARDTYPE == ESP32)
 
   #include <WiFi.h>
+  #include <ESP_Mail_Client.h>
   #include <WiFiClient.h>
   #include <WebServer.h>
   #include <ESPmDNS.h>
@@ -33,16 +32,19 @@
   #include <ESP_Mail_Client.h>
 
   #include <ESP8266WiFi.h>
+  #include <ESP8266mDNS.h>       // Bonjour/multicast DNS, finds the device on network by name
+  
   #include <WiFiClient.h>
+  
   #include <ESP8266WebServer.h>  // for the webserver
   #include <ESP8266HTTPClient.h> // for the webclient https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266HTTPClient
-  #include <ESP8266mDNS.h>       // Bonjour/multicast DNS, finds the device on network by name
   #include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
 
   #include <NTPClient.h> // get time from timeserver
   #include <WiFiUdp.h>
 
   ESP8266WebServer server(80); // an instance for the webserver
+ 
 
 #endif
 
@@ -925,7 +927,7 @@ void handleCommand()
     {
       Serial.println(F("D232 toggle ahh"));
 
-      if (simVal_AHH = digitalRead(GPin_AHH))
+      if (simVal_AHH == digitalRead(GPin_AHH))
       { // toggle: if the pin was on - switch it of and vice versa
         digitalWrite(GPin_AHH, LOW);
       }
@@ -937,7 +939,7 @@ void handleCommand()
     if (server.arg(0) == "2") // the value for that parameter
     {
       Serial.println(F("D232 toggle ah"));
-      if (simVal_AH  = digitalRead(GPin_AH))
+      if (simVal_AH  == digitalRead(GPin_AH))
       {
         digitalWrite(GPin_AH, LOW);
       }
@@ -950,7 +952,7 @@ void handleCommand()
     {
       Serial.println(F("D232 toggle al"));
 
-      if (simVal_AL  = digitalRead(GPin_AL))
+      if (simVal_AL  == digitalRead(GPin_AL))
       { // toggle: if the pin was on - switch it of and vice versa
         digitalWrite(GPin_AL, LOW);
       }
@@ -991,6 +993,7 @@ void handleCommand()
   }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
+
 
 //}
 /*
