@@ -44,11 +44,6 @@ Some basic defines for the whole project
   /*=================================================================*/
   /* Prepare WaterLevel Application */
 
-  /* -- Pin-Def -- */  // Board159
-  #define GPin_AHH  2  // blau   rot
-  #define GPin_AH  13  // grau   grün
-  #define GPin_AL  12  // lila   gelb
-  // #define GPin_ALL 16  // grün   orange (GPIO16 is not usable, because it is used for PSRAM)
 
   #if BOARDTYPE == ESP8266
 
