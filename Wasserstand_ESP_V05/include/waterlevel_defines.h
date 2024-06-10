@@ -9,7 +9,7 @@ Some basic defines for the whole project
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "5.3" // the version of this sketch
+  #define VERSION "5.4" // the version of this sketch
 
   
 
