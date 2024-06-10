@@ -100,9 +100,6 @@ known issues: OTA download not possible "not enouth space"
     #include <Adafruit_ADS1X15.h>
   #endif
 
-  #include "soc/soc.h"            // disable brownout detector
-  #include "soc/rtc_cntl_reg.h"   // disable brownout detector
-
   WebServer server(80);
 
   #include <server.h>
@@ -137,29 +134,12 @@ known issues: OTA download not possible "not enouth space"
 
 #endif
 
-<<<<<<< HEAD
-// use time.h from Arduino.h 
-#include "time.h"                   // for time() ctime()
-
-#include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
-
-#ifdef ARDUINO_ARCH_ESP32
-  #include "soc/soc.h"            // disable brownout detector
-  #include "soc/rtc_cntl_reg.h"   // disable brownout detector
-#endif
-
-#include <server.h>
-#include <timeserver.h>
-#include <NoiascaCurrentLoop.h>   // library for analog measurement
-#include <EvaluateSensor.h>
 
 extern CurrentLoopSensor currentLoopSensor();
 
 
-#include <client.h>
+#include <ProjClient.h>
 
-=======
->>>>>>> 2f6099e1bf90f865627453ba8f95d8b651558e5f
 
 // definitions for analog-digital conversion
 #ifdef ARDUINO_ARCH_ESP32
@@ -167,8 +147,6 @@ extern CurrentLoopSensor currentLoopSensor();
    Adafruit_ADS1115 ads;
    int16_t adc0;
 #endif
-
-extern CurrentLoopSensor currentLoopSensor();
 
 /********************************************************************
          Globals - Variables and constants
@@ -366,20 +344,12 @@ unsigned long halfSecond;
  *****************************************************************************************************************/
 
 void setup(void) {
-<<<<<<< HEAD
 
   #if BOARDTYPE == ESP32
-     WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
+//     WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
   #endif 
-=======
->>>>>>> 2f6099e1bf90f865627453ba8f95d8b651558e5f
 
-  // #if BOARDTYPE == ESP32
-  //   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
-  // #endif 
-
-   pinMode(builtin_led, OUTPUT);
-   
+  pinMode(builtin_led, OUTPUT);
 
   /*=================================================================*/
   /* setup serial  and connect to WLAN */
@@ -415,13 +385,15 @@ void setup(void) {
     if (MDNS.begin("esp32")) {
       Serial.println("MDNS responder started");
     }
-  #else
-    if (MDNS.begin("esp8266")) {
+    #else
+    {
+      if (MDNS.begin("esp8266"))
         Serial.println(F("MDNS responder started"));
+      }
     }
   #endif
   /*=================================================================*/
-  /* Prepare SendMail */
+  // /* Prepare SendMail */
 
   MailClient.networkReconnect(true);
   smtp.debug(1);
@@ -446,11 +418,12 @@ void setup(void) {
     configTime(MY_TZ, MY_NTP_SERVER);    // --> for the ESP8266 only
   #endif
 
+
   /*=================================================================*/
   /* Prepare WaterLevel Application */
 
   // prepare relais input / output
-  
+
   pinMode(GPin_AHH, INPUT_PULLUP);
   pinMode(GPin_AH,  INPUT_PULLUP);
   pinMode(GPin_AL,  INPUT_PULLUP);
@@ -505,9 +478,11 @@ void setup(void) {
   ArduinoOTA.setHostname(myhostname); // give a name to your ESP for the Arduino IDE
   ArduinoOTA.begin();                 // OTA Upload via ArduinoIDE https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html
 
+
+
+  
   /*=================================================================*/
   beginCurrentLoopSensor();
-
   
   #ifdef ARDUINO_ARCH_ESP32
     /*==================================================================*/
@@ -572,8 +547,7 @@ void loop(void) {
   delay(2);//allow the cpu to switch to other tasks
 
   if (debugLevelSwitches != debugLevelSwitches_old) {
-    if (debugLevelSwitches) 
-    {
+    if (debugLevelSwitches) {
       pinMode(GPin_AHH, OUTPUT);
       pinMode(GPin_AH,  OUTPUT);
       pinMode(GPin_AL,  OUTPUT);
@@ -590,6 +564,7 @@ void loop(void) {
     }
   }
   debugLevelSwitches_old = debugLevelSwitches;
+
 
   /*=================================================================*/
   /* WebClient */
@@ -616,11 +591,9 @@ void loop(void) {
 
   SetAlarmState_from_relais();
 
-
   /*=================================================================*/
   /* Send Email reusing session   */
   /*=================================================================*/
-
 
   if (executeSendMail)
   {
