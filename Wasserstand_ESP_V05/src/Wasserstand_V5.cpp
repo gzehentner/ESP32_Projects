@@ -324,9 +324,10 @@ unsigned long halfSecond;
  *****************************************************************************************************************/
 
 void setup(void) {
-   #ifdef ARDUINO_ARCH_ESP32
+
+  #if BOARDTYPE == ESP32
      WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
-   #endif
+  #endif 
 
   pinMode(builtin_led, OUTPUT);
 
