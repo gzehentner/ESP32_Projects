@@ -28,9 +28,7 @@
 #include <NoiascaCurrentLoop.h>
 #include <waterlevel_defines.h>
 
-#if BOARDTYPE == ESP8266
-  const int maxAdc_value = 0x3FF;   // 10bit ADC
-#else
+#ifdef USE_ADS1115
   #include <waterlevel.h>
 
   #include <Wire.h>
@@ -38,6 +36,8 @@
   #include <Adafruit_ADS1X15.h>
   const int maxAdc_value = 0x7FFF;  // 15bit ADC
   const float mili_volt_per_bit = 0.125 ;  // with gain = 1
+#else
+  const int maxAdc_value = 0x3FF;   // 10bit ADC
 #endif
 
 CurrentLoopSensor::CurrentLoopSensor(byte pin, uint16_t resistor, byte vref, uint16_t maxValue) :
@@ -45,12 +45,12 @@ CurrentLoopSensor::CurrentLoopSensor(byte pin, uint16_t resistor, byte vref, uin
   resistor (resistor),
   vref (vref),
   maxValue (maxValue),
-  #if BOARDTYPE == ESP8266
-    minAdc (210), // (0.004 * resistor * maxAdc_value / (vref / 10.0)),
-    maxAdc (0.020 * resistor * maxAdc_value / (vref / 10.0))
-  #else
+  #ifdef USE_ADS1115
     minAdc (0.004 * resistor / mili_volt_per_bit * 1000),
     maxAdc (0.020 * resistor / mili_volt_per_bit * 1000)
+  #else
+    minAdc (210), // (0.004 * resistor * maxAdc_value / (vref / 10.0)),
+    maxAdc (0.020 * resistor * maxAdc_value / (vref / 10.0))
   #endif
   {}
 

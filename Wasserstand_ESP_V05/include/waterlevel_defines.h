@@ -8,17 +8,18 @@ Some basic defines for the whole project
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "5.4" // the version of this sketch
+  #define VERSION "6.0" // the version of this sketch
 
   
 
-  #ifndef ARDUINO_ARCH_ESP32               // if it is not a board with ESP32, then a
-    #define BOARDTYPE ESP8266                // Board with ESP8266 is used (internal ADC)
-  #else
+  #ifdef ARDUINO_ARCH_ESP32               // if it is not a board with ESP32, then a
     #define BOARDTYPE ESP32
+    #define USE_ADS1115
+  #else
+    #define BOARDTYPE ESP8266                // Board with ESP8266 is used (internal ADC)
   #endif
 
-  #ifdef ARDUINO_ARCH_ESP32
+  #ifdef USE_ADS1115
 
     #include <Wire.h>
     #include <Adafruit_Sensor.h>
@@ -33,11 +34,11 @@ Some basic defines for the whole project
   #ifdef isLiveSystem
 
     #define TXT_BOARDID "164"                   // an ID for the board
-    #define TXT_BOARDNAME "Wasserstand-Messung" // the name of the board
+    #define TXT_BOARDNAME BOARDTYPE & "Wasserstand" // the name of the board
     #define CSS_MAINCOLOR "blue"                // don't get confused by the different webservers and use different colors
   #else
     #define TXT_BOARDID "Develop"           // show that something is configured as development version
-    #define TXT_BOARDNAME "Wasserstand-Messung" // the name of the board
+    #define TXT_BOARDNAME BOARDTYPE & "Wasserstand" // the name of the board
     #define CSS_MAINCOLOR "blue"                // don't get confused by the different webservers and use different colors
   #endif
   /*=================================================================*/
@@ -70,24 +71,36 @@ Some basic defines for the whole project
   #endif
 
   // definitions for analog-digital conversion
-  #ifdef ARDUINO_ARCH_ESP32
+  #ifdef USE_ADS1115
     #define GET_ANALOG ads.readADC_Differential_0_1() * DEBUG_VOLT_MULT
     #define ADC_BIT  15  // only 15 bit for single ended signals
     #define Ain_Level 0  // input = adc0
 
-    #define I2C_SDA 14
-    #define I2C_SCL 15
+    #if BOARDTYPE == ESP32
+      #define I2C_SDA 14
+      #define I2C_SCL 15
+    #else
+      No I2C defined for ESP8266
+    #endif
 
-    // pin of builtin led
-    const int builtin_led = 4;
 
-  #else // BOARDTYPE == ESP8266
+
+  #else // use builtin ADC
+    #if BOARDTYPE == ESP32
+      Builtin ADC cannot be used with ESP32
+    #endif
+
     #define GET_ANALOG analogRead(pin)
     #define ADC_BIT 10
     #define Ain_Level 12 
     #define PWM_OUT 1 // PWM-Output to IO1
+  #endif
 
-    #define builtin_led 2
+  #if BOARDTYPE == ESP32
+        // pin of builtin led
+    const int builtin_led = 4;
+  #else
+    #define builtin_led 2 
     #define BLUE_LED builtin_led
   #endif
 

@@ -1,5 +1,10 @@
 /*
 =============================================
+Wasserstand_V6
+V6.0
+- both builds OK
+- tests are to be done
+=============================================
 Wasserstand_V5
 V5.3
 - runs OK on ESP32
@@ -74,13 +79,11 @@ known issues: OTA download not possible "not enouth space"
 /************************************ */
 /* includes                           */
 /************************************ */
+#include <waterlevel_defines.h>
 
-#ifdef ARDUINO_ARCH_ESP32
-  #define BOARDTYPE ESP32
-// #if BOARDTYPE == ESP32
+#if BOARDTYPE == ESP32
   #include <Arduino.h>
 
-  #include <waterlevel_defines.h>
   #include <waterlevel.h>
 
   #include <ESP_Mail_Client.h>
@@ -100,6 +103,9 @@ known issues: OTA download not possible "not enouth space"
     #include <Adafruit_ADS1X15.h>
   #endif
 
+  #include "soc/soc.h"            // disable brownout detector
+  #include "soc/rtc_cntl_reg.h"   // disable brownout detector
+
   WebServer server(80);
 
   #include <server.h>
@@ -113,12 +119,11 @@ known issues: OTA download not possible "not enouth space"
 #else
   #include <Arduino.h>
 
-  #include <waterlevel_defines.h>
   #include <waterlevel.h>
 
   #include <ESP_Mail_Client.h>
   #include <ESP8266mDNS.h>  // Bonjour/multicast DNS, finds the device on network by name
-  #include <NTPClient.h>    // get time from timeserver
+  //#include <NTPClient.h>    // get time from timeserver
   #include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
 
 
@@ -142,7 +147,7 @@ extern CurrentLoopSensor currentLoopSensor();
 
 
 // definitions for analog-digital conversion
-#ifdef ARDUINO_ARCH_ESP32
+#ifdef USE_ADS1115
    TwoWire I2CSensors = TwoWire(0);
    Adafruit_ADS1115 ads;
    int16_t adc0;
@@ -346,7 +351,7 @@ unsigned long halfSecond;
 void setup(void) {
 
   #if BOARDTYPE == ESP32
-//     WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
+     WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
   #endif 
 
   pinMode(builtin_led, OUTPUT);
@@ -380,18 +385,17 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  #ifdef ARDUINO_ARCH_ESP32
+  #if BOARDTPYE == ESP32
 
     if (MDNS.begin("esp32")) {
       Serial.println("MDNS responder started");
     }
     #else
-    {
-      if (MDNS.begin("esp8266"))
-        Serial.println(F("MDNS responder started"));
+    
+    if (MDNS.begin("esp8266")) {
+      Serial.println(F("MDNS responder started"));
       }
-    }
-  #endif
+    #endif
   /*=================================================================*/
   // /* Prepare SendMail */
 
@@ -408,7 +412,7 @@ void setup(void) {
   config.login.user_domain = F("127.0.0.1");
 
 
-  #ifdef ARDUINO_ARCH_ESP32
+  #if BOARDTPYE == ESP32
     // ESP32 seems to be a little more complex:
     configTime(0, 0, MY_NTP_SERVER);  // 0, 0 because we will use TZ in the next line
     setenv("TZ", MY_TZ, 1);            // Set environment variable with your time zone
@@ -484,7 +488,7 @@ void setup(void) {
   /*=================================================================*/
   beginCurrentLoopSensor();
   
-  #ifdef ARDUINO_ARCH_ESP32
+  #ifdef USE_ADS1115
     /*==================================================================*/
     // Prepare analog output
     //  pinMode(LED_PIN, OUTPUT);
