@@ -62,37 +62,6 @@ int firstRun = 1;
 
 int debugLevelSwitches=0;
 
-/*
-void handleRoot() {
-  digitalWrite(builtin_led, 1);
-  char temp[400];
-  int sec = millis() / 1000;
-  int min = sec / 60;
-  int hr = min / 60;
-
-  snprintf(temp, 400,
-
-           "<html>\
-  <head>\
-    <meta http-equiv='refresh' content='5'/>\
-    <title>ESP32 Demo</title>\
-    <style>\
-      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-    </style>\
-  </head>\
-  <body>\
-    <h1>Hello from ESP32!</h1>\
-    <p>Uptime: %02d:%02d:%02d</p>\
-    <img src=\"/test.svg\" />\
-  </body>\
-</html>",
-
-           hr, min % 60, sec % 60
-          );
-  server.send(200, "text/html", temp);
-  digitalWrite(builtin_led, 0);
-}
-*/
 /* =======================================*/
 void handleNotFound() {
 /* =======================================*/
@@ -132,27 +101,6 @@ void handleNotFound() {
 //   server.send(200, "image/svg+xml", out);
 // }
 
-// /* =======================================*/
-// void handleNotFound()
-// {
-//   /* =======================================*/
-//   // Output a "404 not found" page. It includes the parameters which comes handy for test purposes.
-//   Serial.println(F("D015 handleNotFound()"));
-//   String message;
-//   message += F("404 - File Not Found\n"
-//                "URI: ");
-//   message += server.uri();
-//   message += F("\nMethod: ");
-//   message += (server.method() == HTTP_GET) ? "GET" : "POST";
-//   message += F("\nArguments: ");
-//   message += server.args();
-//   message += F("\n");
-//   for (uint8_t i = 0; i < server.args(); i++)
-//   {
-//     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-//   }
-//   server.send(404, "text/plain", message);
-// }
 
 // /* =======================================*/
 // void handle204()
@@ -405,7 +353,7 @@ void handleListFiltered()
   // 2 - message length: 3909
   
   String message = "";
-  message.reserve(7000);
+  message.reserve(70000);
 
   String formattedTimeL= "";
   String formattedDateL= "";
@@ -505,10 +453,10 @@ void handleGraph()
 /* =======================================*/
 {
   String graphXValues = "";     // values for graph (displayed)
-  graphXValues.reserve(1500);
+  graphXValues.reserve(15000);
 
   String graphYValues = "";
-  graphYValues.reserve(800);
+  graphYValues.reserve(8000);
 
   String formattedTimeL= "";
   String formattedDateL= "";
@@ -559,7 +507,7 @@ void handleGraph()
 
 
   String message;
-  message.reserve(5000);
+  message.reserve(50000);
   addTop(message);
 
 
@@ -608,7 +556,8 @@ void handleGraph()
   message +=  "   labels: xValues,";
   message +=  "   datasets: [{";
   message +=  "     fill: false,";
-  message +=  "     lineTension: 0,";
+  message +=  "     lineTension: 1,";
+  message +=  "     pointRadius: 1,";
   message +=  "     backgroundColor: \"rgba(0,0,255,1.0)\",";
   message +=  "     borderColor: \"rgba(0,0,255,0.5)\",";
   message +=  "     label: \"Wasserstand [mm]\",";
@@ -616,6 +565,7 @@ void handleGraph()
   message +=  "     },{";
   message +=  "     fill: false,";
   message +=  "     lineTension: 0,";
+  message +=  "     pointRadius: 0,";
   message +=  "     backgroundColor: \"rgba(0,255,0,0)\",";
   message +=  "     borderColor: \"rgba(0,255,0,0.3)\",";
   message +=  "     label: \"Warnschwelle: ";
@@ -625,6 +575,7 @@ void handleGraph()
   message +=  "     },{";
   message +=  "     fill: false,";
   message +=  "     lineTension: 0,";
+  message +=  "     pointRadius: 0,";
   message +=  "     backgroundColor: \"rgba(255,0,0,0)\",";
   message +=  "     borderColor: \"rgba(255,0,0,0.3)\",";
   message +=  "     label: \"Alarmschwelle: ";
@@ -646,13 +597,13 @@ void handleGraph()
   message +=  " });";
   message +=  " function generateWarnData(value, i1, i2, step = 1) {";
   message +=  "     for (let x = i1; x <= i2; x += step) {";
-  message +=  "       xValues.push(x);";
+  message +=  "       ;";
   message +=  "       graphYlevelWarn.push(eval(value));";
   message +=  "     }";
   message +=  "   }";
   message +=  " function generateErroData(value, i1, i2, step = 1) {";
   message +=  "     for (let x = i1; x <= i2; x += step) {";
-  message +=  "       xValues.push(x);";
+  message +=  "       ;";
   message +=  "       graphYlevelErro.push(eval(value));";
   message +=  "     }";
   message +=  "   }";
@@ -678,10 +629,10 @@ void handleLongtermGraph()
 /* =======================================*/
 {
   String graphLongtermXValues = "";     // values for graph (displayed)
-  graphLongtermXValues.reserve(1500);
+  graphLongtermXValues.reserve(15000);
 
   String graphLongtermYValues = "";
-  graphLongtermYValues.reserve(800);
+  graphLongtermYValues.reserve(8000);
 
   String formattedTimeL= "";
   String formattedDateL= "";
@@ -736,7 +687,7 @@ void handleLongtermGraph()
 
   
   String message;
-  message.reserve(5000);
+  message.reserve(50000);
 
   addTop(message);
 
@@ -787,7 +738,8 @@ void handleLongtermGraph()
   message +=  "   labels: xValues,";
   message +=  "   datasets: [{";
   message +=  "     fill: false,";
-  message +=  "     lineTension: 0,";
+  message +=  "     lineTension: 1,";
+  message +=  "     pointRadius: 2,";
   message +=  "     backgroundColor: \"rgba(0,0,255,1.0)\",";
   message +=  "     borderColor: \"rgba(0,0,255,0.5)\",";
   message +=  "     label: \"Wasserstand [mm]\",";
@@ -795,6 +747,7 @@ void handleLongtermGraph()
   message +=  "     },{";
   message +=  "     fill: false,";
   message +=  "     lineTension: 0,";
+  message +=  "     pointRadius: 0,";
   message +=  "     backgroundColor: \"rgba(0,255,0,0)\",";
   message +=  "     borderColor: \"rgba(0,255,0,0.3)\",";
   message +=  "     label: \"Warnschwelle: ";
@@ -804,6 +757,7 @@ void handleLongtermGraph()
   message +=  "     },{";
   message +=  "     fill: false,";
   message +=  "     lineTension: 0,";
+  message +=  "     pointRadius: 0,";
   message +=  "     backgroundColor: \"rgba(255,0,0,0)\",";
   message +=  "     borderColor: \"rgba(255,0,0,0.3)\",";
   message +=  "     label: \"Alarmschwelle: ";
@@ -825,13 +779,13 @@ void handleLongtermGraph()
   message +=  " });";
   message +=  " function generateWarnData(value, i1, i2, step = 1) {";
   message +=  "     for (let x = i1; x <= i2; x += step) {";
-  message +=  "       xValues.push(x);";
+  message +=  "       ;";
   message +=  "       graphYlevelWarn.push(eval(value));";
   message +=  "     }";
   message +=  "   }";
   message +=  " function generateErroData(value, i1, i2, step = 1) {";
   message +=  "     for (let x = i1; x <= i2; x += step) {";
-  message +=  "       xValues.push(x);";
+  message +=  "       ;";
   message +=  "       graphYlevelErro.push(eval(value));";
   message +=  "     }";
   message +=  "   }";

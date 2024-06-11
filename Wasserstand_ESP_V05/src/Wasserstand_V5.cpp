@@ -1,8 +1,17 @@
 /*
 =============================================
 Wasserstand_V6
-- comming soon
-- merge from V04 and V05: should run for ESP32 and EWP8622
+V6.0
+- both builds OK
+- tests are to be done
+=============================================
+Wasserstand_V5
+V5.3
+- runs OK on ESP32
+- some bugs fixed 
+  - crash with sending mail
+  - crash because overload of string
+next step: adapt to ESP 8266
 =============================================
 Wasserstand_V4
 
@@ -70,13 +79,11 @@ known issues: OTA download not possible "not enouth space"
 /************************************ */
 /* includes                           */
 /************************************ */
+#include <waterlevel_defines.h>
 
-#ifdef ARDUINO_ARCH_ESP32
-  #define BOARDTYPE ESP32
-// #if BOARDTYPE == ESP32
+#if BOARDTYPE == ESP32
   #include <Arduino.h>
 
-  #include <waterlevel_defines.h>
   #include <waterlevel.h>
 
   #include <ESP_Mail_Client.h>
@@ -112,12 +119,11 @@ known issues: OTA download not possible "not enouth space"
 #else
   #include <Arduino.h>
 
-  #include <waterlevel_defines.h>
   #include <waterlevel.h>
 
   #include <ESP_Mail_Client.h>
   #include <ESP8266mDNS.h>  // Bonjour/multicast DNS, finds the device on network by name
-  #include <NTPClient.h>    // get time from timeserver
+  //#include <NTPClient.h>    // get time from timeserver
   #include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
 
 
@@ -134,14 +140,18 @@ known issues: OTA download not possible "not enouth space"
 #endif
 
 
+extern CurrentLoopSensor currentLoopSensor();
+
+
+#include <ProjClient.h>
+
+
 // definitions for analog-digital conversion
-#ifdef ARDUINO_ARCH_ESP32
+#ifdef USE_ADS1115
    TwoWire I2CSensors = TwoWire(0);
    Adafruit_ADS1115 ads;
    int16_t adc0;
 #endif
-
-extern CurrentLoopSensor currentLoopSensor();
 
 /********************************************************************
          Globals - Variables and constants
@@ -340,12 +350,11 @@ unsigned long halfSecond;
 
 void setup(void) {
 
-  // #if BOARDTYPE == ESP32
-  //   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
-  // #endif 
+  #if BOARDTYPE == ESP32
+     WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
+  #endif 
 
-   pinMode(builtin_led, OUTPUT);
-   
+  pinMode(builtin_led, OUTPUT);
 
   /*=================================================================*/
   /* setup serial  and connect to WLAN */
@@ -376,18 +385,19 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  #ifdef ARDUINO_ARCH_ESP32
+  #if BOARDTPYE == ESP32
 
     if (MDNS.begin("esp32")) {
       Serial.println("MDNS responder started");
     }
-  #else
+    #else
+    
     if (MDNS.begin("esp8266")) {
-        Serial.println(F("MDNS responder started"));
-    }
-  #endif
+      Serial.println(F("MDNS responder started"));
+      }
+    #endif
   /*=================================================================*/
-  /* Prepare SendMail */
+  // /* Prepare SendMail */
 
   MailClient.networkReconnect(true);
   smtp.debug(1);
@@ -402,7 +412,7 @@ void setup(void) {
   config.login.user_domain = F("127.0.0.1");
 
 
-  #ifdef ARDUINO_ARCH_ESP32
+  #if BOARDTPYE == ESP32
     // ESP32 seems to be a little more complex:
     configTime(0, 0, MY_NTP_SERVER);  // 0, 0 because we will use TZ in the next line
     setenv("TZ", MY_TZ, 1);            // Set environment variable with your time zone
@@ -412,11 +422,12 @@ void setup(void) {
     configTime(MY_TZ, MY_NTP_SERVER);    // --> for the ESP8266 only
   #endif
 
+
   /*=================================================================*/
   /* Prepare WaterLevel Application */
 
   // prepare relais input / output
-  
+
   pinMode(GPin_AHH, INPUT_PULLUP);
   pinMode(GPin_AH,  INPUT_PULLUP);
   pinMode(GPin_AL,  INPUT_PULLUP);
@@ -471,11 +482,13 @@ void setup(void) {
   ArduinoOTA.setHostname(myhostname); // give a name to your ESP for the Arduino IDE
   ArduinoOTA.begin();                 // OTA Upload via ArduinoIDE https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html
 
-  /*=================================================================*/
-  beginCurrentLoopSensor();
+
 
   
-  #ifdef ARDUINO_ARCH_ESP32
+  /*=================================================================*/
+  beginCurrentLoopSensor();
+  
+  #ifdef USE_ADS1115
     /*==================================================================*/
     // Prepare analog output
     //  pinMode(LED_PIN, OUTPUT);
@@ -538,8 +551,7 @@ void loop(void) {
   delay(2);//allow the cpu to switch to other tasks
 
   if (debugLevelSwitches != debugLevelSwitches_old) {
-    if (debugLevelSwitches) 
-    {
+    if (debugLevelSwitches) {
       pinMode(GPin_AHH, OUTPUT);
       pinMode(GPin_AH,  OUTPUT);
       pinMode(GPin_AL,  OUTPUT);
@@ -556,6 +568,7 @@ void loop(void) {
     }
   }
   debugLevelSwitches_old = debugLevelSwitches;
+
 
   /*=================================================================*/
   /* WebClient */
@@ -582,11 +595,9 @@ void loop(void) {
 
   SetAlarmState_from_relais();
 
-
   /*=================================================================*/
   /* Send Email reusing session   */
   /*=================================================================*/
-
 
   if (executeSendMail)
   {
