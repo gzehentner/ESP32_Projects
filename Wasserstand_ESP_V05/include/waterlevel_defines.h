@@ -3,23 +3,33 @@
 Some basic defines for the whole project
 
 */
-// #define isLiveSystem;
+// #define Xyes 1
+// #define Xno  0
+
+// is defined in platformio.ini
+    // #define isLiveSystem no
 
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
   #define VERSION "6.0" // the version of this sketch
 
-  
+  #define internADC 0
+  #define ADS1115   1
+
 
   #ifdef ARDUINO_ARCH_ESP32               // if it is not a board with ESP32, then a
     #define BOARDTYPE ESP32
-    #define USE_ADS1115
+    // defined in platformio.ini 
+    // #define MyUSE_ADC ADS1115
+    //
   #else
     #define BOARDTYPE ESP8266                // Board with ESP8266 is used (internal ADC)
+    // defined in platformio.ini 
+    // #define MyUSE_ADC internADC
   #endif
 
-  #ifdef USE_ADS1115
+  #if MyUSE_ADC == ADS1115
 
     #include <Wire.h>
     #include <Adafruit_Sensor.h>
@@ -34,11 +44,11 @@ Some basic defines for the whole project
   #ifdef isLiveSystem
 
     #define TXT_BOARDID "164"                   // an ID for the board
-    #define TXT_BOARDNAME BOARDTYPE & "Wasserstand" // the name of the board
+    #define TXT_BOARDNAME "Wasserstand " // the name of the board
     #define CSS_MAINCOLOR "blue"                // don't get confused by the different webservers and use different colors
   #else
     #define TXT_BOARDID "Develop"           // show that something is configured as development version
-    #define TXT_BOARDNAME BOARDTYPE & "Wasserstand" // the name of the board
+    #define TXT_BOARDNAME "Wasserstand" // the name of the board
     #define CSS_MAINCOLOR "blue"                // don't get confused by the different webservers and use different colors
   #endif
   /*=================================================================*/
@@ -48,11 +58,11 @@ Some basic defines for the whole project
   
   #if BOARDTYPE == ESP8266
     /* -- Pin-Def for ESP8266 -- */
-    #define GPin_AHH 3  // grün
-    #define GPin_AH 5   // gelb
-    #define GPin_AL 4   // orange
-    #define GPin_ALL 14 // rot
-    #define GPout_GND 12
+    #define GPin_AHH 3  // blau
+    #define GPin_AH 5   // braun
+    #define GPin_AL 4   // grau
+    #define GPin_ALL 14 // weiß
+    #define GPout_GND 12 // schwarz
   #else
     /* -- Pin-Def for ESP32 -- */  // Board159
     #define GPin_AHH  2  // blau   rot
@@ -62,16 +72,16 @@ Some basic defines for the whole project
   
   #endif
 
-  #ifndef isLiveSystem
-    // Testpad with external poti to simulate sensor needs a factor to be in working range
-    //    for life system factor has to be 1
+  #ifdef isLiveSystem
     #define DEBUG_VOLT_MULT 1
   #else
+    // Testpad with external poti to simulate sensor needs a factor to be in working range
+    //    for life system factor has to be 1
     #define DEBUG_VOLT_MULT 1
   #endif
 
   // definitions for analog-digital conversion
-  #ifdef USE_ADS1115
+  #if MyUSE_ADC == ADS1115
     #define GET_ANALOG ads.readADC_Differential_0_1() * DEBUG_VOLT_MULT
     #define ADC_BIT  15  // only 15 bit for single ended signals
     #define Ain_Level 0  // input = adc0
@@ -92,7 +102,7 @@ Some basic defines for the whole project
 
     #define GET_ANALOG analogRead(pin)
     #define ADC_BIT 10
-    #define Ain_Level 12 
+    #define Ain_Level PIN_A0
     #define PWM_OUT 1 // PWM-Output to IO1
   #endif
 
@@ -104,7 +114,8 @@ Some basic defines for the whole project
     #define BLUE_LED builtin_led
   #endif
 
-  #ifndef isLiveSystem
+  #ifdef isLiveSystem
+  #else
     // #define DEBUG_PRINT_HEAP
   
     // #define DEBUG_PRINT_RAW  // print raw voltage values without calculating current values; used for debug ADC function
@@ -112,20 +123,29 @@ Some basic defines for the whole project
     // #define SIM_FADING_LEVEL  // generate a fading value for analog input to simulate funkctions without an external electronic
   #endif
 
-  // length of ring buffer
-  #define iRingValueMax  1000 // 50 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
-  #define iLongtermRingValueMax 120 // 10// 120 // 370 // one value a day, buffer for one year (now we have four values a day so we have one month)
-  // maximum lines to be printed and points in graph
-  const int maxLines  = 1000;
-  const int maxPoints = 1000;
+  #if BOARDTYPE == ESP32
+    // length of ring buffer
+    #define iRingValueMax  1000 // 50 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
+    #define iLongtermRingValueMax 120 // 10// 120 // 370 // one value a day, buffer for one year (now we have four values a day so we have one month)
+    // maximum lines to be printed and points in graph
+    const int maxLines  = 1000;
+    const int maxPoints = 1000;
+  #else // BOARDTYPE == ESP8266
+    // length of ring buffer
+    #define iRingValueMax  100 // 50 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
+    #define iLongtermRingValueMax 120 // 10// 120 // 370 // one value a day, buffer for one year (now we have four values a day so we have one month)
+    // maximum lines to be printed and points in graph
+    const int maxLines  = 100;
+    const int maxPoints = 100;
+  #endif
 
   #ifdef SIM_VALUES
-  //  const int  filterCntMax = 1;  //  GZE: zum Test ganz ohne Filter!!       // time for myvalue: measureInterval * filterCntMax  
-  const int  filterCntMax = 10;        // time for myvalue: measureInterval * filterCntMax  
+    //  const int  filterCntMax = 1;  //  GZE: zum Test ganz ohne Filter!!       // time for myvalue: measureInterval * filterCntMax  
+    const int  filterCntMax = 100;        // time for myvalue: measureInterval * filterCntMax  
     const unsigned long  longtermInterval = 10000;  // time between two saved values in ms
   #else
     const int  filterCntMax = 1800; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
-    const unsigned long  longtermInterval = 1000*60*60*6; // four time a day
+    const unsigned long  longtermInterval = 1000*60*60*6; // four times a day
   #endif
 
   /* -- Alarm-Level -- */

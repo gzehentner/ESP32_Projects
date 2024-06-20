@@ -28,7 +28,7 @@
 #include <NoiascaCurrentLoop.h>
 #include <waterlevel_defines.h>
 
-#ifdef USE_ADS1115
+#if MyUSE_ADC == ADS1115
   #include <waterlevel.h>
 
   #include <Wire.h>
@@ -45,7 +45,7 @@ CurrentLoopSensor::CurrentLoopSensor(byte pin, uint16_t resistor, byte vref, uin
   resistor (resistor),
   vref (vref),
   maxValue (maxValue),
-  #ifdef USE_ADS1115
+  #if MyUSE_ADC == ADS1115
     minAdc (0.004 * resistor / mili_volt_per_bit * 1000),
     maxAdc (0.020 * resistor / mili_volt_per_bit * 1000)
   #else
@@ -116,6 +116,8 @@ int CurrentLoopSensor::getValueUnfiltered()
   
   //int32_t value = (adc - 186) * 500L / (931 - 186);                          // for 1023*500 we need a long
   int32_t value = (adc - minAdc) * int32_t(maxValue) / (maxAdc - minAdc);      // for 1023*500 we need a long  // -> pressure
+  //value += 53; // add 53mm to compensate offset
+  value += 10;  // add 10mm
   if (value > maxValue) value = maxValue;
   else if (value < 0) value = 0;
   return  value;

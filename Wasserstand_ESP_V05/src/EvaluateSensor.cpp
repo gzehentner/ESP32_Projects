@@ -39,7 +39,7 @@ unsigned long longtermMillisDiff;
 // shortterm 
 unsigned long ringTime [iRingValueMax +1];
 int    ringValue[iRingValueMax +1];     // ring buffer for display last 50 values
-// int    ringADC  [iRingValueMax +1];     // ring buffer for display last 50 adc values
+int    ringADC  [iRingValueMax +1];     // ring buffer for display last 50 adc values
 int    wrRingPtr = 0;                  // ring buffer write pointer 
 int    rdRingPtr = 0;                  // ring buffer read pointer 
 
@@ -96,7 +96,11 @@ String htmlMsg="";
   
     // calculate average
     myValueFilteredAct = myValueFiltered / filterCntMax;     
-    
+    myAdcFiltered      = myAdcFiltered   / filterCntMax;
+
+    Serial.print("myValueFilteredAct"); Serial.println(myValueFilteredAct);
+    Serial.print("myAdcFiltered     "); Serial.println(myAdcFiltered     );
+
     /*=========================================*/
     /*=========================================*/
     /* handle shortterm values */
@@ -109,7 +113,7 @@ String htmlMsg="";
     ringValue[wrRingPtr] = myValueFilteredAct;  
 
     // add ADC raw values to ring buffer
-    // ringADC[wrRingPtr]  = myAdcFiltered / filterCntMax;
+    ringADC[wrRingPtr]  = myAdcFiltered;
 
     // increment write pos
     if (wrRingPtr<iRingValueMax) {
@@ -168,6 +172,7 @@ String htmlMsg="";
     val_AH =  digitalRead(GPin_AH);
     val_AL =  digitalRead(GPin_AL);
     // val_ALL = digitalRead(GPin_ALL);
+    
 
     //++++++++++++++++++++++
     // set alarmState
@@ -194,6 +199,15 @@ String htmlMsg="";
     // {
     //   alarmState = 1;
     // }
+
+    // GZE
+    if (alarmState != alarmStateOld){
+      Serial.print("Alarmstate: "); Serial.println(alarmState);
+      Serial.print("AHH: "); Serial.println(val_AHH);
+      Serial.print("AH : "); Serial.println(val_AH);
+      Serial.print("AL : "); Serial.println(val_AL);  
+
+    }
   
     //++++++++++++++++++++++
     // prepare send mail depending on alarmState

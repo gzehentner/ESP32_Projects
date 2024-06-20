@@ -353,7 +353,7 @@ void handleListFiltered()
   // 2 - message length: 3909
   
   String message = "";
-  message.reserve(70000);
+  message.reserve(35000);
 
   String formattedTimeL= "";
   String formattedDateL= "";
@@ -389,8 +389,10 @@ void handleListFiltered()
 
       message += "  ";
       message += ringValue[rdRingPtr];
-      // message += ringADC[rdRingPtr];
+      message += "  ";
+      message += ringADC[rdRingPtr];
       message += "<br>";
+      
     }
 
     if (rdRingPtr<iRingValueMax) {
@@ -453,10 +455,10 @@ void handleGraph()
 /* =======================================*/
 {
   String graphXValues = "";     // values for graph (displayed)
-  graphXValues.reserve(15000);
+  graphXValues.reserve(13000);
 
   String graphYValues = "";
-  graphYValues.reserve(8000);
+  graphYValues.reserve(4000);
 
   String formattedTimeL= "";
   String formattedDateL= "";
@@ -507,7 +509,7 @@ void handleGraph()
 
 
   String message;
-  message.reserve(50000);
+  message.reserve(20000);
   addTop(message);
 
 
@@ -629,10 +631,10 @@ void handleLongtermGraph()
 /* =======================================*/
 {
   String graphLongtermXValues = "";     // values for graph (displayed)
-  graphLongtermXValues.reserve(15000);
+  graphLongtermXValues.reserve(2000);
 
   String graphLongtermYValues = "";
-  graphLongtermYValues.reserve(8000);
+  graphLongtermYValues.reserve(500);
 
   String formattedTimeL= "";
   String formattedDateL= "";
@@ -687,7 +689,7 @@ void handleLongtermGraph()
 
   
   String message;
-  message.reserve(50000);
+  message.reserve(5000);
 
   addTop(message);
 
