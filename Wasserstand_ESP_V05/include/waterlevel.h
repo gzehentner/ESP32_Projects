@@ -55,7 +55,7 @@ extern float pegel; // waterlevel in m
 
 
 // definitions for analog-digital conversion
-  #ifdef USE_ADS1115
+  #if MyUSE_ADC == ADS1115
      extern TwoWire I2CSensors;
      extern Adafruit_ADS1115 ads;
    #endif

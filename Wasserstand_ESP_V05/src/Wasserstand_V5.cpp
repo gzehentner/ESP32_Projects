@@ -147,7 +147,7 @@ extern CurrentLoopSensor currentLoopSensor();
 
 
 // definitions for analog-digital conversion
-#ifdef USE_ADS1115
+#if MyUSE_ADC == ADS1115
    TwoWire I2CSensors = TwoWire(0);
    Adafruit_ADS1115 ads;
    int16_t adc0;
@@ -385,7 +385,7 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  #if BOARDTPYE == ESP32
+  #if BOARDTYPE == ESP32
 
     if (MDNS.begin("esp32")) {
       Serial.println("MDNS responder started");
@@ -412,7 +412,7 @@ void setup(void) {
   config.login.user_domain = F("127.0.0.1");
 
 
-  #if BOARDTPYE == ESP32
+  #if BOARDTYPE == ESP32
     // ESP32 seems to be a little more complex:
     configTime(0, 0, MY_NTP_SERVER);  // 0, 0 because we will use TZ in the next line
     setenv("TZ", MY_TZ, 1);            // Set environment variable with your time zone
@@ -488,7 +488,10 @@ void setup(void) {
   /*=================================================================*/
   beginCurrentLoopSensor();
   
-  #ifdef USE_ADS1115
+  Serial.print("is_life_system: ");
+  Serial.println(isLiveSystem);
+  
+  #if MyUSE_ADC == ADS1115
     /*==================================================================*/
     // Prepare analog output
     //  pinMode(LED_PIN, OUTPUT);
