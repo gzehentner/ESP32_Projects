@@ -28,14 +28,22 @@
 #include <NoiascaCurrentLoop.h>
 #include <waterlevel_defines.h>
 
-#if MyUSE_ADC == ADS1115
-  #include <waterlevel.h>
 
-  #include <Wire.h>
-  #include <Adafruit_Sensor.h>
-  #include <Adafruit_ADS1X15.h>
-  const int maxAdc_value = 0x7FFF;  // 15bit ADC
-  const float mili_volt_per_bit = 0.125 ;  // with gain = 1
+#include <waterlevel.h>
+
+#if MyUSE_ADC == ADS1115_ADC
+  #if BOARDTYPE == ESP32
+    #include <Wire.h>
+    #include <Adafruit_Sensor.h>
+    #include <Adafruit_ADS1X15.h>
+    const int maxAdc_value = 0x7FFF;  // 15bit ADC
+    const float mili_volt_per_bit = 0.125 ;  // with gain = 1
+  #else
+    #include <Wire.h>
+    #include <ADS1X15.h>
+    const int maxAdc_value = 0x7FFF;  // 15bit ADC
+    const float mili_volt_per_bit = 0.125 ;  // with gain = 1
+  #endif
 #else
   const int maxAdc_value = 0x3FF;   // 10bit ADC
 #endif
@@ -45,7 +53,7 @@ CurrentLoopSensor::CurrentLoopSensor(byte pin, uint16_t resistor, byte vref, uin
   resistor (resistor),
   vref (vref),
   maxValue (maxValue),
-  #if MyUSE_ADC == ADS1115
+  #if MyUSE_ADC == ADS1115_ADC
     minAdc (0.004 * resistor / mili_volt_per_bit * 1000),
     maxAdc (0.020 * resistor / mili_volt_per_bit * 1000)
   #else

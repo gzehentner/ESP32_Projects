@@ -15,13 +15,13 @@ Some basic defines for the whole project
   #define VERSION "6.0" // the version of this sketch
 
   #define internADC 0
-  #define ADS1115   1
+  #define ADS1115_ADC   1
 
 
   #ifdef ARDUINO_ARCH_ESP32               // if it is not a board with ESP32, then a
     #define BOARDTYPE ESP32
     // defined in platformio.ini 
-    // #define MyUSE_ADC ADS1115
+    // #define MyUSE_ADC ADS1115_ADC
     //
   #else
     #define BOARDTYPE ESP8266                // Board with ESP8266 is used (internal ADC)
@@ -29,14 +29,16 @@ Some basic defines for the whole project
     // #define MyUSE_ADC internADC
   #endif
 
-  #if MyUSE_ADC == ADS1115
-
+#if MyUSE_ADC == ADS1115_ADC
+  #if BOARDTYPE == ESP32
     #include <Wire.h>
     #include <Adafruit_Sensor.h>
     #include <Adafruit_ADS1X15.h>
+  #else
+    #include <Wire.h>
+    #include <ADS1X15.h>
   #endif
-
-
+#endif
 
   /* *******************************************************************
           the board settings / die Einstellungen der verschiedenen Boards
@@ -58,11 +60,11 @@ Some basic defines for the whole project
   
   #if BOARDTYPE == ESP8266
     /* -- Pin-Def for ESP8266 -- */
-    #define GPin_AHH 3  // blau
-    #define GPin_AH 5   // braun
-    #define GPin_AL 4   // grau
-    #define GPin_ALL 14 // weiß
-    #define GPout_GND 12 // schwarz
+    #define GPin_AHH   3 // weiß
+    #define GPin_AH   13 // grau
+    #define GPin_AL   12 // violett
+    #define GPin_ALL  14 // blau
+    // #define GPout_GND 12 // schwarz
   #else
     /* -- Pin-Def for ESP32 -- */  // Board159
     #define GPin_AHH  2  // blau   rot
@@ -81,7 +83,7 @@ Some basic defines for the whole project
   #endif
 
   // definitions for analog-digital conversion
-  #if MyUSE_ADC == ADS1115
+  #if MyUSE_ADC == ADS1115_ADC
     #define GET_ANALOG ads.readADC_Differential_0_1() * DEBUG_VOLT_MULT
     #define ADC_BIT  15  // only 15 bit for single ended signals
     #define Ain_Level 0  // input = adc0
@@ -90,7 +92,8 @@ Some basic defines for the whole project
       #define I2C_SDA 14
       #define I2C_SCL 15
     #else
-      No I2C defined for ESP8266
+      #define I2C_SDA 13
+      #define I2C_SCL 15
     #endif
 
 
@@ -151,7 +154,7 @@ Some basic defines for the whole project
   /* -- Alarm-Level -- */
   // Pegel wurde verändert, hängt um 6cm höher
   // --> Werte korrigieren
-  #define Level_AHH 185 // Oberkante Schacht = 191cm
+  #define Level_AHH 185 // Oberkante Schacht = 187cm // Oberkante Bodenplatte = (OK-Schacht + 8 cm) = 1,95cm
   #define Level_AH  170  // Warnschwelle
   #define Level_AL  155
   #define Level_ALL 140 // Unterkante KG Rohr

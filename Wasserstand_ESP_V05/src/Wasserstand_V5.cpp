@@ -97,11 +97,6 @@ known issues: OTA download not possible "not enouth space"
 
 #include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
-  #ifdef DEBUG_PRINT_RAW
-    #include <Wire.h>
-    #include <Adafruit_Sensor.h>
-    #include <Adafruit_ADS1X15.h>
-  #endif
 
   #include "soc/soc.h"            // disable brownout detector
   #include "soc/rtc_cntl_reg.h"   // disable brownout detector
@@ -115,6 +110,10 @@ known issues: OTA download not possible "not enouth space"
 
 
   #include <ProjClient.h>
+
+  // Is the following correct?
+  // #include <LittleFS.h>
+  // #include <MyLittleFSLib.h>
 
 #else
   #include <Arduino.h>
@@ -136,7 +135,25 @@ known issues: OTA download not possible "not enouth space"
   #include <EvaluateSensor.h>
 
   #include <ProjClient.h>
+  #include <LittleFS.h>
+  
+  #include <MyLittleFSLib.h>
+#endif
 
+#if MyUSE_ADC == ADS1115_ADC
+  #if BOARDTYPE == ESP32
+    #include <Wire.h>
+    #include <Adafruit_Sensor.h>
+    #include <Adafruit_ADS1X15.h>
+    TwoWire I2CSensors = TwoWire(0);
+    Adafruit_ADS1115 ads;
+    int16_t adc0;
+  #else
+    #include <ADS1X15.h>
+    #include <Wire.h>
+    
+    ADS1115 ads(0x48);
+  #endif
 #endif
 
 
@@ -147,10 +164,11 @@ extern CurrentLoopSensor currentLoopSensor();
 
 
 // definitions for analog-digital conversion
-#if MyUSE_ADC == ADS1115
-   TwoWire I2CSensors = TwoWire(0);
-   Adafruit_ADS1115 ads;
-   int16_t adc0;
+#if MyUSE_ADC == ADS1115_ADC
+  #if BOARDTYPE == ESP32
+  #else
+
+  #endif
 #endif
 
 /********************************************************************
@@ -436,9 +454,9 @@ void setup(void) {
 
   // for ESP32 we no longer use digital output for GND, but ESP32-GND
   #if (BOARDTYPE == ESP8266)
-    pinMode(GPout_GND, OUTPUT);
-
-    digitalWrite(GPout_GND, 0);
+    // GZE_DEBUG
+    // pinMode(GPout_GND, OUTPUT);
+    // digitalWrite(GPout_GND, 0);
   #endif
 
   
@@ -491,37 +509,69 @@ void setup(void) {
   Serial.print("is_life_system: ");
   Serial.println(isLiveSystem);
   
-  #if MyUSE_ADC == ADS1115
+  #if MyUSE_ADC == ADS1115_ADC
     /*==================================================================*/
     // Prepare analog output
     //  pinMode(LED_PIN, OUTPUT);
 
+    #if BOARDTYPE == ESP32
     /*==================================================================*/
     // prepare I2C interface
-    I2CSensors.begin(I2C_SDA, I2C_SCL, 100000);
-    
+      I2CSensors.begin(I2C_SDA, I2C_SCL, 100000);
+    #endif
+
     /*==================================================================*/
     // prepare analog read
     // ADS 1115 (0x48 .. 0x4B will be the address)
-    if (!ads.begin(0x48, &I2CSensors))
+    #if BOARDTYPE == ESP8266
+      Wire.begin(4,5);
+    #endif
+    #if BOARDTYPE == ESP32
+      if (!ads.begin(0x48, &I2CSensors))
+    #else
+      if (!ads.begin())
+    #endif
     {
       Serial.println("Couldn't Find ADS 1115");
-      while (1)
+      while  (1)
         ;
     }
     else
     {
       Serial.println("ADS 1115 Found");
-      ads.setGain(GAIN_ONE);
+      ads.setGain(1);
       Serial.print("Gain: ");
       Serial.println(ads.getGain());
     }
 
-    // PSRAM?
-    log_d("Total heap: %d", ESP.getHeapSize());
-    log_d("Free heap: %d", ESP.getFreeHeap());
-    log_d("Total PSRAM: %d", ESP.getPsramSize());
-    log_d("Free PSRAM: %d", ESP.getFreePsram());
+    #if BOARDTYPE == ESP32
+      // PSRAM?
+      log_d("Total heap: %d", ESP.getHeapSize());
+      log_d("Free heap: %d", ESP.getFreeHeap());
+      log_d("Total PSRAM: %d", ESP.getPsramSize());
+      log_d("Free PSRAM: %d", ESP.getFreePsram());
+    #endif
+  #endif
+
+  //#define RD_TEST_FILE
+  #ifdef RD_TEST_FILE
+    if(!LittleFS.begin()){
+    Serial.println("An Error has occurred while mounting LittleFS");
+    return;
+    }
+  
+    File file = LittleFS.open("/text.txt", "r");
+    if(!file){
+      Serial.println("Failed to open file for reading");
+      return;
+    }
+  
+  // write data to a file
+  appendFile("/text.txt","good night\n");
+  listDir("/");
+
+  readFile("/text.txt");
+
   #endif
 
 }
@@ -607,6 +657,11 @@ void loop(void) {
      executeSendMail = false;
 
     SMTP_Message message;
+    
+    /* The attachment data item */
+    SMTP_Attachment att[2];
+    int attIndex = 0;
+    // GZE  weitere Definitionen siehe ESP Mail Client/ examples / SMTP / Send_attachment_File
 
     message.sender.name = F("Pegel Zehentner");
     message.sender.email = AUTHOR_EMAIL;
