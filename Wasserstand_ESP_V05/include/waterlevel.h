@@ -55,9 +55,14 @@ extern float pegel; // waterlevel in m
 
 
 // definitions for analog-digital conversion
-  #if MyUSE_ADC == ADS1115
-     extern TwoWire I2CSensors;
-     extern Adafruit_ADS1115 ads;
-   #endif
-
+  #if MyUSE_ADC == ADS1115_ADC
+    #if BOARDTYPE == ESP32
+      TwoWire I2CSensors = TwoWire(0);
+      Adafruit_ADS1115 ads;
+      int16_t adc0;
+    #else
+      extern ADS1115 ads;
+      //Wire.begin(4,5);
+    #endif
+  #endif
 #endif

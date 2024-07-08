@@ -2,6 +2,10 @@
 	"folders": [
 		{
 			"path": "Wasserstand_ESP_V05"
+		},
+		{
+			"name": "pio-esp32-esp8266-filesystem-downloader-main",
+			"path": "../ESP32_local_Projects/pio-esp32-esp8266-filesystem-downloader-main/pio-esp32-esp8266-filesystem-downloader-main"
 		}
 	]
 }
