@@ -75,21 +75,34 @@ Some basic defines for the whole project
 
  
   // definitions for analog-digital conversion
-  #if MyUSE_ADC == ADS1115_ADC
-    #define ADC_BIT  15  // only 15 bit for single ended signals
-    #define Ain_Level 0  // input = adc0
+  // #if MyUSE_ADC == ADS1115_ADC
+    // #define ADC_BIT  15  // only 15 bit for single ended signals
+    // #define Ain_Level 0  // input = adc0
 
-    #if BOARDTYPE == ESP32
-      #define GET_ANALOG ads.readADC_Differential_0_1()
-      #define I2C_SDA 14
-      #define I2C_SCL 15
-    #else
-      #define GET_ANALOG ads.readADC(Ain_Level)
-      // #define I2C_SDA 13
-      // #define I2C_SCL 15
-    #endif
+    // #if BOARDTYPE == ESP32
+    //   #define GET_ANALOG ads.readADC_Differential_0_1()
+    //   #define I2C_SDA 14
+    //   #define I2C_SCL 15
+    // #else
+    //   #define GET_ANALOG ads.readADC(Ain_Level)
+    //   // #define I2C_SDA 13
+    //   // #define I2C_SCL 15
+    // #endif
 
+      // definitions for analog-digital conversion
+    #if MyUSE_ADC == ADS1115_ADC
+      #define ADC_BIT  15  // only 15 bit for single ended signals
+      #define Ain_Level 0  // input = adc0
 
+      #if BOARDTYPE == ESP32
+        #define GET_ANALOG ads.readADC_Differential_0_1()
+        #define I2C_SDA 14
+        #define I2C_SCL 15
+      #else
+        #define GET_ANALOG ads.readADC(0)
+        #define I2C_SDA 13
+        #define I2C_SCL 15
+      #endif
 
   #else // use builtin ADC
     #if BOARDTYPE == ESP32
@@ -140,7 +153,7 @@ Some basic defines for the whole project
     // const int  filterCntMax = 100;        // time for myvalue: measureInterval * filterCntMax  
     const unsigned long  longtermInterval = 10000;  // time between two saved values in ms
   #else
-    const int  filterCntMax = 900; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
+    const int  filterCntMax = 10; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
     const unsigned long  longtermInterval = 1000*60*60*6; // four times a day
   #endif
 
