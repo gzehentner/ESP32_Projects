@@ -206,7 +206,7 @@ int debugLevelSwitches_old = 0;
 #define AUTHOR_PASSWORD "lwecoyvlkmordnly"
 
 /* Recipient email address */
-#ifdef isLiveSystem
+#if isLiveSystem == 1
   #define RECIPIENT_EMAIL "gzehentner@web.de"
 #else
   #define RECIPIENT_EMAIL "gzehentner@t-online.de"

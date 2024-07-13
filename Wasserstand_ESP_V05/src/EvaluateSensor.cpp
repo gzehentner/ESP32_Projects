@@ -98,9 +98,6 @@ String htmlMsg="";
     myValueFilteredAct = myValueFiltered / filterCntMax;     
     myAdcFiltered      = myAdcFiltered   / filterCntMax;
 
-    Serial.print("myValueFilteredAct"); Serial.println(myValueFilteredAct);
-    Serial.print("myAdcFiltered     "); Serial.println(myAdcFiltered     );
-
     /*=========================================*/
     /*=========================================*/
     /* handle shortterm values */
