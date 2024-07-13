@@ -13,6 +13,7 @@
 
 /*=================================================================*/
 /* Parameter for CurrentLoop */
+/*=================================================================*/
 const byte sensorPin    = Ain_Level;  // ADC pin for the sensor
 const uint16_t resistor = 165;        // used shunt  resistor in Ohm
 const byte vref         = 32;         // VREF in Volt*10 (Uno 16MHz: 50, ProMini 8MHz: 3V3).
@@ -21,6 +22,7 @@ const int maxValue      = 5000;        // measurement range: 000cm to 5000mm -->
 
 /*=================================================================*/
 /* Variables for CurrentLoop */
+/*=================================================================*/
 
 CurrentLoopSensor currentLoopSensor(sensorPin, resistor, vref, maxValue); // create the sensor object 
 
@@ -32,18 +34,21 @@ int    filterCnt    = 0;       // count loop runs for collecting values for filt
 
 const int  measureInterval = 100; // measurement interval in milliseconds
 
-
 unsigned long millisDiff;
 unsigned long longtermMillisDiff;
 
-// shortterm 
+/*=================================================================*/
+/* definitions for shortterm ring buffer */
+/*=================================================================*/
 unsigned long ringTime [iRingValueMax +1];
 int    ringValue[iRingValueMax +1];     // ring buffer for display last 50 values
 int    ringADC  [iRingValueMax +1];     // ring buffer for display last 50 adc values
 int    wrRingPtr = 0;                  // ring buffer write pointer 
 int    rdRingPtr = 0;                  // ring buffer read pointer 
 
-// longterm 
+/*=================================================================*/
+/* definitions for longterm ring buffer */
+/*=================================================================*/
 unsigned long ringLongtermTime [iLongtermRingValueMax +1];
 int    ringLongtermValue[iLongtermRingValueMax +1];     // ring buffer for display last 50 values
 int    wrLongtermRingPtr = 0;                  // ring buffer write pointer 
@@ -51,7 +56,9 @@ int    rdLongtermRingPtr = 0;                  // ring buffer read pointer
 
 //int firstRun = 1;
 
+/*=================================================================*/
 // global variables for send mail
+/*=================================================================*/
 String subject="";
 String htmlMsg="";
 
@@ -66,10 +73,14 @@ String htmlMsg="";
 //    currentLoopSensor.check();  // check the values and settings
   }
 
-/*=====================================================*/
+/*================================================================*/
+/*   get analog values from currentLoopSensor and calculate level */
+/*   store values in two ring buffers =                           */
+/*================================================================*/
   void Current2Waterlevel()
+/*================================================================*/
 {
-        // measure time and return, when to early
+    // measure time and return, when to early
     millisNow = millis();
     
     millisDiff = millisNow - previousMillis;
@@ -94,59 +105,57 @@ String htmlMsg="";
       // else: when a new filtered value is calculated ()
       filterCnt = 0;
   
-    // calculate average
-    myValueFilteredAct = myValueFiltered / filterCntMax;     
-    myAdcFiltered      = myAdcFiltered   / filterCntMax;
+      // calculate average
+      myValueFilteredAct = myValueFiltered / filterCntMax;     
+      myAdcFiltered      = myAdcFiltered   / filterCntMax;
 
-    /*=========================================*/
-    /*=========================================*/
-    /* handle shortterm values */
-    /*=========================================*/
-
-    // write time to ring buffer
-    ringTime [wrRingPtr] = epochTime; // myEpochTime;
-
-    // write shortterm value to ring buffer
-    ringValue[wrRingPtr] = myValueFilteredAct;  
-
-    // add ADC raw values to ring buffer
-    ringADC[wrRingPtr]  = myAdcFiltered;
-
-    // increment write pos
-    if (wrRingPtr<iRingValueMax) {
-      wrRingPtr++;
-    } else  {
-      wrRingPtr = 0;
-    }
-
-    /*=========================================*/
-    /*=========================================*/
-    /* handle longterm values */
-    /*=========================================*/
-    if (longtermMillisDiff > longtermInterval) 
-    {
-      longtermPreviousMillis = millisNow;
+      /*=========================================*/
+      /*=========================================*/
+      /* handle shortterm values */
+      /*=========================================*/
 
       // write time to ring buffer
-      ringLongtermTime [wrLongtermRingPtr] = epochTime; // myEpochTime;
+      ringTime [wrRingPtr] = epochTime; // myEpochTime;
 
       // write shortterm value to ring buffer
-      ringLongtermValue[wrLongtermRingPtr] = myValueFilteredAct;  
+      ringValue[wrRingPtr] = myValueFilteredAct;  
+
+      // add ADC raw values to ring buffer
+      ringADC[wrRingPtr]  = myAdcFiltered;
 
       // increment write pos
-      if (wrLongtermRingPtr < iLongtermRingValueMax) {
-        wrLongtermRingPtr++;
+      if (wrRingPtr<iRingValueMax) {
+        wrRingPtr++;
       } else  {
-        wrLongtermRingPtr = 0;
+        wrRingPtr = 0;
       }
+
+      /*=========================================*/
+      /*=========================================*/
+      /* handle longterm values */
+      /*=========================================*/
+      if (longtermMillisDiff > longtermInterval) 
+      {
+        longtermPreviousMillis = millisNow;
+
+        // write time to ring buffer
+        ringLongtermTime [wrLongtermRingPtr] = epochTime; // myEpochTime;
+
+        // write shortterm value to ring buffer
+        ringLongtermValue[wrLongtermRingPtr] = myValueFilteredAct;  
+
+        // increment write pos
+        if (wrLongtermRingPtr < iLongtermRingValueMax) {
+          wrLongtermRingPtr++;
+        } else  {
+          wrLongtermRingPtr = 0;
+        }
+      }
+
+      /*=========================================*/
+      myValueFiltered = 0;
+      myAdcFiltered   = 0;
     }
-
-
-
-    /*=========================================*/
-    myValueFiltered = 0;
-    myAdcFiltered   = 0;
-  }
   }
 
   /*=====================================================*/
@@ -155,6 +164,7 @@ String htmlMsg="";
     - set alarm stat
     - prepare email text
   */
+  /*=====================================================*/
   void SetAlarmState_from_relais() {
   /*=====================================================*/
 
@@ -205,10 +215,14 @@ String htmlMsg="";
       Serial.print("AL : "); Serial.println(val_AL);  
 
     }
-  
-    //++++++++++++++++++++++
-    // prepare send mail depending on alarmState
-    //++++++++++++++++++++++
+  }
+
+  /******************************************************** */
+  /* prepare send mail depending on alarmState */
+  /******************************************************** */
+  void prepareSendMail ()
+  /******************************************************** */
+  {
     if (alarmStateOld > 0)
     { // alarmStateOld == 0 means, it is the first run / dont send mail at the first run
       if (alarmStateOld < alarmState)
@@ -271,21 +285,22 @@ String htmlMsg="";
   Return: PWM duty cycle as number with 255 = 100%
   
   */
-float Waterlevel2dutyCycle (float level) {
-
-  const float maxPegel =  5.0;  // m
-  const float Imax     = 20.0; // mA
-  const float Imin     =  4.0; // mA
-
-  float Vact     =  0.0;  // actual voltage
-  float Vmax     =  0.0;  // voltage at max Pegel
-
-  Vmax = (((Imax-Imin))               +Imin)/1000.0*resistor;
-  
-  Vact = (((Imax-Imin)/maxPegel*level)+Imin)/1000.0*resistor;;
-
-  // Serial.print("Vact: ");Serial.println(Vact);
-  // Serial.print("Vmax: ");Serial.println(Vmax);
-  
-  return Vact / Vmax*255.0;
-}
+// not used yet; needs some care
+// float Waterlevel2dutyCycle (float level) {
+// 
+//   const float maxPegel =  5.0;  // m
+//   const float Imax     = 20.0; // mA
+//   const float Imin     =  4.0; // mA
+// 
+//   float Vact     =  0.0;  // actual voltage
+//   float Vmax     =  0.0;  // voltage at max Pegel
+// 
+//   Vmax = (((Imax-Imin))               +Imin)/1000.0*resistor;
+//   
+//   Vact = (((Imax-Imin)/maxPegel*level)+Imin)/1000.0*resistor;;
+// 
+//   // Serial.print("Vact: ");Serial.println(Vact);
+//   // Serial.print("Vmax: ");Serial.println(Vmax);
+//   
+//   return Vact / Vmax*255.0;
+// }

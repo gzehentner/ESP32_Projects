@@ -100,8 +100,8 @@ Some basic defines for the whole project
         #define I2C_SCL 15
       #else
         #define GET_ANALOG ads.readADC(0)
-        #define I2C_SDA 13
-        #define I2C_SCL 15
+        #define I2C_SDA 4
+        #define I2C_SCL 5
       #endif
 
   #else // use builtin ADC
