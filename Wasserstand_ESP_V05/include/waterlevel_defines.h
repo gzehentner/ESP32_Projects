@@ -153,7 +153,7 @@ Some basic defines for the whole project
     // const int  filterCntMax = 100;        // time for myvalue: measureInterval * filterCntMax  
     const unsigned long  longtermInterval = 10000;  // time between two saved values in ms
   #else
-    const int  filterCntMax = 10; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
+    const int  filterCntMax = 1800; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
     const unsigned long  longtermInterval = 1000*60*60*6; // four times a day
   #endif
 
