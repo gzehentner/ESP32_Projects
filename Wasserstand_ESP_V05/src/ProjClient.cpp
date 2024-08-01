@@ -68,8 +68,9 @@ client.addHeader("Content-Type", "application/x-www-form-urlencoded");       // 
 int httpCode = client.POST(message);                                         // Send the request
 client.writeToStream(&Serial);                                               // Debug only: Output of received data
 Serial.print(F("\nhttpCode: "));                                             
-Serial.println(httpCode);                                                    // Print HTTP return code
-
+Serial.println(httpCode);  
+Serial.print(F("\nmessage: "));                                                  // Print HTTP return code;
+Serial.println(message);
 client.end();  //Close connection
 }
 

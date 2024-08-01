@@ -127,7 +127,7 @@ known issues: OTA download not possible "not enouth space"
 
 
   // use time.h from Arduino.h 
-  #include "time.h"                   // for time() ctime()
+  // #include "time.h"                   // for time() ctime()
 
   #include <server.h>
   #include <timeserver.h>
@@ -184,7 +184,7 @@ unsigned long millisNow      = 0;
 const uint16_t ajaxIntervall = 5;             // intervall for AJAX or fetch API call of website in seconds
 uint32_t clientPreviousSs = 0;                // - clientIntervall;  // last second when data was sent to server
 
-const uint16_t clientIntervall = 0;                      // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+const uint16_t clientIntervall = CLIENT_INTERVALL;       // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
 const char *sendHttpTo = "http://192.168.178.153/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
 
 int alarmState    = 0;    // shows the actual water level
@@ -206,7 +206,7 @@ int debugLevelSwitches_old = 0;
 #define AUTHOR_PASSWORD "lwecoyvlkmordnly"
 
 /* Recipient email address */
-#ifdef isLiveSystem
+#if isLiveSystem == 1
   #define RECIPIENT_EMAIL "gzehentner@web.de"
 #else
   #define RECIPIENT_EMAIL "gzehentner@t-online.de"
@@ -245,96 +245,8 @@ char *ramend = (char *)0x20088000;
 const char *ssid = STASSID;
 const char *password = STAPSK;
 
-/*=================================================================*/
-/* ===========   prepare timeserver =================*/
-
-/* Configuration of NTP */
-#define MY_NTP_SERVER "at.pool.ntp.org"           
-#define MY_TZ "CET-1CEST,M3.5.0/02,M10.5.0/03"  
-
-
-/* Globals */
-time_t epochTime;                         // this are the seconds since Epoch (1970) - UTC
-
-// declare global variables
-String currentDate;   // hold the current date
-String formattedTime; // hold the current time
-
-
-void showTime() {
-  tm tmL;
-  time(&epochTime);                       // read the current time
-  localtime_r(&epochTime, &tmL);           // update the structure tm with the current time
-  Serial.print("year:");
-  Serial.print(tmL.tm_year + 1900);  // years since 1900
-  Serial.print("\tmonth:");
-  Serial.print(tmL.tm_mon + 1);      // January = 0 (!)
-  Serial.print("\tday:");
-  Serial.print(tmL.tm_mday);         // day of month
-  Serial.print("\thour:");
-  Serial.print(tmL.tm_hour);         // hours since midnight  0-23
-  Serial.print("\tmin:");
-  Serial.print(tmL.tm_min);          // minutes after the hour  0-59
-  Serial.print("\tsec:");
-  Serial.print(tmL.tm_sec);          // seconds after the minute  0-61*
-  Serial.print("\twday");
-  Serial.print(tmL.tm_wday);         // days since Sunday 0-6
-  if (tmL.tm_isdst == 1)             // Daylight Saving Time flag
-    Serial.print("\tDST");
-  else
-    Serial.print("\tstandard");
-  Serial.println();
-}
-
-void showTimeAlternative() {
-  //time_t epochTime;                       // this are the seconds since Epoch (1970) - UTC
-  tm tmL;                            // the structure tm holds time information in a more convenient way
-  time(&epochTime);                       // read the current time
-  localtime_r(&epochTime, &tmL);           // update the structure tm with the current time
-  char buffer[42] {0};              // a buffer large enough to hold your output
-  strftime (buffer, sizeof(buffer), "%H:%M", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
-  Serial.println(buffer);
-}
-
-// void getFormattedDateAndTime()
-// {
-//   //time_t epochTime;                       // this are the seconds since Epoch (1970) - UTC
-//   tm tmL;                           // the structure tm holds time information in a more convenient way
-//   time(&epochTime);                       // read the current time
-//   localtime_r(&epochTime, &tmL);          // update the structure tm with the current time
-  
-//   char buffer[42] {0};              // a buffer large enough to hold your output
-//   strftime (buffer, sizeof(buffer), "%H:%M:%S", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
-//   formattedTime = buffer;
-
-//   strftime (buffer, sizeof(buffer), "%F", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
-//   currentDate = buffer;
-
-// }
-
-void getEpochTime(time_t &epochTime)
-{
-  time(&epochTime);                       // read the current time
-}
-
-void formatDateAndTime(String &formattedTime, String &formattedDate, time_t epochTime)
-{
-  //time_t epochTime;                       // this are the seconds since Epoch (1970) - UTC
-  tm tmL;                           // the structure tm holds time information in a more convenient way
-  localtime_r(&epochTime, &tmL);          // update the structure tm with the current time
-  
-  char buffer[42] {0};              // a buffer large enough to hold your output
-  strftime (buffer, sizeof(buffer), "%H:%M:%S", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
-  formattedTime = buffer;
-
-  strftime (buffer, sizeof(buffer), "%F", &tmL);  // for different formats see https://cplusplus.com/reference/ctime/strftime/
-  formattedDate = buffer;
-
-}
 
 WiFiUDP ntpUDP;
-
-/* End Timeserver */
 
 #ifndef CSS_MAINCOLOR
 #define CSS_MAINCOLOR "#8A0829" // fallback if no CSS_MAINCOLOR was declared for the board
@@ -450,16 +362,7 @@ void setup(void) {
   pinMode(GPin_AH,  INPUT_PULLUP);
   pinMode(GPin_AL,  INPUT_PULLUP);
 
-
-
-  // for ESP32 we no longer use digital output for GND, but ESP32-GND
-  #if (BOARDTYPE == ESP8266)
-    // GZE_DEBUG
-    // pinMode(GPout_GND, OUTPUT);
-    // digitalWrite(GPout_GND, 0);
-  #endif
-
-  
+ 
   /* ----End Setup WaterLevel ------------------------------------------ */
   /*=================================================================*/
 
@@ -524,7 +427,7 @@ void setup(void) {
     // prepare analog read
     // ADS 1115 (0x48 .. 0x4B will be the address)
     #if BOARDTYPE == ESP8266
-      Wire.begin(4,5);
+      Wire.begin(I2C_SDA,I2C_SCL);
     #endif
     #if BOARDTYPE == ESP32
       if (!ads.begin(0x48, &I2CSensors))
@@ -604,14 +507,21 @@ void loop(void) {
   delay(2);//allow the cpu to switch to other tasks
 
   if (debugLevelSwitches != debugLevelSwitches_old) {
-    if (debugLevelSwitches) {
+    if (debugLevelSwitches == 1) {
+      // set default values to last actual values, when debug is switched on 
+      Serial.print("val_AHH: "); Serial.println(val_AHH);
+      Serial.print("val_AH:  "); Serial.println(val_AH);
+      Serial.print("val_AL:  "); Serial.println(val_AL);
+      simVal_AHH = val_AHH;
+      simVal_AH  = val_AH;
+      simVal_AL  = val_AL;
       pinMode(GPin_AHH, OUTPUT);
       pinMode(GPin_AH,  OUTPUT);
       pinMode(GPin_AL,  OUTPUT);
       
-      digitalWrite(GPin_AHH, HIGH);
-      digitalWrite(GPin_AH , HIGH);
-      digitalWrite(GPin_AL , HIGH);
+      digitalWrite(GPin_AHH, simVal_AHH);
+      digitalWrite(GPin_AH , simVal_AH);
+      digitalWrite(GPin_AL , simVal_AL);
       Serial.println("debug level enabled");
     } else {
       pinMode(GPin_AHH, INPUT_PULLUP);
@@ -643,10 +553,11 @@ void loop(void) {
   /* evaluate water level */
   /*=================================================================*/
 
-  // Get waterlevel out of Current
   Current2Waterlevel();
-
+ 
   SetAlarmState_from_relais();
+
+  prepareSendMail();
 
   /*=================================================================*/
   /* Send Email reusing session   */

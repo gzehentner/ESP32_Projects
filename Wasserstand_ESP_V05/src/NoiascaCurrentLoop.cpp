@@ -124,8 +124,7 @@ int CurrentLoopSensor::getValueUnfiltered()
   
   //int32_t value = (adc - 186) * 500L / (931 - 186);                          // for 1023*500 we need a long
   int32_t value = (adc - minAdc) * int32_t(maxValue) / (maxAdc - minAdc);      // for 1023*500 we need a long  // -> pressure
-  //value += 53; // add 53mm to compensate offset
-  value += 10;  // add 10mm
+  value += valOffset;
   if (value > maxValue) value = maxValue;
   else if (value < 0) value = 0;
   return  value;

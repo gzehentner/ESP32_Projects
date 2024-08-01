@@ -15,6 +15,7 @@
   void beginCurrentLoopSensor();
   void ReadRelaisSetErrorLevel();
   void SetAlarmState_from_relais();
+  void prepareSendMail ();
 
 /*=================================*/
 /* calculate PWM duty cycle for simulation of analog value 
@@ -24,7 +25,7 @@
   Return: PWM duty cycle as number with 255 = 100%
   
   */
-  float Waterlevel2dutyCycle (float level);
+  //float Waterlevel2dutyCycle (float level);
   
 #endif
 

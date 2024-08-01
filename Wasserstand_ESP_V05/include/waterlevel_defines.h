@@ -7,12 +7,12 @@ Some basic defines for the whole project
 // #define Xno  0
 
 // is defined in platformio.ini
-    // #define isLiveSystem no
+    // #define isLiveSystem 0
 
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "6.0" // the version of this sketch
+  #define VERSION "6.2" // the version of this sketch
 
   #define internADC 0
   #define ADS1115_ADC   1
@@ -43,8 +43,7 @@ Some basic defines for the whole project
   /* *******************************************************************
           the board settings / die Einstellungen der verschiedenen Boards
   ********************************************************************/
-  #ifdef isLiveSystem
-
+  #if isLiveSystem == 1
     #define TXT_BOARDID "164"                   // an ID for the board
     #define TXT_BOARDNAME "Wasserstand " // the name of the board
     #define CSS_MAINCOLOR "blue"                // don't get confused by the different webservers and use different colors
@@ -60,10 +59,10 @@ Some basic defines for the whole project
   
   #if BOARDTYPE == ESP8266
     /* -- Pin-Def for ESP8266 -- */
-    #define GPin_AHH   3 // weiß
-    #define GPin_AH   13 // grau
-    #define GPin_AL   12 // violett
-    #define GPin_ALL  14 // blau
+    #define GPin_AHH   3 // weiß    // RX
+    #define GPin_AH   13 // grau    // D7
+    #define GPin_AL   12 // violett // D6
+    // #define GPin_ALL  14 // blau   
     // #define GPout_GND 12 // schwarz
   #else
     /* -- Pin-Def for ESP32 -- */  // Board159
@@ -74,29 +73,36 @@ Some basic defines for the whole project
   
   #endif
 
-  #ifdef isLiveSystem
-    #define DEBUG_VOLT_MULT 1
-  #else
-    // Testpad with external poti to simulate sensor needs a factor to be in working range
-    //    for life system factor has to be 1
-    #define DEBUG_VOLT_MULT 1
-  #endif
-
+ 
   // definitions for analog-digital conversion
-  #if MyUSE_ADC == ADS1115_ADC
-    #define GET_ANALOG ads.readADC_Differential_0_1() * DEBUG_VOLT_MULT
-    #define ADC_BIT  15  // only 15 bit for single ended signals
-    #define Ain_Level 0  // input = adc0
+  // #if MyUSE_ADC == ADS1115_ADC
+    // #define ADC_BIT  15  // only 15 bit for single ended signals
+    // #define Ain_Level 0  // input = adc0
 
-    #if BOARDTYPE == ESP32
-      #define I2C_SDA 14
-      #define I2C_SCL 15
-    #else
-      #define I2C_SDA 13
-      #define I2C_SCL 15
-    #endif
+    // #if BOARDTYPE == ESP32
+    //   #define GET_ANALOG ads.readADC_Differential_0_1()
+    //   #define I2C_SDA 14
+    //   #define I2C_SCL 15
+    // #else
+    //   #define GET_ANALOG ads.readADC(Ain_Level)
+    //   // #define I2C_SDA 13
+    //   // #define I2C_SCL 15
+    // #endif
 
+      // definitions for analog-digital conversion
+    #if MyUSE_ADC == ADS1115_ADC
+      #define ADC_BIT  15  // only 15 bit for single ended signals
+      #define Ain_Level 0  // input = adc0
 
+      #if BOARDTYPE == ESP32
+        #define GET_ANALOG ads.readADC_Differential_0_1()
+        #define I2C_SDA 14
+        #define I2C_SCL 15
+      #else
+        #define GET_ANALOG ads.readADC(0)
+        #define I2C_SDA 4
+        #define I2C_SCL 5
+      #endif
 
   #else // use builtin ADC
     #if BOARDTYPE == ESP32
@@ -117,7 +123,7 @@ Some basic defines for the whole project
     #define BLUE_LED builtin_led
   #endif
 
-  #ifdef isLiveSystem
+  #if isLiveSystem == 1
   #else
     // #define DEBUG_PRINT_HEAP
   
@@ -143,14 +149,18 @@ Some basic defines for the whole project
   #endif
 
   #ifdef SIM_VALUES
-    //  const int  filterCntMax = 1;  //  GZE: zum Test ganz ohne Filter!!       // time for myvalue: measureInterval * filterCntMax  
-    const int  filterCntMax = 100;        // time for myvalue: measureInterval * filterCntMax  
+    const int  filterCntMax = 1;  //  GZE: zum Test ganz ohne Filter!!       // time for myvalue: measureInterval * filterCntMax  
+    // const int  filterCntMax = 100;        // time for myvalue: measureInterval * filterCntMax  
     const unsigned long  longtermInterval = 10000;  // time between two saved values in ms
   #else
     const int  filterCntMax = 1800; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
     const unsigned long  longtermInterval = 1000*60*60*6; // four times a day
   #endif
 
+  /* -- Server / Client Settings -- */
+  #define CLIENT_INTERVALL 0     // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+
+  
   /* -- Alarm-Level -- */
   // Pegel wurde verändert, hängt um 6cm höher
   // --> Werte korrigieren
@@ -161,5 +171,9 @@ Some basic defines for the whole project
                         // Aktueller Niedrig-Stand Nov 2023 = 99 cm
 
   // #define BUTTON1_PIN 19
+
+  // value offset
+  // adapt measured value to TS [mm]
+  #define valOffset -15
 
 #endif
