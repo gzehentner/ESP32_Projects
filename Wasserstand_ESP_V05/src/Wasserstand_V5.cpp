@@ -184,7 +184,7 @@ unsigned long millisNow      = 0;
 const uint16_t ajaxIntervall = 5;             // intervall for AJAX or fetch API call of website in seconds
 uint32_t clientPreviousSs = 0;                // - clientIntervall;  // last second when data was sent to server
 
-const uint16_t clientIntervall = 0;                      // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+const uint16_t clientIntervall = CLIENT_INTERVALL;       // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
 const char *sendHttpTo = "http://192.168.178.153/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
 
 int alarmState    = 0;    // shows the actual water level
@@ -507,14 +507,21 @@ void loop(void) {
   delay(2);//allow the cpu to switch to other tasks
 
   if (debugLevelSwitches != debugLevelSwitches_old) {
-    if (debugLevelSwitches) {
+    if (debugLevelSwitches == 1) {
+      // set default values to last actual values, when debug is switched on 
+      Serial.print("val_AHH: "); Serial.println(val_AHH);
+      Serial.print("val_AH:  "); Serial.println(val_AH);
+      Serial.print("val_AL:  "); Serial.println(val_AL);
+      simVal_AHH = val_AHH;
+      simVal_AH  = val_AH;
+      simVal_AL  = val_AL;
       pinMode(GPin_AHH, OUTPUT);
       pinMode(GPin_AH,  OUTPUT);
       pinMode(GPin_AL,  OUTPUT);
       
-      digitalWrite(GPin_AHH, HIGH);
-      digitalWrite(GPin_AH , HIGH);
-      digitalWrite(GPin_AL , HIGH);
+      digitalWrite(GPin_AHH, simVal_AHH);
+      digitalWrite(GPin_AH , simVal_AH);
+      digitalWrite(GPin_AL , simVal_AL);
       Serial.println("debug level enabled");
     } else {
       pinMode(GPin_AHH, INPUT_PULLUP);

@@ -53,14 +53,14 @@ int val_AH;
 int val_AL;
 // int val_ALL;
 
-int simVal_AHH = 0;
-int simVal_AH  = 0;
+int simVal_AHH = 1;
+int simVal_AH  = 1;
 int simVal_AL  = 0;
 // int simVal_ALL = 0;
 
 int firstRun = 1;
 
-int debugLevelSwitches=0;
+int debugLevelSwitches=0; // default off
 
 /* =======================================*/
 void handleNotFound() {
@@ -294,32 +294,36 @@ void handlePage()
   message += F("</article>");
 
   message += F("<article>\n"
-  "<h2>Simulate</h2>\n" 
-  "<p>Enable Simulation and switch relais outputs "
-  "Click to toggle the output.</p>\n");
-  if (debugLevelSwitches) 
+  "<h2>Simulation</h2>\n" 
+  "<p>Zum Einschalten der Simulation klicke auf den obersten Schalter "
+  "<br>rot : Debug ein"
+  "<br><br>Um die Relais Eingänge zu schalten, klicke auf den entsprechenden Schalter<br>"
+  "<br>AHH / AH / AL : rot  --> überschritten"
+  "<br>AHH / AH / AL : grün --> unterschritten"
+  "</p>");
+  if (debugLevelSwitches == 1) // simulation aktiv = rot
   {
     message += F("<p class='on'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
   } else {
     message += F("<p class='off'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
   }
-  if (simVal_AHH) 
+  if (simVal_AHH == 0)  // low active => 0 = on = rot
   {
   message += F("<p class='on'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
   } else {
   message += F("<p class='off'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
   }
-  if (simVal_AH) 
+  if (simVal_AH == 0) // low active
   {
-  message += F("<p class='on'><a href='c.php?toggle=2' target='i'>AH </a></p>\n");
+  message += F("<p class='on'><a href='c.php?toggle=2' target='i'>AH</a></p>\n");
   } else {
-  message += F("<p class='off'><a href='c.php?toggle=2' target='i'>AH </a></p>\n");
+  message += F("<p class='off'><a href='c.php?toggle=2' target='i'>AH</a></p>\n");
   }
-  if (simVal_AL) 
+  if (simVal_AL == 1)  // high active => 1 = on = rot
   {
-  message += F("<p class='on'><a href='c.php?toggle=3' target='i'>AL </a></p>\n");
+  message += F("<p class='on'><a href='c.php?toggle=3' target='i'>AL</a></p>\n");
   } else {
-  message += F("<p class='off'><a href='c.php?toggle=3' target='i'>AL </a></p>\n");
+  message += F("<p class='off'><a href='c.php?toggle=3' target='i'>AL</a></p>\n");
   }
   // if (simVal_ALL) 
   // {
@@ -832,8 +836,8 @@ void handleCss()
               "nav a:hover{text-decoration:underline}"
               "nav p{margin:0px;padding:0px}"
               ".on, .off{color:white;margin-top:0;margin-bottom:0.2em;margin-left:4em;font-size:1.4em;border-style:solid;border-radius:10px;border-style:outset;width:5em;height:1.5em;text-decoration:none;text-align:center}"
-              ".on{background-color:green;border-color:green}"
-              ".off{background-color:red;border-color:red}"
+              ".off{color:white;background-color:green;border-color:green}"
+              ".on{color:black;background-color:red;border-color:red}"
               "message_ok  {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:green ;width:19em;text-align:center}"
               "message_warn{color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:orange;width:19em;text-align:center}"
               "message_err {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:red   ;width:19em;text-align:center}");
@@ -928,52 +932,27 @@ void handleCommand()
     if (server.arg(0) == "1") // the value for that parameter
     {
       Serial.println(F("D232 toggle ahh"));
-
-      if (simVal_AHH == digitalRead(GPin_AHH))
-      { // toggle: if the pin was on - switch it of and vice versa
-        digitalWrite(GPin_AHH, LOW);
-      }
-      else
-      {
-        digitalWrite(GPin_AHH, HIGH);
-      }
+      if (simVal_AHH == 1) {simVal_AHH = 0;} else {simVal_AHH = 1;}
+      digitalWrite(GPin_AHH, simVal_AHH);
     }
     if (server.arg(0) == "2") // the value for that parameter
     {
       Serial.println(F("D232 toggle ah"));
-      if (simVal_AH  == digitalRead(GPin_AH))
-      {
-        digitalWrite(GPin_AH, LOW);
-      }
-      else
-      {
-        digitalWrite(GPin_AH, HIGH);
-      }
+      if (simVal_AH == 1) {simVal_AH = 0;} else {simVal_AH = 1;}
+      digitalWrite(GPin_AH, simVal_AH);
     }
     if (server.arg(0) == "3") // the value for that parameter
     {
       Serial.println(F("D232 toggle al"));
-
-      if (simVal_AL  == digitalRead(GPin_AL))
-      { // toggle: if the pin was on - switch it of and vice versa
-        digitalWrite(GPin_AL, LOW);
-      }
-      else
-      {
-        digitalWrite(GPin_AL, HIGH);
-      }
+      if (simVal_AL == 1) {simVal_AL = 0;} else {simVal_AL = 1;}
+      digitalWrite(GPin_AL, simVal_AL);
     }
     if (server.arg(0) == "4") // the value for that parameter
     {
       Serial.println(F("D232 toggle all"));
-      // if (simVal_ALL = digitalRead(GPin_ALL))
-      // {
-      //   digitalWrite(GPin_ALL, LOW);
-      // }
-      // else
-      // {
-      //   digitalWrite(GPin_ALL, HIGH);
-      // }
+      // if (simVal_ALL == 1) {simVal_ALL = 0;} else {simVal_ALL = 1;}
+      // digitalWrite(GPin_AHH, simVal_ALL);
+      // Serial.println(simVal_ALL);
     }
     if (server.arg(0) == "5") // the value for that parameter(led))
     {

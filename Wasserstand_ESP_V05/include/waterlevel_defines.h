@@ -12,7 +12,7 @@ Some basic defines for the whole project
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "6.1" // the version of this sketch
+  #define VERSION "6.2" // the version of this sketch
 
   #define internADC 0
   #define ADS1115_ADC   1
@@ -157,6 +157,10 @@ Some basic defines for the whole project
     const unsigned long  longtermInterval = 1000*60*60*6; // four times a day
   #endif
 
+  /* -- Server / Client Settings -- */
+  #define CLIENT_INTERVALL 0     // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+
+  
   /* -- Alarm-Level -- */
   // Pegel wurde verändert, hängt um 6cm höher
   // --> Werte korrigieren
