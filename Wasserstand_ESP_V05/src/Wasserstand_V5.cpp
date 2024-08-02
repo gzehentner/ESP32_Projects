@@ -436,7 +436,7 @@ void setup(void) {
     #endif
     {
       Serial.println("Couldn't Find ADS 1115");
-      while  (1)
+      //while  (1)
         ;
     }
     else
