@@ -188,19 +188,19 @@ String htmlMsg="";
   
     if ((val_AHH == 0) && (val_AH == 0))
     {
-      alarmState = 5;
+      alarmState = 5;       // Alarm
     }
     else if (val_AH == 0)
     {
-      alarmState = 4;
+      alarmState = 4;       // urgent warning
     }
     else if (val_AL == 1)
     {
-      alarmState = 3;
+      alarmState = 3;       // normal high
     }
     else if ((val_AL == 0) ) //&& (val_ALL == 1))
     {
-      alarmState = 2;
+      alarmState = 2;       // normal
     }
     // else if ((val_ALL == 0))
     // {
@@ -258,7 +258,7 @@ String htmlMsg="";
           htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
           executeSendMail = true;
         }
-        else if (alarmState == 3)
+        else if ((alarmState == 3) || (alarmState == 2))
         {
           // info that level is now ok
           Serial.println(F("level decreased to OK"));
