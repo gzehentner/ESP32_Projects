@@ -170,6 +170,11 @@ Some basic defines for the whole project
   #define Level_ALL 140 // Unterkante KG Rohr
                         // Aktueller Niedrig-Stand Nov 2023 = 99 cm
 
+  #define Level_AHH_Str "185"
+  #define Level_AH_Str  "170"
+  #define Level_AL_Str  "155"
+  #define Level_ALL_Str "140" 
+
   // #define BUTTON1_PIN 19
 
   // value offset

@@ -187,8 +187,18 @@ uint32_t clientPreviousSs = 0;                // - clientIntervall;  // last sec
 const uint16_t clientIntervall = CLIENT_INTERVALL;       // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
 const char *sendHttpTo = "http://192.168.178.153/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
 
-int alarmState    = 0;    // shows the actual water level
-int alarmStateOld = 0; // previous value of alarmState
+
+int alarmStateRelais    = 0; // actual state of alarm derived from relais
+int alarmStateRelaisOld = 0; // previous value of alarmStateRelais
+int alarmStateLevel     = 0; // actual state of alarm derived from measured water level
+int alarmStateLevelOld  = 0; // previous value of alarmStateLevel
+int alarmState    = 0;       // worst case value of both alarmState
+                             //   5 : pump running
+                             //   4 : severe warning
+                             //   3 : normal high
+                             //   2 : normal 
+                             //   1 : normal low
+int alarmStateOld = 0;       // previous value of alarmState
 bool executeSendMail = false;
 
 int debugLevelSwitches_old = 0;
@@ -263,7 +273,7 @@ WiFiUDP ntpUDP;
 float dutycylce  = 0;              // how bright the LED is
 
 float fadeAmount = 0.0001;         // how many m to fade the LED by
-float pegel      = Level_AL/100.0; // waterlevel in m
+float pegel      = Level_ALL - 5; // waterlevel in cm
 
 
 unsigned long previousMillisMemoryStatePrint;
@@ -330,7 +340,7 @@ void setup(void) {
   // /* Prepare SendMail */
 
   MailClient.networkReconnect(true);
-  smtp.debug(1);
+  smtp.debug(0);
 
   smtp.callback(smtpCallback);
 
@@ -378,11 +388,13 @@ void setup(void) {
 
   server.on("/f.css", handleCss); // a stylesheet
   server.on("/j.js", handleJs);   // javscript based on fetch API to update the page
+  //server.on("/jslider.js", handleSliderJs);   // javscript display of slider value
   // server.on("/j.js",  handleAjax);             // a javascript to handle AJAX/JSON update of the page  https://werner.rothschopf.net/201809_arduino_esp8266_server_client_2_ajax.htm
   server.on("/json", handleJson);    // send data in JSON format
   server.on("/c.php", handleCommand);            // process commands
                                      //  server.on("/favicon.ico", handle204);          // process commands
   server.onNotFound(handleNotFound); // show a typical HTTP Error 404 page
+  //server.on("/slider.htm",handleSlider);
 
   // the next two handlers are necessary to receive and show data from another module
   //  server.on("/d.php", handleData);               // receives data from another module
@@ -556,6 +568,8 @@ void loop(void) {
   Current2Waterlevel();
  
   SetAlarmState_from_relais();
+  SetAlarmState_from_level();
+  calculateWorstCaseAlarmState();
 
   prepareSendMail();
 

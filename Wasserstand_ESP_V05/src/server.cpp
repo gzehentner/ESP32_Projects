@@ -11,10 +11,15 @@
 //   ***************************************************************** */
 //
 
+//*************************************************
+// include headers depending on BOARDTYPE
+//*************************************************
+
 #include <Arduino.h>
 #include <timeserver.h>
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
+#include <EvaluateSensor.h>
 
   #if (BOARDTYPE == ESP32)
 
@@ -201,6 +206,8 @@ void handlePage()
   message += F("<article>"
                "<h2>Rohdaten</h2><pre>");
 
+  //************************************************ */
+  // display stat of the relais input signals
   // input signals are low active
   message += F("Level Alarm   high: <span id='val_AHH'>");
   if (val_AHH == 0)
@@ -231,113 +238,174 @@ void handlePage()
   {
     message += F("--");
   }
+
   message += F("</span><br>");
-  // message += F("Level Alarm   low:  <span id='val_ALL'>");
-  // if (val_ALL == 0)
-  // {
-  //   message += F("active");
-  // }
-  // else
-  // {
-  //   message += F("--");
-  // }
-  // message += F("</span><br>");
+
   message += F("</pre></article>");
 
+  // ------------- end of display relais
+
+  //-------------------------------------------------
+  //  Prepre and send message, depending on alarmState
+  //------------------------------------------------
   message += F("<article>"
                "<h2>Auswertung Wasserstand</h2>");
-  if (alarmState == 5)
-  {
-    message += F("<message_err> Achtung Hochwasser -- Pumpe einschalten <br>Wasserstand &gt ");
-    message += Level_AHH;
-    message += F("<br></message_err>");
-  }
+
+  if (alarmState == 5) 
+    message += F("<message_err> Achtung Hochwasser -- Pumpe einschalten <br>Wasserstand &gt " Level_AHH_Str "<br></message_err>");
+
   else if (alarmState == 4)
-  {
-    message += F("<message_warn> Wasserstand ist zwischen ");
-    message += Level_AH;
-    message += F(" und ");
-    message += Level_AHH;
-    message += F("<br></message_warn>");
-  }
+    message += F("<message_warn> Wasserstand ist zwischen " Level_AH_Str" und " Level_AHH_Str "<br></message_warn>");
+  
   else if (alarmState == 3)
-  {
-    message += F("<message_ok> Wasserstand ist zwischen ");
-    message += Level_AL;
-    message += F(" und ");
-    message += Level_AH;
-    message += F("<br></message_ok>");
-  }
+    message += F("<message_ok> Wasserstand ist zwischen " Level_AL_Str " und " Level_AH_Str " <br></message_ok>");
+
   else if (alarmState == 2)
-  {
-    message += F("<message_ok>   Wasserstand &lt; ");
-    // message += F("<message_ok> Wasserstand ist zwischen ");
-    // message += Level_ALL;
-    // message += F(" und ");
-    message += Level_AL;
+    message += F("<message_ok>   Wasserstand &lt; " Level_AL_Str "<br></message_ok>");
+  else
+    message += F("<message_ok>   Wasserstand &lt; " Level_AL_Str "<br>Alarmstate 1/0 <br></message_ok>");
 
-    message += F("<br></message_ok>");
-  }
-  // else if (alarmState == 1)
-  // {
-  //   message += F("<message_ok>   Wasserstand &lt; ");
-  //   message += Level_ALL;
-  //   message += F("<br></message_ok>");
-  // }
-
-  // print when a new value arrieves
+  // print when a new value arrives
   message += F("<br><br>  Zeit: ");
   message += formattedTime;
   message += F("   Wasserstand aktuell: ");
   message += myValueFilteredAct;
 
+  //-----------------------------------------------------------------------------------------
+  // End of show message depending of alarmstate
   message += F("</article>");
 
+  //-----------------------------------------------------------------------------------------
+  // Simulation
   message += F("<article>\n"
+  //-----------------------------------------------------------------------------------------
   "<h2>Simulation</h2>\n" 
   "<p>Zum Einschalten der Simulation klicke auf den obersten Schalter "
   "<br>rot : Debug ein"
   "<br><br>Um die Relais Eingänge zu schalten, klicke auf den entsprechenden Schalter<br>"
-  "<br>AHH / AH / AL : rot  --> überschritten"
-  "<br>AHH / AH / AL : grün --> unterschritten"
+  "<br>AHH / AH : rot   --> überschritten"
+  "<br>AHH / AH : grau  --> unterschritten"
+  "<br>    / AL : grün  --> unterschritten"
+  "<br>    / AL : grau  --> überschritten"
   "</p>");
   if (debugLevelSwitches == 1) // simulation aktiv = rot
   {
-    message += F("<p class='on'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
+    message += F("<p class='on_red'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
   } else {
     message += F("<p class='off'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
   }
-  if (simVal_AHH == 0)  // low active => 0 = on = rot
+  if (simVal_AHH == 0)  // low active => 0 = on = rot = higher than AHH
   {
-  message += F("<p class='on'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
+  message += F("<p class='on_red'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
   } else {
   message += F("<p class='off'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
   }
-  if (simVal_AH == 0) // low active
+  if (simVal_AH == 0) // low active => higher than AH
   {
-  message += F("<p class='on'><a href='c.php?toggle=2' target='i'>AH</a></p>\n");
+  message += F("<p class='on_red'><a href='c.php?toggle=2' target='i'>AH</a></p>\n");
   } else {
   message += F("<p class='off'><a href='c.php?toggle=2' target='i'>AH</a></p>\n");
   }
-  if (simVal_AL == 1)  // high active => 1 = on = rot
+  if (simVal_AL == 0)  // low active => 0 = on = green => lower! than
   {
-  message += F("<p class='on'><a href='c.php?toggle=3' target='i'>AL</a></p>\n");
+  message += F("<p class='on_green'><a href='c.php?toggle=3' target='i'>AL</a></p>\n");
   } else {
   message += F("<p class='off'><a href='c.php?toggle=3' target='i'>AL</a></p>\n");
   }
-  // if (simVal_ALL) 
-  // {
-  // message += F("<p class='on'><a href='c.php?toggle=4' target='i'>ALL</a></p>\n");
-  // } else {
-  // message += F("<p class='off'><a href='c.php?toggle=4' target='i'>ALL</a></p>\n");
-  // }
+
   message += F("<p class='off'><a href='c.php?toggle=5' target='i'>LED</a></p>\n"
   "<iframe name='i' style='display:none' ></iframe>\n" // hack to keep the button press in the window
+  //-----------------------------------------------------------------------------------------
+  // end of simulation
   "</article>\n");
+
+  // // add slider for waterlevel
+  // message += F("<article>\n"
+  // "<h2>Slider</h2>\n" 
+  // "<div class='slidecontainer'>\n"
+  // "<input type='range' min='1' max='100' value='50' class='slider' id='myRange'>\n"
+  // "</div>");
 
   addBottom(message);
   server.send(200, "text/html", message);
 }
+
+void handleSlider()
+{
+  String message;
+  addTop(message);
+
+  message += F(
+
+               "<!DOCTYPE html>"
+               "<html>"
+               "<head>"
+               "<meta name='viewport' content='width=device-width, initial-scale=1'>"
+               "<style>"
+               ".slidecontainer {"
+               "  width: 100%;"
+               "}"
+               ""
+               ".slider {"
+               "  -webkit-appearance: none;"
+               "  width: 100%;"
+               "  height: 25px;"
+               "  background: #d3d3d3;"
+               "  outline: none;"
+               "  opacity: 0.7;"
+               "  -webkit-transition: .2s;"
+               "  transition: opacity .2s;"
+               "}"
+               ""
+               ".slider:hover {"
+               "  opacity: 1;"
+               "}"
+               ""
+               ".slider::-webkit-slider-thumb {"
+               "  -webkit-appearance: none;"
+               "  appearance: none;"
+               "  width: 25px;"
+               "  height: 25px;"
+               "  background: #04AA6D;"
+               "  cursor: pointer;"
+               "}"
+               ""
+               ".slider::-moz-range-thumb {"
+               "  width: 25px;"
+               "  height: 25px;"
+               "  background: #04AA6D;"
+               "  cursor: pointer;"
+               "}"
+               "</style>"
+               "</head>"
+               "<body>"
+               ""
+               "<h1>Custom Range Slider</h1>"
+               "<p>Drag the slider to display the current value.</p>"
+               ""
+               "<div class='slidecontainer'>"
+               "  <input type='range' min='1' max='100' value='50' class='slider' id='myRange'>"
+               "  <p>Value: <span id='demo'></span></p>"
+               "</div>"
+               ""
+               "<script>"
+               "var slider = document.getElementById('myRange');"
+               "var output = document.getElementById('demo');"
+               "output.innerHTML = slider.value;"
+               ""
+               "slider.oninput = function() {"
+               "  output.innerHTML = this.value;"
+               "}"
+               "</script>"
+               ""
+               "</body>"
+               "</html>");
+
+              addBottom(message);
+              server.send(200, "text/html", message);
+};
+
+//=======================================================================================
 
 
 /* =======================================*/
@@ -543,14 +611,14 @@ void handleGraph()
 
   message += "const graphYlevelWarn = [];";
   message += "generateWarnData(\"";
-  message += Level_AH*10;
+  message += Level_AH;
   message += "\",0,";
   message += noValues;
   message +=",1);";
 
   message += "const graphYlevelErro = [];";
   message += "generateErroData(\"";
-  message += Level_AHH*10;
+  message += Level_AHH;
   message += "\",0,";
   message += noValues;
   message +=",1);";
@@ -566,7 +634,7 @@ void handleGraph()
   message +=  "     pointRadius: 1,";
   message +=  "     backgroundColor: \"rgba(0,0,255,1.0)\",";
   message +=  "     borderColor: \"rgba(0,0,255,0.5)\",";
-  message +=  "     label: \"Wasserstand [mm]\",";
+  message +=  "     label: \"Wasserstand [cm]\",";
   message +=  "     data: yValues";
   message +=  "     },{";
   message +=  "     fill: false,";
@@ -576,7 +644,7 @@ void handleGraph()
   message +=  "     borderColor: \"rgba(0,255,0,0.3)\",";
   message +=  "     label: \"Warnschwelle: ";
   message +=  Level_AH;
-  message +=  "0 mm\",";
+  message +=  " cm\",";
   message +=  "     data: graphYlevelWarn";
   message +=  "     },{";
   message +=  "     fill: false,";
@@ -586,18 +654,18 @@ void handleGraph()
   message +=  "     borderColor: \"rgba(255,0,0,0.3)\",";
   message +=  "     label: \"Alarmschwelle: ";
   message +=  Level_AHH;
-  message +=  "0 mm\",";
+  message +=  " cm\",";
   message +=  "     data: graphYlevelErro";
   message +=  "   }]";
   message +=  " },";
   message +=  " options: {";
   message +=  "   title: {";
   message +=  "   display: false,";
-  message +=  "   text: \"Wasserstand in mm\"";
+  message +=  "   text: \"Wasserstand in cm\"";
   message +=  "   },";
   message +=  "   legend: {display: true, text: \"Wasserstand \"},";
   message +=  "   scales: {";
-  message +=  "     yAxes: [{ticks: {min: 1000, max:2000}}]";
+  message +=  "     yAxes: [{ticks: {min: 100, max:200}}]";
   message +=  "   }";
   message +=  " }";
   message +=  " });";
@@ -725,14 +793,14 @@ void handleLongtermGraph()
   
   message += "const graphYlevelWarn = [];";
   message += "generateWarnData(\"";
-  message += Level_AH*10;
+  message += Level_AH;
   message += "\",0,";
   message += noValues;
   message +=",1);";
 
   message += "const graphYlevelErro = [];";
   message += "generateErroData(\"";
-  message += Level_AHH*10;
+  message += Level_AHH;
   message += "\",0,";
   message += noValues;
   message +=",1);";
@@ -748,7 +816,7 @@ void handleLongtermGraph()
   message +=  "     pointRadius: 2,";
   message +=  "     backgroundColor: \"rgba(0,0,255,1.0)\",";
   message +=  "     borderColor: \"rgba(0,0,255,0.5)\",";
-  message +=  "     label: \"Wasserstand [mm]\",";
+  message +=  "     label: \"Wasserstand [cm]\",";
   message +=  "     data: yValues";
   message +=  "     },{";
   message +=  "     fill: false,";
@@ -758,7 +826,7 @@ void handleLongtermGraph()
   message +=  "     borderColor: \"rgba(0,255,0,0.3)\",";
   message +=  "     label: \"Warnschwelle: ";
   message +=  Level_AH;
-  message +=  "0 mm\",";
+  message +=  " cm\",";
   message +=  "     data: graphYlevelWarn";
   message +=  "     },{";
   message +=  "     fill: false,";
@@ -768,18 +836,18 @@ void handleLongtermGraph()
   message +=  "     borderColor: \"rgba(255,0,0,0.3)\",";
   message +=  "     label: \"Alarmschwelle: ";
   message +=  Level_AHH;
-  message +=  "0 mm\",";
+  message +=  " cm\",";
   message +=  "     data: graphYlevelErro";
   message +=  "   }]";
   message +=  " },";
   message +=  " options: {";
   message +=  "   title: {";
   message +=  "   display: false,";
-  message +=  "   text: \"Wasserstand in mm\"";
+  message +=  "   text: \"Wasserstand in cm\"";
   message +=  "   },";
   message +=  "   legend: {display: true, text: \"Wasserstand \"},";
   message +=  "   scales: {";
-  message +=  "     yAxes: [{ticks: {min: 1000, max:2000}}]";
+  message +=  "     yAxes: [{ticks: {min: 100, max:200}}]";
   message +=  "   }";
   message +=  " }";
   message +=  " });";
@@ -822,6 +890,7 @@ void handleCss()
               "h1{font-size:1.2em;margin:1px;padding:5px}"
               "h2{font-size:1.0em}"
               "h3{font-size:0.9em}"
+              "p{color: black;}"
               "a{text-decoration:none;color:dimgray;text-align:center}"
               "main{text-align:center}"
               "article{vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:#E5E5E5;width:20em;text-align:left}" // if you don't like the floating effect (vor portrait mode on smartphones!) - remove display:inline-block
@@ -835,12 +904,56 @@ void handleCss()
               "nav a{color:dimgrey;padding:10px;text-decoration:none}"
               "nav a:hover{text-decoration:underline}"
               "nav p{margin:0px;padding:0px}"
-              ".on, .off{color:white;margin-top:0;margin-bottom:0.2em;margin-left:4em;font-size:1.4em;border-style:solid;border-radius:10px;border-style:outset;width:5em;height:1.5em;text-decoration:none;text-align:center}"
-              ".off{color:white;background-color:green;border-color:green}"
-              ".on{color:black;background-color:red;border-color:red}"
+              ".on_red, .on_green, .off{margin-top:0;margin-bottom:0.2em;margin-left:4em;font-size:1.4em;border-style:solid;border-radius:10px;border-style:outset;width:5em;height:1.5em;text-decoration:none;text-align:center}"
+              ".off{color:black;background-color:gray;border-color:grey}"
+              ".on_red{background-color:red;border-color:red}"
+              ".on_green{background-color:green;border-color:green}"
               "message_ok  {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:green ;width:19em;text-align:center}"
               "message_warn{color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:orange;width:19em;text-align:center}"
-              "message_err {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:red   ;width:19em;text-align:center}");
+              "message_err {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:red   ;width:19em;text-align:center}"
+              // //=========================================================================
+              // ".slidecontainer {"
+              // "  width: 100%; /* Width of the outside container */"
+              // "}"
+              // ""
+              // "/* The slider itself */"
+              // ".slider {"
+              // "  -webkit-appearance: none;  /* Override default CSS styles */"
+              // "  appearance: none;"
+              // "  width: 100%; /* Full-width */"
+              // "  height: 25px; /* Specified height */"
+              // "  background: #d3d3d3; /* Grey background */"
+              // "  outline: none; /* Remove outline */"
+              // "  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */"
+              // "  -webkit-transition: .2s; /* 0.2 seconds transition on hover */"
+              // "  transition: opacity .2s;"
+              // "}"
+              // ""
+              // "/* Mouse-over effects */"
+              // ".slider:hover {"
+              // "  opacity: 1; /* Fully shown on mouse-over */"
+              // "}"
+              // ""
+              // "/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */"
+              // ".slider::-webkit-slider-thumb {"
+              // "  -webkit-appearance: none; /* Override default look */"
+              // "  appearance: none;"
+              // "  width: 25px; /* Set a specific slider handle width */"
+              // "  height: 25px; /* Slider handle height */"
+              // "  background: #04AA6D; /* Green background */"
+              // "  cursor: pointer; /* Cursor on hover */"
+              // "}"
+              // ""
+              // ".slider::-moz-range-thumb {"
+              // "  width: 25px; /* Set a specific slider handle width */"
+              // "  height: 25px; /* Slider handle height */"
+              // "  background: #04AA6D; /* Green background */"
+              // "  cursor: pointer; /* Cursor on hover */"
+              // "}"
+              // ""
+              //=========================================================================
+              
+              );
   server.send(200, "text/css", message);
 }
 
@@ -900,6 +1013,26 @@ void handleJs()
 
   server.send(200, "text/javascript", message);
 }
+
+// /* =======================================*/
+// // Create a dynamic range slider to display the current value, with JavaScript:
+// void handleSliderJs()
+// {
+//   /* =======================================*/
+//   String message;
+//   message += F("const url ='json';\n"
+//                "var slider = document.getElementById('myRange');"
+//                "var output = document.getElementById('demo');"
+//                "output.innerHTML = slider.value; // Display the default slider value"
+
+//                "// Update the current slider value (each time you drag the slider handle)"
+//                "slider.oninput = function() {"
+//                "  output.innerHTML = this.value;"
+//                "}");
+
+//   server.send(200, "text/javascript", message);
+// }
+
 
 void handleCommand()
 {
@@ -973,6 +1106,9 @@ void handleCommand()
     ESP.restart();
   }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
+
+  setPegelforSimulation();
+
 }
 
 

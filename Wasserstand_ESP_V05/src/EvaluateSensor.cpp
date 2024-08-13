@@ -10,6 +10,7 @@
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 #include <NoiascaCurrentLoop.h>   // library for analog measurement
+#include <server.h>
 
 /*=================================================================*/
 /* Parameter for CurrentLoop */
@@ -17,7 +18,7 @@
 const byte sensorPin    = Ain_Level;  // ADC pin for the sensor
 const uint16_t resistor = 165;        // used shunt  resistor in Ohm
 const byte vref         = 32;         // VREF in Volt*10 (Uno 16MHz: 50, ProMini 8MHz: 3V3).
-const int maxValue      = 5000;        // measurement range: 000cm to 5000mm --> maxValue=5000
+const int maxValue      = 500;        // measurement range: 000cm to 500cm --> maxValue=500
 
 
 /*=================================================================*/
@@ -94,12 +95,17 @@ String htmlMsg="";
     // calculate average in interval: filterCntMax * 100us
     if (filterCnt < filterCntMax) {
       filterCnt++;
-    #ifdef SIM_FADING_LEVEL
-      myValueFiltered += pegel*1000;
-    #else
+
+    // in debug mode, pegel has to be used
+    // pegel is set by function setPegelforSimulation() as direct value
+    // in a coming version may be we set a PWM value and read back is done with the ADC
+    if (debugLevelSwitches) {
+      myValueFiltered += pegel;
+    } else {
       myValueFiltered +=  currentLoopSensor.getValueUnfiltered(); // read sensor value into variable
                                                         // and create a sum for filtering
-    #endif
+    }
+
       myAdcFiltered   += currentLoopSensor.getAdc();    // read ADC raw value
     } else {
       // else: when a new filtered value is calculated ()
@@ -161,17 +167,11 @@ String htmlMsg="";
   /*=====================================================*/
   /*
     - read out relais status
-    - set alarm stat
-    - prepare email text
+    - set alarm state accordingly
   */
   /*=====================================================*/
   void SetAlarmState_from_relais() {
   /*=====================================================*/
-
-    // reserve enough space for strings
-    subject.reserve(50);
-    htmlMsg.reserve(200);
-
     //++++++++++++++++++++++
     // Read in relais status
     //++++++++++++++++++++++
@@ -182,47 +182,101 @@ String htmlMsg="";
     
 
     //++++++++++++++++++++++
-    // set alarmState
+    // set alarmStateRelais
     //++++++++++++++++++++++
-    alarmStateOld = alarmState;
+    alarmStateRelaisOld = alarmStateRelais;
   
     if ((val_AHH == 0) && (val_AH == 0))
     {
-      alarmState = 5;       // Alarm
+      alarmStateRelais = 5;       // Alarm, pump running
     }
     else if (val_AH == 0)
     {
-      alarmState = 4;       // urgent warning
+      alarmStateRelais = 4;       // severe warning
     }
     else if (val_AL == 1)
     {
-      alarmState = 3;       // normal high
+      alarmStateRelais = 3;       // normal high
     }
     else if ((val_AL == 0) ) //&& (val_ALL == 1))
     {
-      alarmState = 2;       // normal
+      alarmStateRelais = 2;       // normal
     }
     // else if ((val_ALL == 0))
     // {
-    //   alarmState = 1;
+    //   alarmStateRelais = 1;    // normal lo9w
     // }
 
-    // GZE
-    if (alarmState != alarmStateOld){
-      Serial.print("Alarmstate: "); Serial.println(alarmState);
+    }
+
+  /*=====================================================*/
+  /*
+    - compare measured waterlevel with alarm level
+    - set alarm state
+  */
+  /*=====================================================*/
+  void SetAlarmState_from_level() {
+  /*=====================================================*/
+
+    //++++++++++++++++++++++
+    // set alarmStateLevel
+    //++++++++++++++++++++++
+    alarmStateLevelOld = alarmStateLevel;
+  
+    if (myValueFilteredAct > Level_AHH)
+    {
+      alarmStateLevel = 5;       // pump running
+    }
+    else if (myValueFilteredAct > Level_AH)
+    {
+      alarmStateLevel = 4;       // severe warning
+    }
+    else if (myValueFilteredAct > Level_AL)
+    {
+      alarmStateLevel = 3;       // normal high
+    }
+    else 
+    {
+      alarmStateLevel = 2;       // normal low
+    }
+    
+  }
+
+  /*=====================================================*/
+  /*
+    - compare the two alarm levels and set the global alarm state to worst case
+    - set alarm state
+  */
+  /*=====================================================*/
+  void calculateWorstCaseAlarmState()
+  {
+    alarmStateOld = alarmState;
+
+    if (alarmStateLevel > alarmStateRelais) {
+      alarmState = alarmStateLevel;
+    } else {
+      alarmState = alarmStateRelais;
+    }
+    
+    if ((alarmStateRelais != alarmStateRelaisOld) || (alarmStateLevel != alarmStateLevelOld)) {
+      Serial.print("alarmStateRelais: "); Serial.println(alarmStateRelais);
       Serial.print("AHH: "); Serial.println(val_AHH);
       Serial.print("AH : "); Serial.println(val_AH);
       Serial.print("AL : "); Serial.println(val_AL);  
-
+      Serial.print("alarmStatePegel: "); Serial.println(alarmStateLevel);
+      Serial.print("Pegel: ");Serial.println(pegel);
     }
   }
-
   /******************************************************** */
   /* prepare send mail depending on alarmState */
   /******************************************************** */
   void prepareSendMail ()
   /******************************************************** */
   {
+    // reserve enough space for strings
+    subject.reserve(50);
+    htmlMsg.reserve(200);
+
     if (alarmStateOld > 0)
     { // alarmStateOld == 0 means, it is the first run / dont send mail at the first run
       if (alarmStateOld < alarmState)
@@ -258,12 +312,20 @@ String htmlMsg="";
           htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
           executeSendMail = true;
         }
-        else if ((alarmState == 3) || (alarmState == 2))
+        else if (alarmState == 3)
         {
           // info that level is now ok
           Serial.println(F("level decreased to OK"));
           subject = F("Pegel Zehentner -- OK ");
           htmlMsg = F("<p>Wasserstand Zehentner ist wieder im Normalbereich</p>");
+          executeSendMail = true;
+        }
+        else if (alarmState == 2)
+        {
+          // info that level is now ok
+          Serial.println(F("level decreased to Low"));
+          subject = F("Pegel Zehentner -- sehr niedrig ");
+          htmlMsg = F("<p>Wasserstand Zehentner ist sehr niedrig. Alles OK</p>");
           executeSendMail = true;
         }
       }
@@ -276,6 +338,24 @@ String htmlMsg="";
   }
 
 
+/************************************
+ * setPegelforSimulation
+ * * set value of pegel direct by this function
+ * * depending on the alarmState we set a value +5cm or -5cm to the
+ *     value of the Level_Axx
+ * ************************************** */
+void setPegelforSimulation()
+{
+  if ((simVal_AHH==0) and (simVal_AH==0)) {
+    pegel = Level_AHH + 5;  // for simulation set pegel to Alarm-Level plus 5cm
+  } else if ((simVal_AH==0)) {
+    pegel = Level_AH  + 5;  // for simulation set pegel to Warning-Level plus 5cm
+  } else if (simVal_AL==1) {
+    pegel = Level_AL + 5;  // for simulation set pegel to OK-Level 1 plus 5cm
+  } else if (simVal_AL==0) {
+    pegel = Level_AL - 5;  // for simulation set pegel to OK-Level minus 5cm
+  }
+}
 /*================================= 
   calculate PWM duty cycle for simulation of analog value 
   ==================================
