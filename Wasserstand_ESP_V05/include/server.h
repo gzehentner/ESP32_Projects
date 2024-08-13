@@ -81,6 +81,12 @@ void handleJson();
 // a function in the JavaScript uses fetch API to request a JSON file from the webserver and updates the values on the page if the object names and ID are the same
 void handleJs();
 
+// only first steps
+// void handleSliderJs();
+// void handleSlider();
+
 void handleCommand();
+
+
 
 #endif

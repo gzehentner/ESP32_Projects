@@ -24,8 +24,13 @@ extern const char *sendHttpTo;         // the module will send information to th
 // extern int inByte;
 // extern int incomingByte; // for incoming serial data
 
-extern int alarmState;    // shows the actual water level
-extern int alarmStateOld; // previous value of alarmState
+extern int alarmStateRelais   ; // actual state of alarm derived from relais
+extern int alarmStateRelaisOld; // previous value of alarmStateRelais
+extern int alarmStateLevel    ; // actual state of alarm derived from measured water level
+extern int alarmStateLevelOld ; // previous value of alarmStateLevel
+extern int alarmState   ;       // worst case value of both alarmState
+extern int alarmStateOld;       // previous value of alarmState
+
 extern bool executeSendMail;
 
 extern int myValueFiltered;   // result of the filtering
@@ -50,7 +55,6 @@ extern int    ringLongtermValue[iLongtermRingValueMax +1];     // ring buffer fo
 extern int    wrLongtermRingPtr;                  // ring buffer write pointer 
 extern int    rdLongtermRingPtr;                  // ring buffer read pointer 
 
-// GZE
 extern float pegel; // waterlevel in m
 
 

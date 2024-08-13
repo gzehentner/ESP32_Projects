@@ -15,7 +15,10 @@
   void beginCurrentLoopSensor();
   void ReadRelaisSetErrorLevel();
   void SetAlarmState_from_relais();
+  void SetAlarmState_from_level();
+  void calculateWorstCaseAlarmState();
   void prepareSendMail ();
+  void setPegelforSimulation();
 
 /*=================================*/
 /* calculate PWM duty cycle for simulation of analog value 
