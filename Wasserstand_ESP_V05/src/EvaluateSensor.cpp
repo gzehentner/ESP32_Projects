@@ -30,6 +30,7 @@ CurrentLoopSensor currentLoopSensor(sensorPin, resistor, vref, maxValue); // cre
 int    myValueFiltered  = 0;   // result of the filtering
 int    myValueFilteredAct = 0; // actual result for display in web page
 int    myAdcFiltered    = 0;
+int    myAdcFilteredAct = 0;
 
 int    filterCnt    = 0;       // count loop runs for collecting values for filter
 
@@ -63,12 +64,13 @@ int    rdLongtermRingPtr = 0;                  // ring buffer read pointer
 String subject="";
 String htmlMsg="";
 
-
-
 /* END Variables for CurrentLoop */
 /*=================================================================*/
 
+
+/*=================================================================*/
   void beginCurrentLoopSensor()
+/*=================================================================*/
   {
     currentLoopSensor.begin(); // start the sensor 
 //    currentLoopSensor.check();  // check the values and settings
@@ -81,7 +83,9 @@ String htmlMsg="";
   void Current2Waterlevel()
 /*================================================================*/
 {
+    /*================================================================*/
     // measure time and return, when to early
+    /*================================================================*/
     millisNow = millis();
     
     millisDiff = millisNow - previousMillis;
@@ -89,31 +93,41 @@ String htmlMsg="";
 
     // when it is too early, do nothing
     if (millisDiff <= measureInterval) return; // do nothing
-
     previousMillis = millisNow;
 
-    // calculate average in interval: filterCntMax * 100us
-    if (filterCnt < filterCntMax) {
-      filterCnt++;
-
-    // in debug mode, pegel has to be used
+    /*================================================================*/
+    // if not too early, get values
+    /*================================================================*/
+    // in debug mode, variable pegel has to be used
     // pegel is set by function setPegelforSimulation() as direct value
     // in a coming version may be we set a PWM value and read back is done with the ADC
     if (debugLevelSwitches) {
       myValueFiltered += pegel;
-    } else {
+    } else 
+   /*================================================================*/
+   // in normal mode values from ADC are used
+    {
+      /*================================================================*/
       myValueFiltered +=  currentLoopSensor.getValueUnfiltered(); // read sensor value into variable
+      /*================================================================*/
                                                         // and create a sum for filtering
-    }
-
       myAdcFiltered   += currentLoopSensor.getAdc();    // read ADC raw value
-    } else {
-      // else: when a new filtered value is calculated ()
-      filterCnt = 0;
-  
+
+    } 
+
+    /*================================================================*/
+    /*== increment filterCnt */
+    filterCnt++;
+
+    /*================================================================*/
+    // when a new filtered value is calculated ()
+    /*================================================================*/
+    if (filterCnt >= filterCntMax)
+    {
+       
       // calculate average
       myValueFilteredAct = myValueFiltered / filterCntMax;     
-      myAdcFiltered      = myAdcFiltered   / filterCntMax;
+      myAdcFilteredAct   = myAdcFiltered   / filterCntMax;
 
       /*=========================================*/
       /*=========================================*/
@@ -127,7 +141,7 @@ String htmlMsg="";
       ringValue[wrRingPtr] = myValueFilteredAct;  
 
       // add ADC raw values to ring buffer
-      ringADC[wrRingPtr]  = myAdcFiltered;
+      ringADC[wrRingPtr]  = myAdcFilteredAct;
 
       // increment write pos
       if (wrRingPtr<iRingValueMax) {
@@ -161,6 +175,10 @@ String htmlMsg="";
       /*=========================================*/
       myValueFiltered = 0;
       myAdcFiltered   = 0;
+      filterCnt = 0; 
+
+      /*================================================================*/
+      // end handle new filter value
     }
   }
 

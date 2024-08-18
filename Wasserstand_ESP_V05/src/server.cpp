@@ -45,7 +45,7 @@
   #include <ESP8266HTTPClient.h> // for the webclient https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266HTTPClient
   #include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
 
-  #include <NTPClient.h> // get time from timeserver
+  //#include <NTPClient.h> // get time from timeserver
   #include <WiFiUdp.h>
 
   ESP8266WebServer server(80); // an instance for the webserver

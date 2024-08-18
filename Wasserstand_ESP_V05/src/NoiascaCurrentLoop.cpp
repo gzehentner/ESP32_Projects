@@ -40,7 +40,7 @@
     const float mili_volt_per_bit = 0.125 ;  // with gain = 1
   #else
     #include <Wire.h>
-    #include <ADS1X15.h>
+    #include <Adafruit_ADS1X15.h>
     const int maxAdc_value = 0x7FFF;  // 15bit ADC
     const float mili_volt_per_bit = 0.125 ;  // with gain = 1
   #endif
@@ -52,11 +52,19 @@ CurrentLoopSensor::CurrentLoopSensor(byte pin, uint16_t resistor, byte vref, uin
   pin (pin),
   resistor (resistor),
   vref (vref),
-  maxValue (maxValue),
+
   #if MyUSE_ADC == ADS1115_ADC
-    minAdc (0.004 * resistor / mili_volt_per_bit * 1000),
-    maxAdc (0.020 * resistor / mili_volt_per_bit * 1000)
+    #ifdef USE_POTI         // use poti as analog input
+      maxValue (maxValue_POTI),
+      minAdc (minADC_POTI),
+      maxAdc (maxADC_POTI)
+    #else
+      maxValue (maxValue),
+      minAdc (0.004 * resistor / mili_volt_per_bit * 1000),
+      maxAdc (0.020 * resistor / mili_volt_per_bit * 1000)
+    #endif
   #else
+    maxValue (maxValue),
     minAdc (210), // (0.004 * resistor * maxAdc_value / (vref / 10.0)),
     maxAdc (0.020 * resistor * maxAdc_value / (vref / 10.0))
   #endif
@@ -121,12 +129,33 @@ int CurrentLoopSensor::getValueUnfiltered()
 {
   adc = 0;
   adc = GET_ANALOG;
+  // if (adc <= 0)
+  // {
+  //   Serial.println("**************************** Error: adc <= 0");
+  //   Serial.print("adc: "); Serial.println(adc);
+
+  //   Serial.println("read again");
+
+  //   // wait until not busy
+  //   // for (; ads.isBusy();) {
+  //   //   Serial.print(".");
+  //   // }
+  //   // read new value
+  //   adc = GET_ANALOG;
+  //   Serial.print("2nd adc: "); Serial.println(adc);
+
+  // }
   
   //int32_t value = (adc - 186) * 500L / (931 - 186);                          // for 1023*500 we need a long
   int32_t value = (adc - minAdc) * int32_t(maxValue) / (maxAdc - minAdc);      // for 1023*500 we need a long  // -> pressure
   value += valOffset;
   if (value > maxValue) value = maxValue;
-  else if (value < 0) value = 0;
+  else if (value < 0) 
+  {
+    value = 0;
+    // Serial.println("**************************** Error: value set to 0");
+//    Serial.print("get error: "); Serial.println(ads.getError());
+  }
   return  value;
 }
 

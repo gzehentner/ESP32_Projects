@@ -12,7 +12,7 @@ Some basic defines for the whole project
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "6.2" // the version of this sketch
+  #define VERSION "6.3" // the version of this sketch
 
   #define internADC 0
   #define ADS1115_ADC   1
@@ -36,7 +36,7 @@ Some basic defines for the whole project
     #include <Adafruit_ADS1X15.h>
   #else
     #include <Wire.h>
-    #include <ADS1X15.h>
+    #include <Adafruit_ADS1X15.h>
   #endif
 #endif
 
@@ -99,7 +99,7 @@ Some basic defines for the whole project
         #define I2C_SDA 14
         #define I2C_SCL 15
       #else
-        #define GET_ANALOG ads.readADC(0)
+        #define GET_ANALOG ads.readADC_SingleEnded(0)
         #define I2C_SDA 4
         #define I2C_SCL 5
       #endif
@@ -112,7 +112,6 @@ Some basic defines for the whole project
     #define GET_ANALOG analogRead(pin)
     #define ADC_BIT 10
     #define Ain_Level PIN_A0
-    #define PWM_OUT 1 // PWM-Output to IO1
   #endif
 
   #if BOARDTYPE == ESP32
@@ -121,15 +120,31 @@ Some basic defines for the whole project
   #else
     #define builtin_led 2 
     #define BLUE_LED builtin_led
+    #define PWM_OUT LED_BUILTIN
   #endif
 
   #if isLiveSystem == 1
   #else
-    // #define DEBUG_PRINT_HEAP
+    // enable printing in main loop
+    // cyclic print with predefined time interval: WaitingCyclicPrint
+    #define DEBUG_PRINT_CYCLIC
   
-    // #define DEBUG_PRINT_RAW  // print raw voltage values without calculating current values; used for debug ADC function
-    #define SIM_VALUES  // use small values for loops to get a fast simulation of firmware
-    // #define SIM_FADING_LEVEL  // generate a fading value for analog input to simulate funkctions without an external electronic
+    // print raw voltage values without calculating current values; used for debug ADC function
+    // #define DEBUG_PRINT_RAW  
+
+    // use small values for loops to get a fast simulation of firmware    
+    #define SIM_VALUES  
+
+    // generate a fading value for analog input to simulate funkctions without an external electronic
+    // #define SIM_FADING_LEVEL  
+    
+    // simulate level with poti --> different values vor minADC/maxADC necessary
+    #define USE_POTI
+    #ifdef USE_POTI
+      #define minADC_POTI 0
+      #define maxADC_POTI 26500
+      #define maxValue_POTI 250
+    #endif
   #endif
 
   #if BOARDTYPE == ESP32
@@ -153,7 +168,8 @@ Some basic defines for the whole project
     // const int  filterCntMax = 100;        // time for myvalue: measureInterval * filterCntMax  
     const unsigned long  longtermInterval = 10000;  // time between two saved values in ms
   #else
-    const int  filterCntMax = 1800; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
+    const int  filterCntMax = 10;  //  GZE: Versuch 1s       // time for myvalue: measureInterval * filterCntMax  
+    // const int  filterCntMax = 1800; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
     const unsigned long  longtermInterval = 1000*60*60*6; // four times a day
   #endif
 
@@ -179,6 +195,6 @@ Some basic defines for the whole project
 
   // value offset
   // adapt measured value to TS [mm]
-  #define valOffset -15
+  #define valOffset 0
 
 #endif
