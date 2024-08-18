@@ -146,13 +146,17 @@ known issues: OTA download not possible "not enouth space"
     #include <Adafruit_Sensor.h>
     #include <Adafruit_ADS1X15.h>
     TwoWire I2CSensors = TwoWire(0);
-    Adafruit_ADS1115 ads;
+    Adafruit_Adafruit_ADS1115 ads;
     int16_t adc0;
   #else
-    #include <ADS1X15.h>
+    #include <Adafruit_ADS1X15.h>
+//    #include <Adafruit_ADS1X15.h>
     #include <Wire.h>
     
-    ADS1115 ads(0x48);
+//    ADS1115 ads(0x48);
+    Adafruit_ADS1115 ads;
+
+    int16_t adc0;
   #endif
 #endif
 
@@ -276,8 +280,8 @@ float fadeAmount = 0.0001;         // how many m to fade the LED by
 float pegel      = Level_ALL - 5; // waterlevel in cm
 
 
-unsigned long previousMillisMemoryStatePrint;
-unsigned long WaitingTimeMemoryStatePrint = 1000;
+unsigned long previousMillisCyclicPrint;
+unsigned long WaitingTimeCyclicPrint = 1000;
 
 unsigned long previousMillis_halfSecondAction;
 unsigned long halfSecond;
@@ -669,14 +673,20 @@ void loop(void) {
 
 
   
-  #ifdef DEBUG_PRINT_HEAP
-    if (millis() - previousMillisMemoryStatePrint > WaitingTimeMemoryStatePrint)
+  #ifdef DEBUG_PRINT_CYCLIC
+    if (millis() - previousMillisCyclicPrint > WaitingTimeCyclicPrint)
     {
-      Serial.println(formattedTime);
-      heapInfo.collect();
-      heapInfo.print();
+      Serial.print(formattedTime);
+      // heapInfo.collect();
+      // heapInfo.print();
       
-      previousMillisMemoryStatePrint = millis();
+      Serial.print("  myValueFilteredAct: "); Serial.print(myValueFilteredAct);
+      Serial.print("  myAdcFilteredAct: ");        Serial.println(myAdcFilteredAct);
+      
+      if ((myValueFilteredAct < 150) && (myValueFilteredAct > 170)) {
+        Serial.println("***************************************************************");
+      }
+      previousMillisCyclicPrint = millis();
     }
   #endif
 

@@ -33,8 +33,9 @@ extern int alarmStateOld;       // previous value of alarmState
 
 extern bool executeSendMail;
 
-extern int myValueFiltered;   // result of the filtering
 extern int myValueFilteredAct; // actual result for display in web page
+extern int myAdcFilteredAct;
+
 extern int filterCnt;   
 extern unsigned long previousMillis;             // used to determine intervall of ADC measurement
 extern unsigned long longtermPreviousMillis;     // used to determine intervall since last value saved
@@ -65,7 +66,7 @@ extern float pegel; // waterlevel in m
       Adafruit_ADS1115 ads;
       int16_t adc0;
     #else
-      extern ADS1115 ads;
+      extern Adafruit_ADS1115 ads;
       //Wire.begin(4,5);
     #endif
   #endif
