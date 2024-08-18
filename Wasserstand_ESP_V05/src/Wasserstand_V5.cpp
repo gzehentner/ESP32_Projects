@@ -458,7 +458,8 @@ void setup(void) {
     else
     {
       Serial.println("ADS 1115 Found");
-      ads.setGain(1);
+      // GZE Debug 
+      ads.setGain(GAIN_ONE);
       Serial.print("Gain: ");
       Serial.println(ads.getGain());
     }

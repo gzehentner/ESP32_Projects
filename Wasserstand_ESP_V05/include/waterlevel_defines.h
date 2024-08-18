@@ -12,7 +12,7 @@ Some basic defines for the whole project
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "6.2" // the version of this sketch
+  #define VERSION "6.3" // the version of this sketch
 
   #define internADC 0
   #define ADS1115_ADC   1
@@ -168,7 +168,8 @@ Some basic defines for the whole project
     // const int  filterCntMax = 100;        // time for myvalue: measureInterval * filterCntMax  
     const unsigned long  longtermInterval = 10000;  // time between two saved values in ms
   #else
-    const int  filterCntMax = 1800; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
+    const int  filterCntMax = 10;  //  GZE: Versuch 1s       // time for myvalue: measureInterval * filterCntMax  
+    // const int  filterCntMax = 1800; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
     const unsigned long  longtermInterval = 1000*60*60*6; // four times a day
   #endif
 
@@ -194,6 +195,6 @@ Some basic defines for the whole project
 
   // value offset
   // adapt measured value to TS [mm]
-  #define valOffset -15
+  #define valOffset 0
 
 #endif
