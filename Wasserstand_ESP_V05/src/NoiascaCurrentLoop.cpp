@@ -1,4 +1,5 @@
-/* Noiasca Current Loop Library, 
+
+/* \brief Current Loop Library, 
  * for measuring current loop sensors 4mA - 20mA
  * https://werner.rothschopf.net
  * Copyright (c) Werner Rothschopf
@@ -23,7 +24,26 @@
  *
  * 2020-05-08 Version 1.0.0 - initial release
  */
- 
+ /*
+ *
+**************************************************************************************************
+ *
+ * \brief Adapted for Waterlevel - Project
+ * 
+ * - use of ADS 1115 via I2C interface
+ *   - controlled by compiler-switch
+ * 
+ * Compiler-Switches used
+ * \param - MyUSE_ADC
+ * \param - BOARDTYPE
+ * \parem - USE_POTI
+ * \param - GET_ANALOG (defines the method to get the analog value - serial I2C or analog input)
+ * 
+ * 
+ * 
+
+ **************************************************************************************************
+*/
 
 #include <NoiascaCurrentLoop.h>
 #include <waterlevel_defines.h>
@@ -31,7 +51,11 @@
 
 #include <waterlevel.h>
 
+/* ***************************************************************************************************/
+/* basic setting*/
+/* ***************************************************************************************************/
 #if MyUSE_ADC == ADS1115_ADC
+  // use external ADC connected with I2C: ADS 1115
   #if BOARDTYPE == ESP32
     #include <Wire.h>
     #include <Adafruit_Sensor.h>
@@ -45,19 +69,22 @@
     const float mili_volt_per_bit = 0.125 ;  // with gain = 1
   #endif
 #else
+  // use internal ADC 
   const int maxAdc_value = 0x3FF;   // 10bit ADC
 #endif
 
+/* ***************************************************************************************************/
 CurrentLoopSensor::CurrentLoopSensor(byte pin, uint16_t resistor, byte vref, uint16_t maxValue) :
+/* ***************************************************************************************************/
   pin (pin),
   resistor (resistor),
   vref (vref),
 
   #if MyUSE_ADC == ADS1115_ADC
     #ifdef USE_POTI         // use poti as analog input
-      maxValue (maxValue_POTI),
-      minAdc (minADC_POTI),
-      maxAdc (maxADC_POTI)
+      maxValue (maxValue),
+      minAdc (0), // with Poti we get a voltage as input; with current sensor a current
+      maxAdc (26500)
     #else
       maxValue (maxValue),
       minAdc (0.004 * resistor / mili_volt_per_bit * 1000),
@@ -70,13 +97,17 @@ CurrentLoopSensor::CurrentLoopSensor(byte pin, uint16_t resistor, byte vref, uin
   #endif
   {}
 
+/* ***************************************************************************************************/
 int CurrentLoopSensor::begin()
+/* ***************************************************************************************************/
 {
   pinMode(pin, INPUT);
   return 1;        // assume success
 }
 
+/* ***************************************************************************************************/
 void CurrentLoopSensor::check()
+/* ***************************************************************************************************/
 {
   byte err = 0;
   if (minAdc < 0)
@@ -97,17 +128,17 @@ void CurrentLoopSensor::check()
   }
 }
 
-/*
-   return the previous measured raw ADC value
- */
+/* ***************************************************************************************************/
+/* return the previous measured raw ADC value */
+/* ***************************************************************************************************/
 int CurrentLoopSensor::getAdc()
 {
   return GET_ANALOG;
 }
 
-/*
-   do the measurement and return the result
- */
+/* ***************************************************************************************************/
+/*   do the measurement and return the result (not used in waterlevel project) */
+/* ***************************************************************************************************/
 int CurrentLoopSensor::getValue()
 {
   adc = 0;
@@ -124,45 +155,27 @@ int CurrentLoopSensor::getValue()
   return  value;
 }
 
+/* ***************************************************************************************************/
 // get the sensor value without filtering --> filtering can be done in calling software
+/* ***************************************************************************************************/
 int CurrentLoopSensor::getValueUnfiltered()
 {
   adc = 0;
   adc = GET_ANALOG;
-  // if (adc <= 0)
-  // {
-  //   Serial.println("**************************** Error: adc <= 0");
-  //   Serial.print("adc: "); Serial.println(adc);
-
-  //   Serial.println("read again");
-
-  //   // wait until not busy
-  //   // for (; ads.isBusy();) {
-  //   //   Serial.print(".");
-  //   // }
-  //   // read new value
-  //   adc = GET_ANALOG;
-  //   Serial.print("2nd adc: "); Serial.println(adc);
-
-  // }
   
   //int32_t value = (adc - 186) * 500L / (931 - 186);                          // for 1023*500 we need a long
   int32_t value = (adc - minAdc) * int32_t(maxValue) / (maxAdc - minAdc);      // for 1023*500 we need a long  // -> pressure
   value += valOffset;
   if (value > maxValue) value = maxValue;
-  else if (value < 0) 
-  {
-    value = 0;
-    // Serial.println("**************************** Error: value set to 0");
-//    Serial.print("get error: "); Serial.println(ads.getError());
-  }
+  else if (value < 0)   value = 0;
+  
   return  value;
 }
 
 
-/*
-   do the measurement and return the ADC value
- */
+/* ***************************************************************************************************/
+/* do the measurement and return the ADC value */
+/* ***************************************************************************************************/
 int CurrentLoopSensor::getFilteredAdc()
 {
   adc = 0;

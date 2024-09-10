@@ -1,30 +1,41 @@
 /*
+ * 
+ * Some basic defines for the whole project
+ * 
+ */
 
-Some basic defines for the whole project
+/*
+ * Variables set in platformio.ini
+ * - isLiveSystem
+ * - MyUSE_ADC
+ * 
+ * 
+ * *****************
+ * \brief compiler switches
+ * \param - BOARDTYPE: ESP8266 / ESP32
+ * \param - 
+
+
 
 */
-// #define Xyes 1
-// #define Xno  0
-
-// is defined in platformio.ini
-    // #define isLiveSystem 0
 
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
   #define VERSION "6.3" // the version of this sketch
 
+  // setting for ADC select: MyUSE_ADC
   #define internADC 0
   #define ADS1115_ADC   1
 
 
-  #ifdef ARDUINO_ARCH_ESP32               // if it is not a board with ESP32, then a
+  #ifdef ARDUINO_ARCH_ESP32          // if it is not a board with ESP32, then a
     #define BOARDTYPE ESP32
     // defined in platformio.ini 
     // #define MyUSE_ADC ADS1115_ADC
     //
   #else
-    #define BOARDTYPE ESP8266                // Board with ESP8266 is used (internal ADC)
+    #define BOARDTYPE ESP8266          // Board with ESP8266 is used (internal ADC)
     // defined in platformio.ini 
     // #define MyUSE_ADC internADC
   #endif
@@ -75,34 +86,19 @@ Some basic defines for the whole project
 
  
   // definitions for analog-digital conversion
-  // #if MyUSE_ADC == ADS1115_ADC
-    // #define ADC_BIT  15  // only 15 bit for single ended signals
-    // #define Ain_Level 0  // input = adc0
+  #if MyUSE_ADC == ADS1115_ADC
+    #define ADC_BIT  15  // only 15 bit for single ended signals
+    #define Ain_Level 0  // input = adc 
 
-    // #if BOARDTYPE == ESP32
-    //   #define GET_ANALOG ads.readADC_Differential_0_1()
-    //   #define I2C_SDA 14
-    //   #define I2C_SCL 15
-    // #else
-    //   #define GET_ANALOG ads.readADC(Ain_Level)
-    //   // #define I2C_SDA 13
-    //   // #define I2C_SCL 15
-    // #endif
-
-      // definitions for analog-digital conversion
-    #if MyUSE_ADC == ADS1115_ADC
-      #define ADC_BIT  15  // only 15 bit for single ended signals
-      #define Ain_Level 0  // input = adc0
-
-      #if BOARDTYPE == ESP32
-        #define GET_ANALOG ads.readADC_Differential_0_1()
-        #define I2C_SDA 14
-        #define I2C_SCL 15
-      #else
-        #define GET_ANALOG ads.readADC_SingleEnded(0)
-        #define I2C_SDA 4
-        #define I2C_SCL 5
-      #endif
+    #if BOARDTYPE == ESP32
+      #define GET_ANALOG ads.readADC_Differential_0_1()
+      #define I2C_SDA 14
+      #define I2C_SCL 15
+    #else
+      #define GET_ANALOG ads.readADC_SingleEnded(0)
+      #define I2C_SDA 4
+      #define I2C_SCL 5
+    #endif
 
   #else // use builtin ADC
     #if BOARDTYPE == ESP32
@@ -123,49 +119,47 @@ Some basic defines for the whole project
     #define PWM_OUT LED_BUILTIN
   #endif
 
+  //**************************************************************
+   //**************************************************************
+   // Debug and Simulation settings used in development board
+   //**************************************************************
+
   #if isLiveSystem == 1
-  #else
+  #else  
+    //*********************************
     // enable printing in main loop
     // cyclic print with predefined time interval: WaitingCyclicPrint
     #define DEBUG_PRINT_CYCLIC
   
+    //*********************************
     // print raw voltage values without calculating current values; used for debug ADC function
     // #define DEBUG_PRINT_RAW  
 
+    //*********************************
     // use small values for loops to get a fast simulation of firmware    
     #define SIM_VALUES  
 
-    // generate a fading value for analog input to simulate funkctions without an external electronic
+    //*********************************
+    // generate a fading value for analog input to simulate functions without an external electronic
     // #define SIM_FADING_LEVEL  
     
-    // simulate level with poti --> different values vor minADC/maxADC necessary
+    //*********************************
+    // simulate level with poti 
     #define USE_POTI
-    #ifdef USE_POTI
-      #define minADC_POTI 0
-      #define maxADC_POTI 26500
-      #define maxValue_POTI 250
-    #endif
+
   #endif
 
-  #if BOARDTYPE == ESP32
-    // length of ring buffer
-    #define iRingValueMax  1000 // 50 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
-    #define iLongtermRingValueMax 120 // 10// 120 // 370 // one value a day, buffer for one year (now we have four values a day so we have one month)
-    // maximum lines to be printed and points in graph
-    const int maxLines  = 1000;
-    const int maxPoints = 1000;
-  #else // BOARDTYPE == ESP8266
-    // length of ring buffer
-    #define iRingValueMax  100 // 50 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
-    #define iLongtermRingValueMax 120 // 10// 120 // 370 // one value a day, buffer for one year (now we have four values a day so we have one month)
-    // maximum lines to be printed and points in graph
-    const int maxLines  = 100;
-    const int maxPoints = 100;
-  #endif
+  // END: Debug and Simulation settings used in development board
+  //**************************************************************
 
+  //**************************************************************
+  // Settings for data capture
+  //**************************************************************
+
+  // \warning GZE: values have to be checked and corrigated
   #ifdef SIM_VALUES
-    const int  filterCntMax = 1;  //  GZE: zum Test ganz ohne Filter!!       // time for myvalue: measureInterval * filterCntMax  
-    // const int  filterCntMax = 100;        // time for myvalue: measureInterval * filterCntMax  
+    const int  filterCntMax = 1;          // time for myvalue: measureInterval * filterCntMax  
+    // const int  filterCntMax = 100;     // time for myvalue: measureInterval * filterCntMax  
     const unsigned long  longtermInterval = 10000;  // time between two saved values in ms
   #else
     const int  filterCntMax = 10;  //  GZE: Versuch 1s       // time for myvalue: measureInterval * filterCntMax  
@@ -173,13 +167,39 @@ Some basic defines for the whole project
     const unsigned long  longtermInterval = 1000*60*60*6; // four times a day
   #endif
 
+  //**************************************************************
+  // settings for ring buffer
+  // may be a too long ring buffer is the reason of sporadic crashes
+  #if BOARDTYPE == ESP32
+    //*****************
+    // length of ring buffer
+    #define iRingValueMax  1000 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
+    #define iLongtermRingValueMax 120 // 10// 120 // 370 // one value a day, buffer for one year (now we have four values a day so we have one month)
+    //*****************
+    // maximum lines to be printed and points in graph
+    const int maxLines  = 1000;
+    const int maxPoints = 1000;
+  #else // BOARDTYPE == ESP8266
+    //*****************
+    // length of ring buffer
+    // GZE \warning values have to be checked and adapted
+    #define iRingValueMax  100 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
+    #define iLongtermRingValueMax 120 // one value a day, buffer for one year (now we have four values a day so we have one month)
+    //*****************
+    // maximum lines to be printed and points in graph
+    const int maxLines  = 100;
+    const int maxPoints = 100;
+  #endif
+
+
   /* -- Server / Client Settings -- */
   #define CLIENT_INTERVALL 0     // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
 
   
+  //**************************************************************
   /* -- Alarm-Level -- */
+  //**************************************************************
   // Pegel wurde verändert, hängt um 6cm höher
-  // --> Werte korrigieren
   #define Level_AHH 185 // Oberkante Schacht = 187cm // Oberkante Bodenplatte = (OK-Schacht + 8 cm) = 1,95cm
   #define Level_AH  170  // Warnschwelle
   #define Level_AL  155
@@ -194,7 +214,20 @@ Some basic defines for the whole project
   // #define BUTTON1_PIN 19
 
   // value offset
-  // adapt measured value to TS [mm]
-  #define valOffset 0
+  // adapt measured value to TS [cm]
+  #define valOffset 0.
+ 
+  /*=================================================================*/
+  /* Parameter for CurrentLoop */
+  /*=================================================================*/
+  const byte sensorPin    = Ain_Level;  // ADC pin for the sensor
+  const uint16_t resistor = 165;        // used shunt  resistor in Ohm
+  const byte vref         = 32;         // VREF in Volt*10 (Uno 16MHz: 50, ProMini 8MHz: 3V3).
+
+  #ifdef USE_POTI
+    const int maxValue      = 250;        // measurement range: 000cm to 250cm --> maxValue=250
+  #else
+    const int maxValue      = 500;        // measurement range: 000cm to 500cm --> maxValue=500
+  #endif
 
 #endif

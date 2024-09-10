@@ -13,15 +13,6 @@
 #include <server.h>
 
 /*=================================================================*/
-/* Parameter for CurrentLoop */
-/*=================================================================*/
-const byte sensorPin    = Ain_Level;  // ADC pin for the sensor
-const uint16_t resistor = 165;        // used shunt  resistor in Ohm
-const byte vref         = 32;         // VREF in Volt*10 (Uno 16MHz: 50, ProMini 8MHz: 3V3).
-const int maxValue      = 500;        // measurement range: 000cm to 500cm --> maxValue=500
-
-
-/*=================================================================*/
 /* Variables for CurrentLoop */
 /*=================================================================*/
 
@@ -38,6 +29,10 @@ const int  measureInterval = 100; // measurement interval in milliseconds
 
 unsigned long millisDiff;
 unsigned long longtermMillisDiff;
+
+// variable for simulation
+//    used to hold the actual waterlevel if simulation is switched on
+float pegel      = Level_ALL - 5;  // waterlevel in cm
 
 /*=================================================================*/
 /* definitions for shortterm ring buffer */
