@@ -53,11 +53,16 @@
 
 #endif
 
+
 int val_AHH;
 int val_AH;
 int val_AL;
 // int val_ALL;
 
+// **************************************************************************************************
+// variables for simulation
+// **************************************************************************************************
+int debugLevelSwitches=0; // default off
 int simVal_AHH = 1;
 int simVal_AH  = 1;
 int simVal_AL  = 0;
@@ -65,11 +70,10 @@ int simVal_AL  = 0;
 
 int firstRun = 1;
 
-int debugLevelSwitches=0; // default off
 
-/* =======================================*/
+// **************************************************************************************************
 void handleNotFound() {
-/* =======================================*/
+// **************************************************************************************************
   // digitalWrite(builtin_led, 1);
   String message = "File Not Found\n\n";
   message += "URI: ";
@@ -87,6 +91,10 @@ void handleNotFound() {
   server.send(404, "text/plain", message);
   // digitalWrite(builtin_led, 0);
 }
+
+// **************************************************************************************************
+// to be used later
+// **************************************************************************************************
 
 // void drawGraph() {
 //   String out = "";
@@ -107,17 +115,17 @@ void handleNotFound() {
 // }
 
 
-// /* =======================================*/
+// **************************************************************************************************
 // void handle204()
-// /* =======================================*/
+// **************************************************************************************************
 // {
 //   server.send(204); // this page doesn't send back content
 // }
 
-/* =======================================*/
+// **************************************************************************************************
 /* add a header  to each page including refs for all other pages */
 void addTop(String &message)
-/* =======================================*/
+// **************************************************************************************************
 {
   message = F("<!DOCTYPE html>"
               "<html lang='en'>"
@@ -135,12 +143,12 @@ void addTop(String &message)
                "<main>");
 }
 
-/* =======================================*/
+// **************************************************************************************************
 /* The footer will display the uptime, the IP-address the version of the sketch and the compile date/time */
 /* add code to calculate the uptime */
 void addBottom(String &message)
 {
-  /* =======================================*/
+// **************************************************************************************************
 
   message += F("</main>"
                "<footer><p>");
@@ -184,6 +192,9 @@ void addBottom(String &message)
 
 // the html output
 // finally check your output if it is valid html: https://validator.w3.org
+
+// **************************************************************************************************
+// **************************************************************************************************
 // *** HOME ***  0.htm
 /* =======================================*/
 /* main page of this application:
@@ -191,7 +202,7 @@ void addBottom(String &message)
  *   - diaplay actual warn or alarm satus
  */
 void handlePage()
-/* =======================================*/
+// **************************************************************************************************
 {
   String message;
   addTop(message);
@@ -246,7 +257,7 @@ void handlePage()
   // ------------- end of display relais
 
   //-------------------------------------------------
-  //  Prepre and send message, depending on alarmState
+  //  Prepare and send message, depending on alarmState
   //------------------------------------------------
   message += F("<article>"
                "<h2>Auswertung Wasserstand</h2>");
@@ -265,6 +276,7 @@ void handlePage()
   else
     message += F("<message_ok>   Wasserstand &lt; " Level_AL_Str "<br>Alarmstate 1/0 <br></message_ok>");
 
+  //------------------------------------------------
   // print when a new value arrives
   message += F("<br><br>  Zeit: ");
   message += formattedTime;
@@ -329,8 +341,9 @@ void handlePage()
   addBottom(message);
   server.send(200, "text/html", message);
 }
-
+//*********************************************************************************
 void handleSlider()
+//*********************************************************************************
 {
   String message;
   addTop(message);
@@ -404,14 +417,14 @@ void handleSlider()
               addBottom(message);
               server.send(200, "text/html", message);
 };
+//*********************************************************************************
 
-//=======================================================================================
 
 
-/* =======================================*/
+//*********************************************************************************
 /* print value history*/
 void handleListFiltered()
-/* =======================================*/
+//*********************************************************************************
 {
   // what string length do we need?
   //   listing shortterm 
@@ -437,9 +450,9 @@ void handleListFiltered()
   Serial.print("1 - message length: "); 
   Serial.println(message.length());
 
-  //---------------------
+  //------------------------------------------------------------------
   // shortterm values
-  //---------------------
+  //-------------------------------------------------------------------
   message += F("<article>"
                "<h2>Wasserstand Zehentner Teisendorf</h2>" 
                "<p>Shortterm values<br>Index ");
@@ -477,9 +490,9 @@ void handleListFiltered()
   }
   message += F("</pre></article>");
 
-  //---------------------
+  //----------------------------------------------------------
   // longterm values
-  //---------------------
+  //----------------------------------------------------------
   message += F("<article>"
               "<h2>Wasserstand Zehentner Teisendorf</h2>" 
               "<p>Longtterm values<br>Index ");
@@ -521,10 +534,10 @@ void handleListFiltered()
   Serial.print("2 - message length: "); 
   Serial.println(message.length());
 }
-/* =======================================*/
+//*********************************************************************************
 /* print both graph longterm and shortterm*/
 void handleGraph()
-/* =======================================*/
+//*********************************************************************************
 {
   String graphXValues = "";     // values for graph (displayed)
   graphXValues.reserve(13000);
@@ -696,11 +709,10 @@ void handleGraph()
     
 }
 
-/* =======================================*/
+//*********************************************************************************
 /* print graph longterm*/
 void handleLongtermGraph()
-
-/* =======================================*/
+//*********************************************************************************
 {
   String graphLongtermXValues = "";     // values for graph (displayed)
   graphLongtermXValues.reserve(2000);
@@ -876,10 +888,11 @@ void handleLongtermGraph()
   graphLongtermYValues = "";
 
 }
+//*********************************************************************************
 
-/* =======================================*/
+//*********************************************************************************
 void handleCss()
-/* =======================================*/
+//*********************************************************************************
 {
   // output of stylesheet
   // this is a straight forward example how to generat a static page from program memory
@@ -957,12 +970,12 @@ void handleCss()
   server.send(200, "text/css", message);
 }
 
-/* =======================================*/
+//*********************************************************************************
 // Output: send data to browser as JSON
 // after modification always check if JSON is still valid. Just call the JSON (json) in your webbrowser and check.
 void handleJson()
 {
-  /* =======================================*/
+//*********************************************************************************
   //  Serial.println(F("D268 requested json"));
   String message = "";
   message = (F("{\"ss\":")); // Start of JSON and the first object "ss":
@@ -979,10 +992,11 @@ void handleJson()
   server.send(200, "application/json", message); // set MIME type https://www.ietf.org/rfc/rfc4627.txt
 }
 
-/* =======================================*/
+//*********************************************************************************
 // Output: a fetch API / JavaScript
 // a function in the JavaScript uses fetch API to request a JSON file from the webserver and updates the values on the page if the object names and ID are the same
 void handleJs()
+//*********************************************************************************
 {
   /* =======================================*/
   String message;
@@ -1014,11 +1028,11 @@ void handleJs()
   server.send(200, "text/javascript", message);
 }
 
-// /* =======================================*/
+//*********************************************************************************
 // // Create a dynamic range slider to display the current value, with JavaScript:
 // void handleSliderJs()
 // {
-//   /* =======================================*/
+//*********************************************************************************
 //   String message;
 //   message += F("const url ='json';\n"
 //                "var slider = document.getElementById('myRange');"
@@ -1032,9 +1046,12 @@ void handleJs()
 
 //   server.send(200, "text/javascript", message);
 // }
+//*********************************************************************************
 
 
+//*********************************************************************************
 void handleCommand()
+//*********************************************************************************
 {
 
   int tempVal = 0;

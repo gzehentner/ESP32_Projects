@@ -42,24 +42,22 @@ extern unsigned long longtermPreviousMillis;     // used to determine intervall 
 
 extern unsigned long millisNow;   
 
-extern unsigned long ringTime[iRingValueMax+1];    // ring buffer for display last 100 values
+// variables for shortterm ringbuffer
+extern unsigned long ringTime[iRingValueMax+1];    // ring buffer for display last n values
 extern int    ringValue[iRingValueMax+1];
 extern int    ringADC[iRingValueMax+1];
 
 extern int wrRingPtr;           // index variable for write buffer
 extern int rdRingPtr;            // position to read out of buffer
 
-// longterm 
+// variables for longterm ringbuffer
 extern unsigned long ringLongtermTime [iLongtermRingValueMax +1];
 extern int    ringLongtermValue[iLongtermRingValueMax +1];     // ring buffer for display last 50 values
 
 extern int    wrLongtermRingPtr;                  // ring buffer write pointer 
 extern int    rdLongtermRingPtr;                  // ring buffer read pointer 
 
-extern float pegel; // waterlevel in m
-
-
-// definitions for analog-digital conversion
+// definitions for analog-digital conversion (using external ADS1115)
   #if MyUSE_ADC == ADS1115_ADC
     #if BOARDTYPE == ESP32
       TwoWire I2CSensors = TwoWire(0);

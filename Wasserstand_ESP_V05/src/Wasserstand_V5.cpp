@@ -1,6 +1,10 @@
 /*
 =============================================
-Wasserstand_V6
+Wasserstand_V5
+V6.3
+- System running and tested
+=============================================
+Wasserstand_V5
 V6.0
 - both builds OK
 - tests are to be done
@@ -111,10 +115,6 @@ known issues: OTA download not possible "not enouth space"
 
   #include <ProjClient.h>
 
-  // Is the following correct?
-  // #include <LittleFS.h>
-  // #include <MyLittleFSLib.h>
-
 #else
   #include <Arduino.h>
 
@@ -122,12 +122,7 @@ known issues: OTA download not possible "not enouth space"
 
   #include <ESP_Mail_Client.h>
   #include <ESP8266mDNS.h>  // Bonjour/multicast DNS, finds the device on network by name
-  //#include <NTPClient.h>    // get time from timeserver
   #include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
-
-
-  // use time.h from Arduino.h 
-  // #include "time.h"                   // for time() ctime()
 
   #include <server.h>
   #include <timeserver.h>
@@ -150,10 +145,8 @@ known issues: OTA download not possible "not enouth space"
     int16_t adc0;
   #else
     #include <Adafruit_ADS1X15.h>
-//    #include <Adafruit_ADS1X15.h>
     #include <Wire.h>
     
-//    ADS1115 ads(0x48);
     Adafruit_ADS1115 ads;
 
     int16_t adc0;
@@ -166,14 +159,6 @@ extern CurrentLoopSensor currentLoopSensor();
 
 #include <ProjClient.h>
 
-
-// definitions for analog-digital conversion
-#if MyUSE_ADC == ADS1115_ADC
-  #if BOARDTYPE == ESP32
-  #else
-
-  #endif
-#endif
 
 /********************************************************************
          Globals - Variables and constants
@@ -237,8 +222,10 @@ void smtpCallback(SMTP_Status status);
 #include "HeapStat.h"
 HeapStat heapInfo;
 
+// GZE: I dont know what this par of code does
 extern char _end;
-// GZE extern "C" char *sbrk(int i);
+extern "C" char *sbrk(int i);
+
 char *ramstart = (char *)0x20070000;
 char *ramend = (char *)0x20088000;
 
@@ -271,14 +258,16 @@ WiFiUDP ntpUDP;
 /*  Prepare analog out        */
 /*=================================================================*/
 
+//--------------- fading LED not used for simulation
+//
 // fade LED PIN (replace with LED_BUILTIN constant for built-in LED)
 // #define LED_PIN            builtin_led
 
-float dutycylce  = 0;              // how bright the LED is
+// float dutycylce  = 0;              // how bright the LED is
 
-float fadeAmount = 0.0001;         // how many m to fade the LED by
-float pegel      = Level_ALL - 5; // waterlevel in cm
+// float fadeAmount = 0.0001;         // how many m to fade the LED by
 
+//--------------------------------------------------------------------
 
 unsigned long previousMillisCyclicPrint;
 unsigned long WaitingTimeCyclicPrint = 1000;
@@ -301,14 +290,14 @@ void setup(void) {
   pinMode(builtin_led, OUTPUT);
 
   /*=================================================================*/
-  /* setup serial  and connect to WLAN */
+  /* =================  setup serial     */
   Serial.begin(115200);
   Serial.println(F("\n" TXT_BOARDNAME "\nVersion: " VERSION " Board " TXT_BOARDID " "));
   Serial.print(__DATE__);
   Serial.print(F(" "));
   Serial.println(__TIME__);
 
-  // Connect to WIFI
+   /*=================  Connect to WIFI */
   char myhostname[8] = {"esp"};
   strcat(myhostname, TXT_BOARDID);
   WiFi.hostname(myhostname);
@@ -341,7 +330,7 @@ void setup(void) {
       }
     #endif
   /*=================================================================*/
-  // /* Prepare SendMail */
+  /*====================   Prepare SendMail */
 
   MailClient.networkReconnect(true);
   smtp.debug(0);
@@ -355,9 +344,11 @@ void setup(void) {
 
   config.login.user_domain = F("127.0.0.1");
 
+  /*=================================================================*/
+  /*====================   Prepare connection to timeserver */
 
   #if BOARDTYPE == ESP32
-    // ESP32 seems to be a little more complex:
+    // ESP32 
     configTime(0, 0, MY_NTP_SERVER);  // 0, 0 because we will use TZ in the next line
     setenv("TZ", MY_TZ, 1);            // Set environment variable with your time zone
     tzset();
@@ -381,8 +372,10 @@ void setup(void) {
   /*=================================================================*/
 
   /*=================================================================*/
+  /*=================================================================*/
   /* Setup WebServer and start*/
-
+  /*=================================================================*/
+  
   // define the pages and other content for the webserver
   server.on("/", handlePage);      // send root page
   server.on("/0.htm", handlePage); // a request can reuse another handler
@@ -413,7 +406,8 @@ void setup(void) {
 
   server.begin(); // start the webserver
   Serial.println(F("HTTP server started"));
-
+  /*=====================   end fo prepare webserver  ===============*/
+  
   /*=================================================================*/
   /* IDE OTA */
   ArduinoOTA.setHostname(myhostname); // give a name to your ESP for the Arduino IDE
@@ -440,32 +434,35 @@ void setup(void) {
     #endif
 
     /*==================================================================*/
-    // prepare analog read
+    // prepare analog read from ads1115 via I2C
     // ADS 1115 (0x48 .. 0x4B will be the address)
     #if BOARDTYPE == ESP8266
       Wire.begin(I2C_SDA,I2C_SCL);
     #endif
+
+    // check if ADS is runnint
     #if BOARDTYPE == ESP32
+      // for ESP32
       if (!ads.begin(0x48, &I2CSensors))
     #else
+      // for ESP 8266
       if (!ads.begin())
     #endif
     {
       Serial.println("Couldn't Find ADS 1115");
-      //while  (1)
+      //while  (1) // endless loop is not good, because ESP is not updatable by OTA
         ;
     }
     else
     {
       Serial.println("ADS 1115 Found");
-      // GZE Debug 
       ads.setGain(GAIN_ONE);
       Serial.print("Gain: ");
       Serial.println(ads.getGain());
     }
 
     #if BOARDTYPE == ESP32
-      // PSRAM?
+      // PSRAM available?
       log_d("Total heap: %d", ESP.getHeapSize());
       log_d("Free heap: %d", ESP.getFreeHeap());
       log_d("Total PSRAM: %d", ESP.getPsramSize());
@@ -473,6 +470,7 @@ void setup(void) {
     #endif
   #endif
 
+  // following code is not yet ready for run so we switch of RD_TEST_FILE
   //#define RD_TEST_FILE
   #ifdef RD_TEST_FILE
     if(!LittleFS.begin()){
@@ -507,7 +505,9 @@ void setup(void) {
 
 void loop(void) {
 
-  // actions triggered every 500 ms
+  // **************************************************************************************************
+  // ===============================================================================
+  // following actions are triggered every 500 ms
   if (millis() - previousMillis_halfSecondAction > halfSecond)
   {
 
@@ -519,10 +519,15 @@ void loop(void) {
     
     previousMillis_halfSecondAction = millis();
   }
-
-
-  delay(2);//allow the cpu to switch to other tasks
-
+  // ===============================================================================
+  // **************************************************************************************************
+  
+  // ============================================================================
+  // In simulation mode:
+  //       Simulate level and relais outputs
+  //
+  //  GZE shift to a separat file
+  // ============================================================================
   if (debugLevelSwitches != debugLevelSwitches_old) {
     if (debugLevelSwitches == 1) {
       // set default values to last actual values, when debug is switched on 
@@ -549,8 +554,8 @@ void loop(void) {
   }
   debugLevelSwitches_old = debugLevelSwitches;
 
-
-  /*=================================================================*/
+  // **************************************************************************************************
+  // **************************************************************************************************
   /* WebClient */
 
   seconds_since_startup = millis() / 1000;
@@ -561,14 +566,16 @@ void loop(void) {
   }
   server.handleClient();
 
+  // **************************************************************************************************
+  // **************************************************************************************************
 
-  /*=================================================================*/
   /* Over the Air UPdate */
   ArduinoOTA.handle(); // OTA Upload via ArduinoIDE
 
-  /*=================================================================*/
+  // **************************************************************************************************
+  // **************************************************************************************************
   /* evaluate water level */
-  /*=================================================================*/
+  // **************************************************************************************************
 
   Current2Waterlevel();
  
@@ -578,9 +585,10 @@ void loop(void) {
 
   prepareSendMail();
 
-  /*=================================================================*/
+  // **************************************************************************************************
+  // **************************************************************************************************
   /* Send Email reusing session   */
-  /*=================================================================*/
+  // **************************************************************************************************
 
   if (executeSendMail)
   {
@@ -642,6 +650,8 @@ void loop(void) {
     /*=END Send_Reuse_Session =====================================*/
   }
   
+  // **************************************************************************************************
+  // **************************************************************************************************
   /*===========================================================
     simulate changing waterlevel
    */
@@ -654,8 +664,12 @@ void loop(void) {
       fadeAmount = -fadeAmount;
     }
   #endif // SIM_FADING_LEVEL
-  
+  // **************************************************************************************************
+
+
+  // **************************************************************************************************
   #ifdef DEBUG_PRINT_RAW
+  // **************************************************************************************************
     /*=================================================================*/
     // read analog value via I2C for debug
     // not used in live system
@@ -671,10 +685,13 @@ void loop(void) {
   // Serial.print("Voltage: "); Serial.println(voltage);
 
    #endif // DEBUG_PRINT_RAW
+  // **************************************************************************************************
 
 
   
+  // **************************************************************************************************
   #ifdef DEBUG_PRINT_CYCLIC
+  // **************************************************************************************************
     if (millis() - previousMillisCyclicPrint > WaitingTimeCyclicPrint)
     {
       Serial.print(formattedTime);
@@ -691,13 +708,18 @@ void loop(void) {
     }
   #endif
 
+  // **************************************************************************************************
   // set a delay to avoid ESP is busy all the time
-  delay(10);
+  //     allow the cpu to switch to other tasks
+  
+  delay(2);
 
-/*==================================================================================================================================*/
+  // **************************************************************************************************
+  // **************************************************************************************************
 } // end void loop()
-/*==================================================================================================================================
-  ==================================================================================================================================*/
+  // **************************************************************************************************
+  // **************************************************************************************************
+
 
 /* Callback function to get the Email sending status */
 void smtpCallback(SMTP_Status status)
