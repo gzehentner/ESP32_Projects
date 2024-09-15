@@ -22,7 +22,7 @@
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "6.4" // the version of this sketch
+  #define VERSION "6.5" // the version of this sketch
 
   // setting for ADC select: MyUSE_ADC
   #define internADC 0
@@ -163,7 +163,9 @@
     const unsigned long  longtermInterval = 10000;  // time between two saved values in ms
   #else
     const int  filterCntMax = 10;  //  GZE: Versuch 1s       // time for myvalue: measureInterval * filterCntMax  
-    // const int  filterCntMax = 1800; // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
+    // values are ok with filterCntMax = 10, but the record length is too sshort
+    // const int  filterCntMax = 1800; 
+        // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
     const unsigned long  longtermInterval = 1000*60*60*6; // four times a day
   #endif
 
@@ -205,6 +207,7 @@
   #define Level_AL  155
   #define Level_ALL 140 // Unterkante KG Rohr
                         // Aktueller Niedrig-Stand Nov 2023 = 99 cm
+  #define Level_HIST  2 // Hysterese für den Pegel
 
   #define Level_AHH_Str "185"
   #define Level_AH_Str  "170"
@@ -229,5 +232,15 @@
   #else
     const int maxValue      = 500;        // measurement range: 000cm to 500cm --> maxValue=500
   #endif
+
+  /*=================================================================*/
+  /* Parameter for pumpControl */
+  /*=================================================================*/
+  #if isLiveSystem == 1
+    #define timeUnit_opTime 60000 // millis / 60000 = minutes
+  #else
+    #define timeUnit_opTime 1000  // millis / 1000 = seconds (for development)
+  #endif
+
 
 #endif

@@ -1,6 +1,10 @@
 /*
 =============================================
 Wasserstand_V5
+V6.4
+- Hysteresis added at alarmStateLevel
+=============================================
+Wasserstand_V5
 V6.3
 - System running and tested
 =============================================
@@ -131,6 +135,8 @@ known issues: OTA download not possible "not enouth space"
 
   #include <ProjClient.h>
   #include <LittleFS.h>
+
+  #include <pumpControl.h>
   
   #include <MyLittleFSLib.h>
 #endif
@@ -694,20 +700,25 @@ void loop(void) {
   // **************************************************************************************************
     if (millis() - previousMillisCyclicPrint > WaitingTimeCyclicPrint)
     {
-      Serial.print(formattedTime);
+      // Serial.print(formattedTime);
       // heapInfo.collect();
       // heapInfo.print();
       
-      Serial.print("  myValueFilteredAct: "); Serial.print(myValueFilteredAct);
-      Serial.print("  myAdcFilteredAct: ");        Serial.println(myAdcFilteredAct);
+      //Serial.print("millisNow : ");Serial.print(opTime_millisNow);Serial.print(" millisDiff : ");Serial.println(opTime_millisDiff);
+      Serial.print(myValueFilteredAct);
+      Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
+      Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  time : "); Serial.print(pumpA_operationTime);
+      Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  time : "); Serial.println(pumpB_operationTime);
       
-      if ((myValueFilteredAct < 150) && (myValueFilteredAct > 170)) {
-        Serial.println("***************************************************************");
-      }
+
       previousMillisCyclicPrint = millis();
     }
   #endif
 
+
+  controlPump();
+  measureOperatingTime();
+  
   // **************************************************************************************************
   // set a delay to avoid ESP is busy all the time
   //     allow the cpu to switch to other tasks
