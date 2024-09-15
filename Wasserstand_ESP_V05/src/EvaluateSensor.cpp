@@ -231,28 +231,79 @@ String htmlMsg="";
   void SetAlarmState_from_level() {
   /*=====================================================*/
 
+    // //++++++++++++++++++++++
+    // // set alarmStateLevel
+    // //++++++++++++++++++++++
+    // alarmStateLevelOld = alarmStateLevel;
+  
+    // if (myValueFilteredAct > Level_AHH)
+    // {
+    //   alarmStateLevel = 5;       // pump running
+    // }
+    // else if (myValueFilteredAct > Level_AH)
+    // {
+    //   alarmStateLevel = 4;       // severe warning
+    // }
+    // else if (myValueFilteredAct > Level_AL)
+    // {
+    //   alarmStateLevel = 3;       // normal high
+    // }
+    // else 
+    // {
+    //   alarmStateLevel = 2;       // normal low
+    // }
+    
     //++++++++++++++++++++++
     // set alarmStateLevel
     //++++++++++++++++++++++
     alarmStateLevelOld = alarmStateLevel;
   
-    if (myValueFilteredAct > Level_AHH)
+    // --------------------------------------------------------
+    // --- 5 --------------------------------------------------
+    // --------------------------------------------------------
+    // switch immediately
+    if ((alarmStateLevel<5) && (myValueFilteredAct > Level_AHH))
     {
       alarmStateLevel = 5;       // pump running
     }
-    else if (myValueFilteredAct > Level_AH)
+    // switch with hysteresis
+    if ((alarmStateLevel>=5) && (myValueFilteredAct > Level_AHH-Level_HIST))
+    {
+      alarmStateLevel = 5;       // pump running
+    }
+    // --------------------------------------------------------
+    // --- 4 --------------------------------------------------
+    // --------------------------------------------------------
+    // switch immediately
+    else if ((alarmStateLevel<4) && (myValueFilteredAct > Level_AH))
     {
       alarmStateLevel = 4;       // severe warning
     }
-    else if (myValueFilteredAct > Level_AL)
+    // switch with hysteresis
+    else if ((alarmStateLevel>=4) && (myValueFilteredAct > Level_AH-Level_HIST))
+    {
+      alarmStateLevel = 4;       // severe warning
+    }
+    // --------------------------------------------------------
+    // --- 3 --------------------------------------------------
+    // --------------------------------------------------------
+    // switch immediately
+    else if ((alarmStateLevel<3) && (myValueFilteredAct > Level_AL))
     {
       alarmStateLevel = 3;       // normal high
     }
+    // switch with hysteresis
+    else if ((alarmStateLevel>=3) && (myValueFilteredAct > Level_AL-Level_HIST))
+    {
+      alarmStateLevel = 3;       // normal high
+    }
+    // --------------------------------------------------------
+    // --- 2 --------------------------------------------------
+    // --------------------------------------------------------
     else 
     {
       alarmStateLevel = 2;       // normal low
     }
-    
   }
 
   /*=====================================================*/
