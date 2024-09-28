@@ -197,6 +197,18 @@ int alarmStateOld = 0;       // previous value of alarmState
 bool executeSendMail = false;
 
 int debugLevelSwitches_old = 0;
+String receivedString="";
+
+char input[64];
+bool inputReadingCompleted = false;
+
+long lastMillis=0;
+
+
+int doPrint = 0;
+int value = 0;
+
+
 
 //* ============================================================= */
 /* Definition for Send-Mail                                      */
@@ -281,6 +293,12 @@ unsigned long WaitingTimeCyclicPrint = 1000;
 unsigned long previousMillis_halfSecondAction;
 unsigned long halfSecond;
 
+
+ void flushInput(){
+  for (int i = 0; i < 64; i++){
+    input[i] = {};
+  }
+ }
 /*****************************************************************************************************************
  *****************************************************************************************************************
          S E T U P
@@ -298,6 +316,12 @@ void setup(void) {
   /*=================================================================*/
   /* =================  setup serial     */
   Serial.begin(115200);
+  
+  // wait for serial to come online
+  while(!Serial); 
+  Serial.println("Serial is ready to accept input");
+  //------------------------
+
   Serial.println(F("\n" TXT_BOARDNAME "\nVersion: " VERSION " Board " TXT_BOARDID " "));
   Serial.print(__DATE__);
   Serial.print(F(" "));
@@ -385,7 +409,8 @@ void setup(void) {
   // define the pages and other content for the webserver
   server.on("/", handlePage);      // send root page
   server.on("/0.htm", handlePage); // a request can reuse another handler
-  server.on("/graph.htm", handleGraph);
+  server.on("/graph_poc.htm", handleGraph_POC); // display a chart with print on change values based on google graph
+  server.on("/graph.htm", handleGraph); // display a chart with shortterm values
   server.on("/longterm_graph.htm", handleLongtermGraph);
   server.on("/filtered.htm",handleListFiltered);
 
@@ -476,28 +501,28 @@ void setup(void) {
     #endif
   #endif
 
-  // following code is not yet ready for run so we switch of RD_TEST_FILE
-  //#define RD_TEST_FILE
-  #ifdef RD_TEST_FILE
-    if(!LittleFS.begin()){
-    Serial.println("An Error has occurred while mounting LittleFS");
+  //==========================================
+  // prepare logfile
+
+  // Serial.println("Formatting LittleFS filesystem");
+  // LittleFS.format();
+
+  Serial.println("Mount LittleFS");
+  if (!LittleFS.begin()) {
+    Serial.println("LittleFS mount failed");
     return;
-    }
+  }
   
-    File file = LittleFS.open("/text.txt", "r");
-    if(!file){
-      Serial.println("Failed to open file for reading");
-      return;
-    }
-  
-  // write data to a file
-  appendFile("/text.txt","good night\n");
-  listDir("/");
-
-  readFile("/text.txt");
-
+  // this var is set in platformio.ini (this doesnot work??)
+  #define deleteLogfile 0
+  #if deleteLogfile == 1
+    // deleting logfile
+    Serial.println("deleting logfile");
+    deleteFile("/level.log");
+  #else
+    Serial.println("NOT!!! deleting logfile");
   #endif
-
+  listDir("/");  
 }
   /*==================================================================*/
   
@@ -507,7 +532,7 @@ void setup(void) {
          M A I N L O O P
  *****************************************************************************************************************
  *****************************************************************************************************************/
-
+ 
 
 void loop(void) {
 
@@ -705,10 +730,10 @@ void loop(void) {
       // heapInfo.print();
       
       //Serial.print("millisNow : ");Serial.print(opTime_millisNow);Serial.print(" millisDiff : ");Serial.println(opTime_millisDiff);
-      Serial.print(myValueFilteredAct);
-      Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
-      Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  time : "); Serial.print(pumpA_operationTime);
-      Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  time : "); Serial.println(pumpB_operationTime);
+      // Serial.print(myValueFilteredAct);
+      // Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
+      // Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  time : "); Serial.print(pumpA_operationTime);
+      // Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  time : "); Serial.println(pumpB_operationTime);
       
 
       previousMillisCyclicPrint = millis();
@@ -719,12 +744,79 @@ void loop(void) {
   controlPump();
   measureOperatingTime();
   
+
+  // input command via serial interface
+  //**************************************************************************************
+
+
+  millisNow = millis();
+
+  if (millisNow - lastMillis >= 2000) {
+    lastMillis = millisNow;
+    doPrint = 1;
+
+    //Serial.println(".");
+    value ++;
+  }
+
+  // serial input is not yet working reliably
+#ifdef useSerialInput
+// if there's any serial available, read it:
+  if (Serial.available() > 0) {
+
+    receivedString= Serial.readString();
+
+    Serial.println();
+    Serial.println("rec: " + receivedString) + "---";
+    Serial.println(";");
+
+    Serial.println("len: " + (receivedString.length()));
+
+    if (receivedString == "r") {
+      Serial.println("executing readFile");
+      
+    }
+
+    // 'R': read complete file at once 
+    // if (c == 'R') {
+    //   Serial.print("2");
+
+    //   Serial.println("executing readFile");
+    //   readFile("/level.log");
+      
+    // }
+  
+
+    // // "r": read file line by line
+    // if (c == 'r'){
+    //   Serial.print("3");
+    //   // open file for reading and check if it exists
+    //   File file = LittleFS.open("/level.log", "r");
+    //   if (!file) {
+    //     Serial.println("Failed to open file for reading");
+    //     return;
+    //   }
+
+    //   while (file.available()) { 
+    //     String fileData = "";
+    
+    //     fileData  = file.read();
+    //     Serial.print ("fileData : "); Serial.println(fileData);
+    
+    //   }
+    
+   }
+   #endif //useSerialInput
+
+   
+  
   // **************************************************************************************************
   // set a delay to avoid ESP is busy all the time
   //     allow the cpu to switch to other tasks
   
   delay(2);
 
+  doPrint = 0;
   // **************************************************************************************************
   // **************************************************************************************************
 } // end void loop()

@@ -1,7 +1,9 @@
 /**********************************************
- Header file for MyLittleFSLib.h
+ Header file for MyLittleFSLib.cpp
  ************************************************* */
-#ifdef GZE_DEBUG
+#ifndef MyLittleFSLib_h_
+#define  MyLittleFSLib_h_
+
 void readFile  (const char *path   );
 void writeFile (const char *path,  const char *message);
 void appendFile(const char *path,  const char *message);

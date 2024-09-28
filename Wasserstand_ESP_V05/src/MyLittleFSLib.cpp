@@ -1,5 +1,5 @@
 /**********************************************
- This file holds some simple funktions to handle LittleFS
+ This file holds some simple functions to handle LittleFS
  I took this from Arduino libraries LittleFS examples
  ************************************************* */
 
@@ -7,7 +7,6 @@
 #define MY_LITTLE_FS_LIB
 #endif
 
-#ifdef GZE_DEBUG
 
 #include <Arduino.h>
 #include <LittleFS.h>
@@ -96,4 +95,3 @@ void listDir(const char *dirname) {
     Serial.printf("  LAST WRITE: %d-%02d-%02d %02d:%02d:%02d\n", (tmstruct->tm_year) + 1900, (tmstruct->tm_mon) + 1, tmstruct->tm_mday, tmstruct->tm_hour, tmstruct->tm_min, tmstruct->tm_sec);
   }
 }
-#endif
