@@ -155,17 +155,16 @@
   //**************************************************************
   // Settings for data capture
   //**************************************************************
+    const int  measureInterval = 100; // measurement interval in milliseconds
 
   // \warning GZE: values have to be checked and corrigated
   #ifdef SIM_VALUES
-    const int  filterCntMax = 1;          // time for myvalue: measureInterval * filterCntMax  
-    // const int  filterCntMax = 100;     // time for myvalue: measureInterval * filterCntMax  
-    const unsigned long  longtermInterval = 10000;  // time between two saved values in ms
+    const int  filterCntMax = 10;  // how many measurements are take for filter
+                            // cycle time for myvalue: measureInterval * filterCntMax  -> 100 ms
+    const unsigned long  longtermInterval = 10000;  // time between two saved values in longterm in ms
   #else
-    const int  filterCntMax = 10;  //  GZE: Versuch 1s       // time for myvalue: measureInterval * filterCntMax  
-    // values are ok with filterCntMax = 10, but the record length is too sshort
-    // const int  filterCntMax = 1800; 
-        // time for myvalue: measureInterval * filterCntMax  1200 : every three minutes
+    const int  filterCntMax = 600;  //   / how many measurements are take for filter
+                            // cycle time for myvalue: measureInterval * filterCntMax  -> here 60s
     const unsigned long  longtermInterval = 1000*60*60*6; // four times a day
   #endif
 
@@ -185,8 +184,8 @@
     //*****************
     // length of ring buffer
     // GZE \warning values have to be checked and adapted
-    #define iRingValueMax  100 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
-    #define iLongtermRingValueMax 120 // one value a day, buffer for one year (now we have four values a day so we have one month)
+    #define iRingValueMax         100 // new value every one minute --> 3h (in eval mode 180*10s)
+    #define iLongtermRingValueMax 120 // four value a day, buffer for one month
     //*****************
     // maximum lines to be printed and points in graph
     const int maxLines  = 100;

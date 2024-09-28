@@ -20,6 +20,9 @@
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 #include <EvaluateSensor.h>
+#include <MyLittleFSLib.h>
+#include <stdio.h>
+#include <string.h>
 
   #if (BOARDTYPE == ESP32)
 
@@ -139,7 +142,7 @@ void addTop(String &message)
   message += F("<body>");
   message += F("<header><h1>" TXT_BOARDNAME " - Board " TXT_BOARDID "</h1>");
   message += F("<nav> <a href=\"/\">[Home]</a> <a href=\"filtered.htm\">[Value History]</a>" 
-               "<a href=\"longterm_graph.htm\">[Longterm Graph]</a>" "<a href=\"graph.htm\">[Shorterm Graph]</a> </nav></header>"
+               "<a href=\"longterm_graph.htm\">[Longterm Graph]</a>" "<a href=\"graph.htm\">[Shorterm Graph]</a> <a href=\"graph_poc.htm\">[PrintOnChange-Graph]</a> </nav></header>"
                "<main>");
 }
 
@@ -890,6 +893,154 @@ void handleLongtermGraph()
 }
 //*********************************************************************************
 
+//*********************************************************************************
+/* print shortterm graph with google chart 
+     google chart allows print on change values */
+
+void handleGraph_POC()
+//*********************************************************************************
+{
+  String formattedTimeL= "";
+  String formattedDateL= "";
+
+  String message;
+  message.reserve(20000);
+
+  String messageLine="";
+
+  addTop(message);
+
+  message += F("<article>"
+               "<h2>Wasserstand Zehentner Teisendorf</h2>" 
+               "<p>Line Graph -- Shortterm values<br> </p> "); 
+
+  message += "<br>filterCnt= ";
+  message += filterCnt;
+
+  // print when a new value arrives
+  message += F("<br><br>  Zeit: ");
+  message += formattedTime;
+  message += F("   Wasserstand aktuell: ");
+  message += myValueFilteredAct;
+  message += "</article>";
+  
+
+  //============================================================
+  // prepare google chart
+  message += "\
+  <div id=\"ShortTermChart\" style=\"max-width:700px; height:400px\"></div>\
+  <script src=\"https://www.gstatic.com/charts/loader.js\"></script>\
+  <script>\
+  \
+  google.charts.load('current',{packages:['corechart']});\
+  google.charts.setOnLoadCallback(drawChart);\
+  \
+  function drawChart() {\
+   ";
+
+
+
+  // prepare values for graph
+  message += "// set data \n \
+              const data = google.visualization.arrayToDataTable([ \
+              ['epochtime', 'Wasserstand']";
+  
+  //******************************************************
+  //******************************************************
+  // read data from logfile
+  //******************************************************
+  
+  // open file for reading and check if it exists
+  File file = LittleFS.open("/level.log", "r");
+  if (!file) {
+    Serial.println("Failed to open file for reading");
+    return;
+  }
+
+  // read from file line by line
+  // prepare loop
+  // define locals
+  char c;
+  String FileContent="";
+  int isTime = 1;
+  String DataTime; 
+  String DataValue;
+  
+  messageLine = "";
+
+  while (file.available()) { 
+
+    c = file.read();
+
+    if  (c=='\n'){
+      // with every new line switch to receiving time
+      isTime=1;
+
+      // fill Y values: level
+      messageLine += ",";
+      messageLine += DataValue;
+      messageLine += "]";
+      DataValue="";
+
+    } else if (c==','){
+      // with every comma switch to value
+      isTime=0;
+
+      // fill X values time
+      messageLine += ",[";
+      formatDateAndTime(formattedTimeL, formattedDateL, DataTime.toInt());
+      messageLine += "'"+formattedDateL + " " + formattedTimeL+"'";
+      //messageLine += DataTime;
+      DataTime="";
+
+    } else if (c==' '){
+      // do nothing
+    } else {
+
+      // get char and add to appropriate string
+      if (isTime==1){
+        DataTime+= c;
+      } else {
+        DataValue+= c;
+      }
+    }
+    //noValues ++;
+  }
+  file.close();
+
+  // enclose the generated strings with necessary brakets
+  firstRun = 0;
+  message += messageLine;
+
+  message += "]);";
+
+   message += "\
+  // Set Options\n \
+  const options = {\
+    title: 'Wasserstand Zehentner Teisendorf',\
+    hAxis: {title: 'Datum/Zeit'},\
+    vAxis: {title: 'Wasserstamd [cm]'},\
+    legend: 'none'\
+  }; ";
+  
+
+   message += "\
+  // Draw Chart \n \
+  const chart = new google.visualization.LineChart(document.getElementById('ShortTermChart'));\
+  chart.draw(data, options);\
+  }\
+  </script>\
+  ";
+  
+
+  addBottom(message);
+
+  Serial.print("message: "); 
+  Serial.println(message.length());
+
+  server.send(200, "text/html", message);
+  
+}
 //*********************************************************************************
 void handleCss()
 //*********************************************************************************

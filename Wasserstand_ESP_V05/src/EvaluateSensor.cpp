@@ -11,6 +11,9 @@
 #include <waterlevel.h>
 #include <NoiascaCurrentLoop.h>   // library for analog measurement
 #include <server.h>
+#include <LittleFS.h>
+#include <MyLittleFSLib.h>
+
 
 /*=================================================================*/
 /* Variables for CurrentLoop */
@@ -18,14 +21,14 @@
 
 CurrentLoopSensor currentLoopSensor(sensorPin, resistor, vref, maxValue); // create the sensor object 
 
-int    myValueFiltered  = 0;   // result of the filtering
-int    myValueFilteredAct = 0; // actual result for display in web page
+int    myValueFiltered        = 0; // result of the filtering
+int    myValueFilteredAct     = 0; // actual result for display in web page
+int    myValueFilteredAct_old = 0; // old value to identify change
+
 int    myAdcFiltered    = 0;
 int    myAdcFilteredAct = 0;
 
 int    filterCnt    = 0;       // count loop runs for collecting values for filter
-
-const int  measureInterval = 100; // measurement interval in milliseconds
 
 unsigned long millisDiff;
 unsigned long longtermMillisDiff;
@@ -133,7 +136,7 @@ String htmlMsg="";
       ringTime [wrRingPtr] = epochTime; // myEpochTime;
 
       // write shortterm value to ring buffer
-      ringValue[wrRingPtr] = myValueFilteredAct;  
+      ringValue[wrRingPtr] = round(myValueFilteredAct);  
 
       // add ADC raw values to ring buffer
       ringADC[wrRingPtr]  = myAdcFilteredAct;
@@ -144,6 +147,22 @@ String htmlMsg="";
       } else  {
         wrRingPtr = 0;
       }
+      
+        //==============================================
+        // write data to logfile (but only if value has changed)
+        //==============================================
+      if (round(myValueFilteredAct) != round(myValueFilteredAct_old)) { // print on change only
+
+        String tempString = "";
+        tempString += epochTime;
+        tempString += ", ";
+        tempString += myValueFilteredAct;
+        
+        appendFile("/level.log", (tempString+ "\n").c_str()); // Append data to the file
+        
+        myValueFilteredAct_old = myValueFilteredAct;
+
+      } // end of print on change
 
       /*=========================================*/
       /*=========================================*/
