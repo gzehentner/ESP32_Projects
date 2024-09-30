@@ -148,10 +148,11 @@ String htmlMsg="";
         wrRingPtr = 0;
       }
       
-        //==============================================
-        // write data to logfile (but only if value has changed)
-        //==============================================
-      if (round(myValueFilteredAct) != round(myValueFilteredAct_old)) { // print on change only
+      //==============================================
+      // write data to logfile (but only if value has changed)
+      //==============================================
+      int diffMyValue = (myValueFilteredAct - myValueFilteredAct_old);
+      if (abs(diffMyValue)>1) { // print on change only (change > 1 to avoid too often change)
 
         String tempString = "";
         tempString += epochTime;
