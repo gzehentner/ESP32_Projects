@@ -409,7 +409,8 @@ void setup(void) {
   // define the pages and other content for the webserver
   server.on("/", handlePage);      // send root page
   server.on("/0.htm", handlePage); // a request can reuse another handler
-  server.on("/graph_poc.htm", handleGraph_POC); // display a chart with print on change values based on google graph
+  // problems with too big data --> still disabled
+  //  server.on("/graph_poc.htm", handleGraph_POC); // display a chart with print on change values based on google graph
   server.on("/graph.htm", handleGraph); // display a chart with shortterm values
   server.on("/longterm_graph.htm", handleLongtermGraph);
   server.on("/filtered.htm",handleListFiltered);
