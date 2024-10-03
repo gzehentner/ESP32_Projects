@@ -22,7 +22,7 @@
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "6.5" // the version of this sketch
+  #define VERSION "6.6" // the version of this sketch
 
   // setting for ADC select: MyUSE_ADC
   #define internADC 0
@@ -120,6 +120,23 @@
   #endif
 
   //**************************************************************
+  //**************************************************************
+  // global variables to simulate remote board
+  //**************************************************************
+  extern int remoteBoardId;
+  extern int remoteLevelAct;
+  extern int remoteDebugLevelSwitches;
+  extern int remoteAHH;
+  extern int remoteAH;
+  extern int remoteAL;
+  extern int remoteLastMessage;
+  extern int remoteMessagesSucessfull;
+
+
+
+
+
+  //**************************************************************
    //**************************************************************
    // Debug and Simulation settings used in development board
    //**************************************************************
@@ -192,10 +209,15 @@
     const int maxPoints = 100;
   #endif
 
-
+  //**************************************************************
   /* -- Server / Client Settings -- */
-  #define CLIENT_INTERVALL 0     // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
-
+  //**************************************************************
+  #define CLIENT_INTERVALL_LIFE 0    // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+  #define CLIENT_INTERVALL_DEV  10    // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+  
+  // if defined, send to my bplaced account
+  //#define sendToBplaced
+  //**************************************************************
   
   //**************************************************************
   /* -- Alarm-Level -- */

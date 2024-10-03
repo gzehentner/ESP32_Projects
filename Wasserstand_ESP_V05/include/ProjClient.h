@@ -8,5 +8,7 @@ Include file for client things
 // header for ProjClient.c
 
 void sendPost();
+//void sendPost_V1();
+//void sendPost_V2();
 
 #endif
