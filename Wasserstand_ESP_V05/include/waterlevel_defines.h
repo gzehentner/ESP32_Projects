@@ -213,7 +213,7 @@
   /* -- Server / Client Settings -- */
   //**************************************************************
   #define CLIENT_INTERVALL_LIFE 0    // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
-  #define CLIENT_INTERVALL_DEV  10    // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+  #define CLIENT_INTERVALL_DEV  0    // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
   
   // if defined, send to my bplaced account
   //#define sendToBplaced
@@ -258,9 +258,13 @@
   /* Parameter for pumpControl */
   /*=================================================================*/
   #if isLiveSystem == 1
-    #define timeUnit_opTime 60000 // millis / 60000 = minutes
+    #define timeUnit_opTime 60000         // millis / 60000 = minutes
+    #define opTimeToExchange_seconds 20   // unit: timeUnit_opTime (minutes)
+    #define timeToSecondPump 5            // unit: timeUnit_opTime (minutes)
   #else
-    #define timeUnit_opTime 1000  // millis / 1000 = seconds (for development)
+    #define timeUnit_opTime 1000          // (millis/1000) = seconds (for development)
+    #define opTimeToExchange_seconds 20   // unit: timeUnit_opTime (seconds)
+    #define timeToSecondPump 10           // unit: timeUnit_opTime (seconds)
   #endif
 
 

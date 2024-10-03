@@ -750,8 +750,10 @@ void loop(void) {
       //Serial.print("millisNow : ");Serial.print(opTime_millisNow);Serial.print(" millisDiff : ");Serial.println(opTime_millisDiff);
       // Serial.print(myValueFilteredAct);
       // Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
-      // Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  time : "); Serial.print(pumpA_operationTime);
-      // Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  time : "); Serial.println(pumpB_operationTime);
+      // Serial.print("  ");
+      // Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  Op time 1 : "); Serial.print(pump1_operationTime);
+      // Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
+      // Serial.print(" linkPump : ");Serial.println(linkPump);
       
 
       previousMillisCyclicPrint = millis();
@@ -760,6 +762,7 @@ void loop(void) {
 
 
   controlPump();
+  selectPump();
   measureOperatingTime();
   
 
