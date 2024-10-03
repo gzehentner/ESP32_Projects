@@ -179,8 +179,24 @@ unsigned long millisNow      = 0;
 const uint16_t ajaxIntervall = 5;             // intervall for AJAX or fetch API call of website in seconds
 uint32_t clientPreviousSs = 0;                // - clientIntervall;  // last second when data was sent to server
 
-const uint16_t clientIntervall = CLIENT_INTERVALL;       // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
-const char *sendHttpTo = "http://192.168.178.153/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
+#if isLiveSystem == 1  /* dont send */
+  const uint16_t clientIntervall = CLIENT_INTERVALL_LIFE;         // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+                                               // live systen shall not send anything for now
+#else
+  const uint16_t clientIntervall = CLIENT_INTERVALL_DEV;       // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+#endif
+
+#ifdef sendToBplaced
+    const char *sendHttpTo = "http://zehentner.bplaced.net/data.php"; // the module will send information to that server/resource. Use an URI or an IP address
+#else
+  #if isLiveSystem == 1
+    const char *sendHttpTo = "http://192.168.178.155/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
+  #else 
+    const char *sendHttpTo = "http://192.168.178.164/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
+  #endif
+#endif
+
+
 
 
 int alarmStateRelais    = 0; // actual state of alarm derived from relais
@@ -410,7 +426,7 @@ void setup(void) {
   server.on("/", handlePage);      // send root page
   server.on("/0.htm", handlePage); // a request can reuse another handler
   // problems with too big data --> still disabled
-  //  server.on("/graph_poc.htm", handleGraph_POC); // display a chart with print on change values based on google graph
+  //server.on("/graph_poc.htm", handleGraph_POC); // display a chart with print on change values based on google graph
   server.on("/graph.htm", handleGraph); // display a chart with shortterm values
   server.on("/longterm_graph.htm", handleLongtermGraph);
   server.on("/filtered.htm",handleListFiltered);
@@ -426,8 +442,8 @@ void setup(void) {
   //server.on("/slider.htm",handleSlider);
 
   // the next two handlers are necessary to receive and show data from another module
-  //  server.on("/d.php", handleData);               // receives data from another module
-  //  server.on("/r.htm", handlePageR);              // show data as received from the remote module
+  server.on("/d.php", handleData);               // receives data from another module
+  server.on("/r.htm", handlePageR);              // show data as received from the remote module
 
 
   // following settings are coming from AdvancedWebServer
@@ -594,6 +610,7 @@ void loop(void) {
   if (clientIntervall > 0 && (seconds_since_startup - clientPreviousSs) >= clientIntervall)
   {
     sendPost();
+    //sendPost_V2();
     clientPreviousSs = seconds_since_startup;
   }
   server.handleClient();

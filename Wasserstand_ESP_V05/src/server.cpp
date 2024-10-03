@@ -62,6 +62,19 @@ int val_AH;
 int val_AL;
 // int val_ALL;
 
+//**************************************************************
+//**************************************************************
+// global variables to simulate remote board
+//**************************************************************
+int remoteBoardId;
+int remoteLevelAct;
+int remoteDebugLevelSwitches;
+int remoteAHH;
+int remoteAH;
+int remoteAL;
+int remoteLastMessage;
+int remoteMessagesSucessfull;
+
 // **************************************************************************************************
 // variables for simulation
 // **************************************************************************************************
@@ -1277,6 +1290,116 @@ void handleCommand()
 
   setPegelforSimulation();
 
+}
+
+void handleData() {
+// receives data from a remote board 
+// and saves data to local variables
+// it uses similar method like the command processing: 
+// we receive parameters and store them in variables
+
+  uint8_t counter = 0; // will count valid values
+  for (uint8_t i = 0; i < server.args(); i++) {
+    Serial.print(server.argName(i));
+    Serial.print(F(": "));
+    Serial.println(server.arg(i));
+    if (server.argName(i) == "board")
+    {
+      remoteBoardId = server.arg(0).toInt();
+      counter++;
+    }
+    else if (server.argName(i) == "levelAct")
+    {
+      remoteLevelAct = server.arg(i).toInt();
+      counter++;
+    }
+    else if (server.argName(i) == "debug_level_switches")
+    {
+      remoteDebugLevelSwitches = server.arg(i).toInt();
+      counter++;
+    }
+    else if (server.argName(i) == "AHH")
+    {
+      remoteAHH = server.arg(i).toInt();
+      counter++;
+    }
+    else if (server.argName(i) == "AH")
+    {
+      remoteAH = server.arg(i).toInt();
+      counter++;
+    }
+    else if (server.argName(i) == "AL")
+    {
+      remoteAL = server.arg(i).toInt();
+      counter++;
+    }
+  }
+  //example for errorhandling
+  if (counter >= 1)
+  {
+    remoteLastMessage = millis() / 1000; // store the timestamp 
+    remoteMessagesSucessfull++; // increase successfull submits
+  }
+  server.send(200, "text/plain", "OK");
+}
+
+// *** Remote Page ***  r.htm
+void handlePageR()
+{
+  Serial.println("handlePageR entered");
+  
+  String message;
+  addTop(message);
+  message += F("<article>\n"
+               "<h2>Remote Module</h2>\n"
+               "<p>This page shows values which were received from a remote module.<p>\n"
+               "<table>\n"
+               "<tr><th>variable</th><th>value</th></tr>\n"
+
+               "<tr><td>remoteBoardId</td><td>");
+  message += remoteBoardId;
+  message += F("</td></tr>\n"
+
+               "<tr><td>remoteLevelAct</td><td>");
+  message += remoteLevelAct;
+  message += F("</td></tr>\n"
+
+               "<tr><td>remoteDebugLevelSwitches</td><td>");
+  message += remoteDebugLevelSwitches;
+  message += F("</td></tr>\n"
+
+               "<tr><td>AHH</td><td>");
+  message += remoteAHH;
+  message += F("</td></tr>\n"
+
+               "<tr><td>AH</td><td>");
+  message += remoteAH;
+  message += F("</td></tr>\n"
+
+               "<tr><td>AL</td><td>");
+  message += remoteAL;
+  message += F("</td></tr>\n");
+
+  if (remoteMessagesSucessfull > 0)
+  {
+    message += F("<tr><td>remoteMessagesSucessfull</td><td>");
+    message += remoteMessagesSucessfull;
+    message += F("</td></tr>\n"
+                 "<tr><td>seconds since last message</td><td>");
+    message += (millis() / 1000) - remoteLastMessage;
+    message += F("</td></tr>\n");
+  }
+  else
+  {
+    message += F("<tr><td>no external data received so far</td><td>-</td>");
+  }
+  message += F("</table>\n"
+               "<p>If this module (the 'server') receives data from another remote module (the 'client'), data will be displayed.</p>\n"
+               "<p>The data for the remote module is not updated, therefore you will need to reload this page. You can modify the handleJson() and this page to add that data.</p>\n"
+               "</article>\n"
+              );
+  addBottom(message);
+  server.send(200, "text/html", message);
 }
 
 
