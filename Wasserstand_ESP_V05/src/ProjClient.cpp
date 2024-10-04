@@ -17,7 +17,7 @@
 
 #else // BOARDTYPE == ESP8266)
    #include <ESP_Mail_Client.h>
-   #include <ESP8266HTTPClient.h>                             // for the webclient https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266HTTPClient
+   #include <ESP8266HTTPClient.h>  // for the webclient https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266HTTPClient
 #endif
 
 void sendPost()
