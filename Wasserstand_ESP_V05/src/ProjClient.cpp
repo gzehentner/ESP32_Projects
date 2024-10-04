@@ -67,6 +67,73 @@ client.end();  //Close connection
 }
 
 
+// *************************************************************
+// !!! subscription cancelled --> access to AskSensors not longer possible
+//
+// AskSensors IoT Platform
+// *************************************************************
+// settings for AskSensors
+const char* apiKeyIn = "i0XfMNeUxnAYSZGoVarg0TGKfXORZjwk";      // API KEY IN
+const unsigned int writeInterval = 25000;   // write interval (in ms)
+
+// ASKSENSORS API host name
+String host = "api.asksensors.com";
+const int https_port = 443;                        // https port
+const char* https_fingerprint =  "B5 C3 1B 2C 0D 5D 9B E5 D6 7C B6 EF 50 3A AD 3F 9F 1E 44 75";     // ASKSENSORS HTTPS SHA1 certificate
+
+// *************************************************************
+void sendPostToAskSensors() {
+// *************************************************************
+
+// create ASKSENSORS client
+WiFiClientSecure client;
+WiFiClient wificlient;
+
+client.setInsecure();
+String https_host = host;
+
+// Use WiFiClientSecure class to create TLS connection
+  Serial.print("********** connecting to HOST : ");
+  Serial.println(https_host);
+  if (!client.connect(https_host, https_port)) {
+    Serial.println("-> connection failed");
+    //return;
+  }
+  // Create a URL for the request
+  String url = "/write/";
+  url += apiKeyIn;
+  url += "?module1=";
+  url += myValueFilteredAct;
+  url += "&module2=";
+  url += val_AHH;
+  url += "&module3=";
+  url += val_AH;
+  url += "&module4=";
+  url += val_AL;
+  
+  Serial.print("********** requesting URL: ");
+  Serial.println(url);
+
+  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+               "Host: " + https_host + "\r\n" +
+               "Connection: close\r\n\r\n");
+
+  Serial.println("> Request sent to ASKSENSORS");
+
+  while (client.connected()) {
+    String line = client.readStringUntil('\n');
+    if (line == "\r") {
+        String line = client.readStringUntil('\n');
+        Serial.println("********** ASKSENSORS replay:");
+        Serial.println(line);
+        Serial.println("********** closing connection");
+      
+        break;
+    }
+
+  }
+
+}
 // void sendPost_V2()
 // // send data as POST to another webserver
 // // V2 no String class for sending data 

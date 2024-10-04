@@ -55,6 +55,7 @@ int    wrLongtermRingPtr = 0;                  // ring buffer write pointer
 int    rdLongtermRingPtr = 0;                  // ring buffer read pointer 
 
 //int firstRun = 1;
+int printOnChangeActive = 0;
 
 /*=================================================================*/
 // global variables for send mail
@@ -153,6 +154,7 @@ String htmlMsg="";
       //==============================================
       int diffMyValue = (myValueFilteredAct - myValueFilteredAct_old);
       if (abs(diffMyValue)>1) { // print on change only (change > 1 to avoid too often change)
+        printOnChangeActive = 1;
 
         String tempString = "";
         tempString += epochTime;

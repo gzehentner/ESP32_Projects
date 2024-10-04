@@ -22,7 +22,7 @@
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "6.6" // the version of this sketch
+  #define VERSION "6.7" // the version of this sketch
 
   // setting for ADC select: MyUSE_ADC
   #define internADC 0

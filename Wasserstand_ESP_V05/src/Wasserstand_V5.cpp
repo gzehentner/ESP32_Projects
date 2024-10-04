@@ -607,9 +607,11 @@ void loop(void) {
   /* WebClient */
 
   seconds_since_startup = millis() / 1000;
-  if (clientIntervall > 0 && (seconds_since_startup - clientPreviousSs) >= clientIntervall)
+  if ((clientIntervall > 0 && (seconds_since_startup - clientPreviousSs) >= clientIntervall) ) // || (printOnChangeActive==1))
   {
-    sendPost();
+    // sendPostToAskSensors(); // subscription cancelled
+
+    // sendPost();
     //sendPost_V2();
     clientPreviousSs = seconds_since_startup;
   }
@@ -838,6 +840,7 @@ void loop(void) {
   delay(2);
 
   doPrint = 0;
+  printOnChangeActive = 0;
   // **************************************************************************************************
   // **************************************************************************************************
 } // end void loop()

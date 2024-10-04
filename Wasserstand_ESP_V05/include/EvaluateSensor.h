@@ -8,6 +8,8 @@
 #ifndef EvaluateSensor_h_
 #define EvaluateSensor_h_ 
 
+  extern int printOnChangeActive;
+
   extern String subject;
   extern String htmlMsg;
   
