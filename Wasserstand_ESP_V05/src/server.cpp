@@ -75,6 +75,8 @@ int remoteAL;
 int remoteLastMessage;
 int remoteMessagesSucessfull;
 
+int sendToClient = 0; // enable sending to client (develop system)
+
 // **************************************************************************************************
 // variables for simulation
 // **************************************************************************************************
@@ -1274,10 +1276,14 @@ void handleCommand()
       if (digitalRead(builtin_led))
       { // toggle: if the pin was on - switch it of and vice versa
         digitalWrite(builtin_led, LOW);
+        sendToClient = 1;  // enable sending to client in Wasserstand_V5.cpp
       }
       else
       {
         digitalWrite(builtin_led, HIGH);
+        if (isLiveSystem==0) {
+          sendToClient = 0;  // disable sending to client in dev version ofWasserstand_V5.cpp
+        }
       }
     }
   }

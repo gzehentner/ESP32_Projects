@@ -212,11 +212,12 @@
   //**************************************************************
   /* -- Server / Client Settings -- */
   //**************************************************************
-  #define CLIENT_INTERVALL_LIFE 0    // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
-  #define CLIENT_INTERVALL_DEV  0    // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+  #define CLIENT_INTERVALL_LIFE 60    // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+  #define CLIENT_INTERVALL_DEV  10    // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
   
   // if defined, send to my bplaced account
-  //#define sendToBplaced
+  #define sendToBplaced
+  #define sendToBplaced_sql
   //**************************************************************
   
   //**************************************************************

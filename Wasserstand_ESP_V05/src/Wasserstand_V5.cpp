@@ -186,7 +186,9 @@ uint32_t clientPreviousSs = 0;                // - clientIntervall;  // last sec
   const uint16_t clientIntervall = CLIENT_INTERVALL_DEV;       // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
 #endif
 
-#ifdef sendToBplaced
+#ifdef sendToBplaced_sql
+    const char *sendHttpTo = "http://zehentner.bplaced.net/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
+#elif defined sendToBplaced
     const char *sendHttpTo = "http://zehentner.bplaced.net/data.php"; // the module will send information to that server/resource. Use an URI or an IP address
 #else
   #if isLiveSystem == 1
@@ -611,8 +613,12 @@ void loop(void) {
   {
     // sendPostToAskSensors(); // subscription cancelled
 
-    // sendPost();
-    //sendPost_V2();
+    // send to client in live system on any case
+    // send to client in develop system only on demand
+    if ((sendToClient==1) || (isLiveSystem==1)) {
+      sendPost();
+      //sendPost_V2();
+    }
     clientPreviousSs = seconds_since_startup;
   }
   server.handleClient();
