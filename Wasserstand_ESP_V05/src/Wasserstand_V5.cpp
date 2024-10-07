@@ -186,10 +186,15 @@ uint32_t clientPreviousSs = 0;                // - clientIntervall;  // last sec
   const uint16_t clientIntervall = CLIENT_INTERVALL_DEV;       // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
 #endif
 
+// select http url to send to: 
+//  - send to Bplaced or an internal device
+//  - select if it is a live system or development
 #ifdef sendToBplaced_sql
-    const char *sendHttpTo = "http://zehentner.bplaced.net/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
-#elif defined sendToBplaced
-    const char *sendHttpTo = "http://zehentner.bplaced.net/data.php"; // the module will send information to that server/resource. Use an URI or an IP address
+  #if isLiveSystem == 1
+    const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/live/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
+  #else
+    const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/dev/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
+  #endif
 #else
   #if isLiveSystem == 1
     const char *sendHttpTo = "http://192.168.178.155/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
