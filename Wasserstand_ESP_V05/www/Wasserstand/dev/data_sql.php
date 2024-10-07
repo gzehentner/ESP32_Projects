@@ -10,7 +10,7 @@ echo "<br>Data from ESP" . PHP_EOL;
 echo "<br>====================================== <br>" . PHP_EOL;
 
 // select table: live-system or development
-$table = WasserstandAllDevelop;
+$table = "WasserstandAllDevelop";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Accessing form data

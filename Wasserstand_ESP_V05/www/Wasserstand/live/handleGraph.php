@@ -4,7 +4,17 @@
     <head><title>Wasserstand-Messung</title>
         <meta http-equiv="content-type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width">
-        <link rel='stylesheet' type='text/css' href='/f.css'><script src='j.js'></script></head>
+        <link rel='stylesheet' type='text/css' href='../f.css'>
+        <script src='j.js'> </script>
+    </head>
+    <header><h1>Wasserstand - Board Develop</h1>
+
+        <nav> 
+            <a href="/">[Home]</a> 
+            <a href="list_level.php">[Value History]</a>
+            <a href="handleGraph.php">[Wasserstand Diagramm]</a>  
+        </nav>
+    </header>
 
         <?php
                     //=====================================================================================================
@@ -12,7 +22,6 @@
                     // ====================================================================================================
                     // select table: live-system or development
                     $table = "WasserstandAllLive";
-
 
                     // Create connection
                     $link = mysqli_connect("localhost", "zehentner", "ZdgzqyAwnJ4M9aHH", "zehentner_wasserstand");
@@ -56,9 +65,7 @@
                     // END: get data from db
                     // ====================================================================================================
                 ?>
-            <body><header><h1>Wasserstand - Board Develop</h1>
-
-            <nav> <a href="/">[Home]</a> <a href="Wasserstand/filtered.htm">[Value History]</a><a href="handleGraph.htm">[Wasserstand Diagramm]</a>  </nav></header>
+            <body>
             
             <main><article><h2>Wasserstand Zehentner Teisendorf</h2>
                 <p>Line Graph<br></p> <br>

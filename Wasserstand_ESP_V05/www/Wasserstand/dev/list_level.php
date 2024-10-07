@@ -1,7 +1,23 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head><title>Wasserstand-Messung</title>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width">
+        <link rel='stylesheet' type='text/css' href='../f.css'>
+        <script src='j.js'> </script>
+    </head>
+    <header><h1>Wasserstand - Board Develop</h1>
+
+        <nav> 
+            <a href="/">[Home]</a> 
+            <a href="list_level.php">[Value History]</a>
+            <a href="handleGraph.php">[Wasserstand Diagramm]</a>  
+        </nav>
+    </header>
 <?php
 
 // select table: live-system or development
-$table = WasserstandAllDevelop;
+$table = "WasserstandAllDevelop";
 
 // Create connection
 $link = mysqli_connect("localhost", "zehentner", "ZdgzqyAwnJ4M9aHH", "zehentner_wasserstand");
@@ -30,3 +46,22 @@ if ($result->num_rows > 0) {
 
 mysqli_close($link);
 ?>
+                     <footer><p>Actual Date and Time:  </p>
+
+<p id="datetime"></p>
+
+<script>
+    function updateDateTime() {
+        var now = new Date();
+        var date = now.toLocaleDateString();
+        var time = now.toLocaleTimeString();
+        document.getElementById('datetime').innerHTML = date + " " + time;
+    }
+
+    setInterval(updateDateTime, 1000); // Update every second
+    window.onload = updateDateTime; // Initial call to display immediately
+</script>
+</p>
+</footer>
+</body>
+</html>

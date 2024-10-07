@@ -22,7 +22,7 @@
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "6.7" // the version of this sketch
+  #define VERSION "6.8" // the version of this sketch
 
   // setting for ADC select: MyUSE_ADC
   #define internADC 0
@@ -216,7 +216,6 @@
   #define CLIENT_INTERVALL_DEV  10    // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
   
   // if defined, send to my bplaced account
-  #define sendToBplaced
   #define sendToBplaced_sql
   //**************************************************************
   
