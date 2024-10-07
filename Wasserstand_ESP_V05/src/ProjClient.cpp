@@ -5,6 +5,9 @@
 #include <waterlevel_defines.h>
 #include <waterlevel.h>
 
+#include <pumpControl.h>
+#include <timeserver.h>
+
   #if BOARDTYPE == ESP32
   // for Send-Mail
   #include <ESP_Mail_Client.h>
@@ -54,6 +57,17 @@ strcat(message, "&AL=");
 itoa(val_AL, val, 10);
 strcat(message, val);
 
+strcat(message, "&pump1_op=");
+itoa(pump1_op, val, 10);
+strcat(message, val);
+
+strcat(message, "&pump2_op=");
+itoa(pump2_op, val, 10);
+strcat(message, val);
+
+strcat(message, "&epochTime=");
+itoa(epochTime, val, 10);
+strcat(message, val);
 
 client.begin(wificlient, sendHttpTo);                                        // Specify request destination
 client.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Specify content-type header

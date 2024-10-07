@@ -21,6 +21,7 @@ extern int simVal_AL ;
 extern int simVal_ALL;
 
 //extern WebServer server; // declare an instance for the webserver
+extern int sendToClient; // enable sending to client
 
 // **************************************************************************************************
   void handleRoot();
