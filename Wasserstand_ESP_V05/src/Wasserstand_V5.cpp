@@ -788,12 +788,12 @@ void loop(void) {
       // heapInfo.print();
       
       //Serial.print("millisNow : ");Serial.print(opTime_millisNow);Serial.print(" millisDiff : ");Serial.println(opTime_millisDiff);
-      Serial.print(myValueFilteredAct);
-      Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
-      Serial.print("  ");
-      Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  Op time 1 : "); Serial.print(pump1_operationTime);
-      Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
-      Serial.print(" linkPump : ");Serial.println(linkPump);
+      // Serial.print(myValueFilteredAct);
+      // Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
+      // Serial.print("  ");
+      // Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  Op time 1 : "); Serial.print(pump1_operationTime);
+      // Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
+      // Serial.print(" linkPump : ");Serial.println(linkPump);
       
       
 
