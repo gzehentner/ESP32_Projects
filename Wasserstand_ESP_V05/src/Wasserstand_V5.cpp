@@ -1,6 +1,16 @@
 /*
 =============================================
 Wasserstand_V5
+V6.9
+- Pumpensteuerung implementiert
+  - sechster Alarmlevel, der gleich zwei Pumpenstartet
+  - Betriebszeit der Pumpen in Datei gespeichert
+- Messdaten zur grafischen Aufbereitung werden zur bplaced-Seite geschickt
+  - schicken der Daten
+  - ablegen in Datenbank
+  - lesen aus Datenbank und einfache Grafik
+=============================================
+Wasserstand_V5
 V6.4
 - Hysteresis added at alarmStateLevel
 =============================================
@@ -546,6 +556,23 @@ void setup(void) {
   #else
     Serial.println("NOT!!! deleting logfile");
   #endif
+
+  #define deleteSetupFile 0
+  #if deleteSetupFile == 1
+    // deleting setupFile
+    Serial.println("deleting setupFile");
+    deleteFile("/setup.ini");
+  #else
+    Serial.println("NOT!!! deleting setup.ini");
+  #endif
+
+  getSetupIni();
+  readFile("/setup.ini");
+  Serial.println();
+  Serial.print("pump1_operationTime : ");Serial.println(pump1_operationTime);
+  Serial.print("pump2_operationTime : ");Serial.println(pump2_operationTime);
+  Serial.print("linkPump            : ");Serial.println(linkPump);
+
   listDir("/");  
 }
   /*==================================================================*/
@@ -768,6 +795,7 @@ void loop(void) {
       // Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
       // Serial.print(" linkPump : ");Serial.println(linkPump);
       
+      
 
       previousMillisCyclicPrint = millis();
     }
@@ -889,3 +917,81 @@ void smtpCallback(SMTP_Status status)
   }
 }
 
+//*******************************************************************************
+// read values out of setup.ini
+void getSetupIni()
+//*******************************************************************************
+{
+  // open file for reading and check if it exists
+  File file = LittleFS.open("/setup.ini", "r");
+  if (!file) {
+    Serial.println("Failed to open file for reading");
+    return;
+  }
+
+  // read from file line by line
+  // prepare loop
+  // define locals
+  char c;
+  String FileContent="";
+  String fileLine="";
+  int isToken  = 1;
+  String tokenName  ="";
+  String tokenValue ="";
+    
+  while (file.available()) { 
+
+    c = file.read();
+
+    if  (c=='\n'){
+      // with every new line decode setting
+        if (tokenName == "pump1_operationTime") {
+            pump1_operationTime = tokenValue.toInt();
+        }
+        if (tokenName == "pump2_operationTime") {
+            pump2_operationTime = tokenValue.toInt();
+        }
+        if (tokenName == "linkPump") {
+            linkPump = tokenValue.toInt();
+        }
+
+        // and prepare for next line
+        isToken=1;
+        tokenName="";
+        tokenValue="";
+
+        } else if (c=='='){
+        // with every equ switch to value
+        isToken=0;
+        } else if (c==' '){
+        // space: do nothing
+        } else {
+
+        // get char and add to appropriate string
+        if (isToken==1){
+            tokenName+= c;
+        } else {
+            tokenValue+= c;
+        }
+    }
+    //noValues ++;
+  }
+  file.close();
+
+}
+//*******************************************************************************
+// write values to setup.ini
+void putSetupIni()
+//*******************************************************************************
+{
+    String tempString="";
+
+    tempString += "pump1_operationTime="    + String(pump1_operationTime);
+    tempString += ";\npump2_operationTime=" + String(pump2_operationTime);
+    tempString += ";\nlinkPump="            + String(linkPump);
+    tempString += ";\n";
+
+    writeFile("/setup.ini", (tempString).c_str()); // Append data to the file
+  
+        
+}
