@@ -253,27 +253,6 @@ String htmlMsg="";
   void SetAlarmState_from_level() {
   /*=====================================================*/
 
-    // //++++++++++++++++++++++
-    // // set alarmStateLevel
-    // //++++++++++++++++++++++
-    // alarmStateLevelOld = alarmStateLevel;
-  
-    // if (myValueFilteredAct > Level_AHH)
-    // {
-    //   alarmStateLevel = 5;       // pump running
-    // }
-    // else if (myValueFilteredAct > Level_AH)
-    // {
-    //   alarmStateLevel = 4;       // severe warning
-    // }
-    // else if (myValueFilteredAct > Level_AL)
-    // {
-    //   alarmStateLevel = 3;       // normal high
-    // }
-    // else 
-    // {
-    //   alarmStateLevel = 2;       // normal low
-    // }
     
     //++++++++++++++++++++++
     // set alarmStateLevel
@@ -281,15 +260,29 @@ String htmlMsg="";
     alarmStateLevelOld = alarmStateLevel;
   
     // --------------------------------------------------------
+    // --- 6 --------------------------------------------------
+    // --------------------------------------------------------
+    // switch immediately
+    if ((alarmStateLevel<6) && (myValueFilteredAct > Level_AHHH))
+    {
+      alarmStateLevel = 6;       // 2x pump running imediately
+    }
+    // switch with hysteresis
+    else if ((alarmStateLevel>=6) && (myValueFilteredAct > Level_AHHH-Level_HIST))
+    {
+      alarmStateLevel = 6;       // 2x pump running imediately
+      
+    }
+    // --------------------------------------------------------
     // --- 5 --------------------------------------------------
     // --------------------------------------------------------
     // switch immediately
-    if ((alarmStateLevel<5) && (myValueFilteredAct > Level_AHH))
+    else if ((alarmStateLevel<5) && (myValueFilteredAct > Level_AHH))
     {
       alarmStateLevel = 5;       // pump running
     }
     // switch with hysteresis
-    if ((alarmStateLevel>=5) && (myValueFilteredAct > Level_AHH-Level_HIST))
+    else if ((alarmStateLevel=5) && (myValueFilteredAct > Level_AHH-Level_HIST))
     {
       alarmStateLevel = 5;       // pump running
     }
@@ -346,9 +339,9 @@ String htmlMsg="";
     
     if ((alarmStateRelais != alarmStateRelaisOld) || (alarmStateLevel != alarmStateLevelOld)) {
       Serial.print("alarmStateRelais: "); Serial.println(alarmStateRelais);
-      Serial.print("AHH: "); Serial.println(val_AHH);
-      Serial.print("AH : "); Serial.println(val_AH);
-      Serial.print("AL : "); Serial.println(val_AL);  
+      // Serial.print("AHH: "); Serial.println(val_AHH);
+      // Serial.print("AH : "); Serial.println(val_AH);
+      // Serial.print("AL : "); Serial.println(val_AL);  
       Serial.print("alarmStatePegel: "); Serial.println(alarmStateLevel);
       Serial.print("Pegel: ");Serial.println(pegel);
     }

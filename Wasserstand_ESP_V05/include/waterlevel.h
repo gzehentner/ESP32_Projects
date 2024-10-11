@@ -57,6 +57,16 @@ extern int    ringLongtermValue[iLongtermRingValueMax +1];     // ring buffer fo
 extern int    wrLongtermRingPtr;                  // ring buffer write pointer 
 extern int    rdLongtermRingPtr;                  // ring buffer read pointer 
 
+//*******************************************************************************
+// write values to setup.ini
+void putSetupIni();
+//*******************************************************************************
+// read values out of setup.ini
+void getSetupIni();
+//*******************************************************************************
+
+
+
 // definitions for analog-digital conversion (using external ADS1115)
   #if MyUSE_ADC == ADS1115_ADC
     #if BOARDTYPE == ESP32

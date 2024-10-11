@@ -22,7 +22,7 @@
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
-  #define VERSION "6.8" // the version of this sketch
+  #define VERSION "6.9" // the version of this sketch
 
   // setting for ADC select: MyUSE_ADC
   #define internADC 0
@@ -223,17 +223,19 @@
   /* -- Alarm-Level -- */
   //**************************************************************
   // Pegel wurde verändert, hängt um 6cm höher
-  #define Level_AHH 185 // Oberkante Schacht = 187cm // Oberkante Bodenplatte = (OK-Schacht + 8 cm) = 1,95cm
-  #define Level_AH  170  // Warnschwelle
-  #define Level_AL  155
-  #define Level_ALL 140 // Unterkante KG Rohr
-                        // Aktueller Niedrig-Stand Nov 2023 = 99 cm
-  #define Level_HIST  2 // Hysterese für den Pegel
+  #define Level_AHHH 195 // Oberkante Bodenplatte --> sofort zwei Pumpen einschalten
+  #define Level_AHH  185 // Oberkante Schacht = 187cm // Oberkante Bodenplatte = (OK-Schacht + 8 cm) = 1,95cm
+  #define Level_AH   170  // Warnschwelle
+  #define Level_AL   155
+  #define Level_ALL  140 // Unterkante KG Rohr
+                         // Aktueller Niedrig-Stand Nov 2023 = 99 cm
+  #define Level_HIST   2 // Hysterese für den Pegel
 
-  #define Level_AHH_Str "185"
-  #define Level_AH_Str  "170"
-  #define Level_AL_Str  "155"
-  #define Level_ALL_Str "140" 
+  #define Level_AHHH_Str "195"
+  #define Level_AHH_Str  "185"
+  #define Level_AH_Str   "170"
+  #define Level_AL_Str   "155"
+  #define Level_ALL_Str  "140" 
 
   // #define BUTTON1_PIN 19
 
@@ -258,13 +260,13 @@
   /* Parameter for pumpControl */
   /*=================================================================*/
   #if isLiveSystem == 1
-    #define timeUnit_opTime 60000         // millis / 60000 = minutes
-    #define opTimeToExchange_seconds 20   // unit: timeUnit_opTime (minutes)
-    #define timeToSecondPump 5            // unit: timeUnit_opTime (minutes)
+    #define timeUnit_opTime 60000  // millis / 60000 = minutes
+    #define opTimeToExchange 20    // unit: timeUnit_opTime (minutes)
+    #define timeToSecondPump 5     // unit: timeUnit_opTime (minutes)
   #else
-    #define timeUnit_opTime 1000          // (millis/1000) = seconds (for development)
-    #define opTimeToExchange_seconds 20   // unit: timeUnit_opTime (seconds)
-    #define timeToSecondPump 10           // unit: timeUnit_opTime (seconds)
+    #define timeUnit_opTime 1000   // (millis/1000) = seconds (for development)
+    #define opTimeToExchange 20    // unit: timeUnit_opTime (seconds)
+    #define timeToSecondPump 10    // unit: timeUnit_opTime (seconds)
   #endif
 
 

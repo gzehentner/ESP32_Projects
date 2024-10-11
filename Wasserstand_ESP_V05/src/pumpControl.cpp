@@ -39,13 +39,10 @@ unsigned long start2ndPumpNow = 0;
 unsigned long startPumpA_millis = 0;
 
 //*******************************************************************************
-
 void measureOperatingTime()
+//*******************************************************************************
 {
-    
-    /*================================================================*/
     // measure time since last invocation
-    /*================================================================*/
     opTime_millisNow = millis();
     
     opTime_millisDiff = opTime_millisNow - opTime_previousMillis;
@@ -70,23 +67,32 @@ void measureOperatingTime()
 
 }
 
+//*******************************************************************************
 void controlPump() {
+//*******************************************************************************
 
     start2ndPump_millisNow = millis();
 
+    // if A is running and B not we generate a start pulse for B after timeToSecondPump
+    //  pulse is blocked when B is already running
     if ((((start2ndPump_millisNow-startPumpA_millis)/ timeUnit_opTime) > timeToSecondPump)
-        && (pumpA_op==1))
+        && (pumpA_op==1) && (pumpB_op==0))
     {
         start2ndPumpNow = 1;
     }
 
+    // if waterlevel comes over bodenplatte start both pumps immediately
+    if (alarmState >= 6)
+    {
+        pumpA_op = 1;
+        pumpB_op = 1;
+    }
     // if waterlevel too high and pumpA not running -> start first pump
     if ((alarmState >= 5) && (pumpA_op==0))
     {
         pumpA_op = 1;
-        startPumpA_millis = millis();
     }
-    // if after the timeizt is still at alarmState 5, start second pump
+    // if after the timeout we are still at alarmState 5, start second pump
     else if ((alarmState >= 5) && (start2ndPumpNow==1))  {
         pumpB_op = 1;
         start2ndPumpNow = 0; // only a pulse
@@ -95,22 +101,42 @@ void controlPump() {
         pumpA_op = 0;
         pumpB_op = 0;
     }
+
+    // remember time, wenn pumpA is started
+    if (pumpA_op==0) {
+        startPumpA_millis = millis();
+    } 
+
 }
 
+//*******************************************************************************
 void selectPump() {
+//*******************************************************************************
     // link logic pumpA/B to physical available pump1/2
     // the pump with lesser operating time is used as pumpA
     // the other pump 
     // if the difference between the two operating times is too big, the pumps will be exchanged
 
+    // select which pump has to run
+     // linkPump =0;   // A->1 -- B->2
+     // linkPump =1;   // A->2 -- B->1
+    
     int pump_operationTimeDiff = (pump1_operationTime-pump2_operationTime);
-    if (abs(pump_operationTimeDiff) > opTimeToExchange_seconds) {
-        if (linkPump==1) {
-            linkPump = 0;  // A->1 -- B->2
-        }else{
-            linkPump =1;   // A->2 -- B->1
-        }
+    
+    if ((linkPump==0) &&
+        (abs(pump_operationTimeDiff) > opTimeToExchange) && 
+        (pump1_operationTime>pump2_operationTime))
+    {
+        linkPump = 1;
+        putSetupIni();
+    } else if ((linkPump==1) &&
+        (abs(pump_operationTimeDiff) > opTimeToExchange) &&
+        (pump1_operationTime<=pump2_operationTime))
+    {
+        linkPump = 0;
+        putSetupIni();
     }
+    
 
     if (linkPump==0) {
         pump1_op = pumpA_op;
