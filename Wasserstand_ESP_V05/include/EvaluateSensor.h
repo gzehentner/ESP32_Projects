@@ -9,6 +9,7 @@
 #define EvaluateSensor_h_ 
 
   extern int printOnChangeActive;
+  extern int valueStable;
 
   extern String subject;
   extern String htmlMsg;

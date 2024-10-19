@@ -30,6 +30,9 @@ int    myAdcFilteredAct = 0;
 
 int    filterCnt    = 0;       // count loop runs for collecting values for filter
 
+int valueStable = 0;           // value is not stable until the first filtering is done (so values should not be sent to website)
+
+
 unsigned long millisDiff;
 unsigned long longtermMillisDiff;
 
@@ -127,6 +130,10 @@ String htmlMsg="";
       // calculate average
       myValueFilteredAct = myValueFiltered / filterCntMax;     
       myAdcFilteredAct   = myAdcFiltered   / filterCntMax;
+
+      /*=========================================*/
+      // value is not stable until the first filtering is done
+      valueStable = 1;
 
       /*=========================================*/
       /*=========================================*/
@@ -402,10 +409,10 @@ String htmlMsg="";
         else if (alarmState == 2)
         {
           // info that level is now ok
-          Serial.println(F("level decreased to Low"));
-          subject = F("Pegel Zehentner -- sehr niedrig ");
-          htmlMsg = F("<p>Wasserstand Zehentner ist sehr niedrig. Alles OK</p>");
-          executeSendMail = true;
+          // Serial.println(F("level decreased to Low"));
+          // subject = F("Pegel Zehentner -- sehr niedrig ");
+          // htmlMsg = F("<p>Wasserstand Zehentner ist sehr niedrig. Alles OK</p>");
+          // executeSendMail = true;
         }
       }
       else if (alarmStateOld == alarmState)

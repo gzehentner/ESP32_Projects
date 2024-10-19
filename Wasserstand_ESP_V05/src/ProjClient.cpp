@@ -7,6 +7,7 @@
 
 #include <pumpControl.h>
 #include <timeserver.h>
+#include <MyLittleFSLib.h>
 
   #if BOARDTYPE == ESP32
   // for Send-Mail
@@ -22,6 +23,8 @@
    #include <ESP_Mail_Client.h>
    #include <ESP8266HTTPClient.h>  // for the webclient https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266HTTPClient
 #endif
+
+int errCnt_communication = 0;
 
 void sendPost()
 // send data as POST to another webserver
@@ -78,8 +81,29 @@ Serial.println(httpCode);
 Serial.print(F("\nmessage: "));                                                  // Print HTTP return code;
 Serial.println(message);
 client.end();  //Close connection
-}
 
+// error handling
+if (httpCode<0) {
+
+  // write to file
+  String errMessage = "";
+  errMessage =  currentDate + " - " + formattedTime + " - " +  " httpCode = " +  httpCode + "\n";
+//  appendFile("/error.log", errMessage.c_str());
+
+  errCnt_communication++;
+
+  if (errCnt_communication > ERR_CNT_COMMUNICATION)
+  {
+    // reset ESP8266
+    errMessage = currentDate + " - " + formattedTime + " - " +  "client connection error - restart triggered\n";
+  //  appendFile("/error.log", errMessage.c_str());
+    ESP.restart();
+  }
+} else {
+  // reset to zero, when communication is running again
+  errCnt_communication = 0;
+}
+}
 
 // *************************************************************
 // !!! subscription cancelled --> access to AskSensors not longer possible
