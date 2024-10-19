@@ -573,6 +573,18 @@ void setup(void) {
   Serial.print("pump2_operationTime : ");Serial.println(pump2_operationTime);
   Serial.print("linkPump            : ");Serial.println(linkPump);
 
+  #define deleteErrLog 1
+  #if deleteErrLog == 1
+    // deleting setupFile
+    Serial.println("deleting error.log");
+    deleteFile("/error.log");
+  #else
+    Serial.println("NOT!!! deleting error.log");
+  #endif
+
+  readFile("/error.log");
+ 
+
   listDir("/");  
 }
   /*==================================================================*/
@@ -648,8 +660,10 @@ void loop(void) {
     // send to client in live system on any case
     // send to client in develop system only on demand
     if ((sendToClient==1) || (isLiveSystem==1)) {
-      sendPost();
-      //sendPost_V2();
+      if (valueStable>0) {
+        sendPost();
+        //sendPost_V2();
+      }
     }
     clientPreviousSs = seconds_since_startup;
   }
@@ -925,7 +939,7 @@ void getSetupIni()
   // open file for reading and check if it exists
   File file = LittleFS.open("/setup.ini", "r");
   if (!file) {
-    Serial.println("Failed to open file for reading");
+    Serial.println("Failed to open setup.ini for reading");
     return;
   }
 

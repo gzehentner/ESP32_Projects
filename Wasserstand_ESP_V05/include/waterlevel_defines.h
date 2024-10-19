@@ -217,7 +217,10 @@
   
   // if defined, send to my bplaced account
   #define sendToBplaced_sql
+
+  // how many communication errors must occure before we reset ESP
   //**************************************************************
+  #define ERR_CNT_COMMUNICATION 5
   
   //**************************************************************
   /* -- Alarm-Level -- */

@@ -87,7 +87,7 @@ int simVal_AL  = 0;
 // int simVal_ALL = 0;
 
 int firstRun = 1;
-
+//int reloadDone = 1; // show if reload of handlePage is done
 
 // **************************************************************************************************
 void handleNotFound() {
@@ -342,6 +342,15 @@ void handlePage()
   } else {
   message += F("<p class='off'><a href='c.php?toggle=3' target='i'>AL</a></p>\n");
   }
+  
+  // message += "<script>";
+  // message += "function changeColor() { window.location.href = '/c.php?reloaded=false'; }"; // Add query parameter
+  // message += "window.onload = function() {";
+  // if (debugLevelSwitches == 1) {
+  //     message += "document.getElementById('colorButton').style.backgroundColor = 'red';";
+  // }
+  // message += "}";
+  // message += "</script>";
 
   message += F("<p class='off'><a href='c.php?toggle=5' target='i'>LED</a></p>\n"
   "<iframe name='i' style='display:none' ></iframe>\n" // hack to keep the button press in the window
@@ -349,12 +358,55 @@ void handlePage()
   // end of simulation
   "</article>\n");
 
+  
+ //-----------------------------------------------------------------------------------------
+  // Print error buffer
+  message += F("<article>\n"
+
+
+  //-----------------------------------------------------------------------------------------
+  "<h2>Print errorbuffer</h2>\n" 
+  "<p>Falls ein Reset-Fehler auftritt wird dieser in das error.log geschrieben "
+  "<br>Dieses Wird hier angezeigt"
+  "</p>");
+
+   // open file for reading and check if it exists
+  // File file = LittleFS.open("/error.log", "r");
+  // if (!file) {
+  // //  Serial.println("Failed to open error.log nf for reading");
+  //   message += "<br>File not found";
+    
+  // } else {
+
+  //   // read from file line by line
+  //   // prepare loop
+  //   // define locals
+  //   char c;
+    
+  //   while (file.available()) { 
+  //     c = file.read();
+
+  //     if  (c=='\n'){
+  //       message += "<br>";
+  //     } else {
+  //       message += c;
+  //     }
+  //   }
+  //   file.close();
+  // }
+  //-----------------------------------------------------------------------------------------
+ 
   // // add slider for waterlevel
   // message += F("<article>\n"
   // "<h2>Slider</h2>\n" 
   // "<div class='slidecontainer'>\n"
   // "<input type='range' min='1' max='100' value='50' class='slider' id='myRange'>\n"
   // "</div>");
+
+  //message += "<script> location.reload(); </script>";
+
+  // we are ready with reload
+  //reloadDone = 1;
 
   addBottom(message);
   server.send(200, "text/html", message);
@@ -968,7 +1020,7 @@ void handleGraph_POC()
   // open file for reading and check if it exists
   File file = LittleFS.open("/level.log", "r");
   if (!file) {
-    Serial.println("Failed to open file for reading");
+    Serial.println("Failed to open level.log for reading");
     return;
   }
 
@@ -1232,6 +1284,9 @@ void handleCommand()
   }
   if (server.argName(0) == "toggle") // the parameter which was sent to this server
   {
+    //reloadDone = 0;
+    //Serial.println("reloadDone -> 0 -- Cmd = toggle");
+
     if (server.arg(0) == "a") // the value for that parameter
     {
       Serial.println(F("D232 toggle debug switch"));
@@ -1292,8 +1347,26 @@ void handleCommand()
     Serial.println(F("D238 will reset"));
     ESP.restart();
   }
-  server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 
+  // else if (server.argName(0) == "reloaded" && server.arg(0) == "true") 
+  // {
+  //   Serial.println(F("D238 will reload"));
+  //   reloadDone = 1;
+  // }
+
+  // Serial.print("reloadDone : "); Serial.println(reloadDone);
+
+// if (reloadDone==0) {
+  if (false) {
+    server.send(200, "text/html", "<html><body><script>localStorage.setItem('reloaded', 'true'); location.reload();</script></body></html>");
+    // reloadDone = 1;
+    Serial.println("200");
+  } else {
+    // reloadDone = 1;
+    server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
+    Serial.println("204");
+  }
+  
   setPegelforSimulation();
 
 }
