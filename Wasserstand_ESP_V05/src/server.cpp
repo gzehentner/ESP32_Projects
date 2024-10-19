@@ -1354,15 +1354,15 @@ void handleCommand()
   //   reloadDone = 1;
   // }
 
-  Serial.print("reloadDone : "); Serial.println(reloadDone);
+  // Serial.print("reloadDone : "); Serial.println(reloadDone);
 
 // if (reloadDone==0) {
   if (false) {
     server.send(200, "text/html", "<html><body><script>localStorage.setItem('reloaded', 'true'); location.reload();</script></body></html>");
-    reloadDone = 1;
+    // reloadDone = 1;
     Serial.println("200");
   } else {
-    reloadDone = 1;
+    // reloadDone = 1;
     server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
     Serial.println("204");
   }
