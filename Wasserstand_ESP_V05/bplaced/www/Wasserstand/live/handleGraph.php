@@ -21,35 +21,26 @@
         </nav>
     </header>
     
-     
+    <!-- 
+    ========================================================
+    - display form to enter number of days to be displayed 
+    - and extract result
+    ========================================================
+    -->
+     <article>
         <form action="handleGraph.php" method="post">
-            <label for="days">Enter number of days:</label>
+            <label for="days">Enter number of days for graph:</label>
             <input type="number" id="days" name="days" min="1" required>
             <input type="submit" value="Submit">
         </form>
+     </article>  
 
 
     <?php
-    // ================================
-    // php code to handle the form submission
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        
         $days = intval($_POST['days']);
-        $endTime = time();
-        $startTime = $endTime - ($days * 24 * 60 * 60);
-
-    } else {
     ?>
-        <!-- Display the form -->
-        <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
-            <label for="days">Enter number of days:</label>
-            <input type="number" id="days" name="days" min="1" required>
-            <input type="submit" value="Submit">
-        </form>
-    <?php
-    }
-    
 
+    <?php
     //=====================================================================================================
     // get data from db
     // ====================================================================================================
@@ -65,18 +56,16 @@
         echo "Debug-Fehlermeldung: " . mysqli_connect_error() . PHP_EOL;
         exit;
     } else {
-        echo "Datenbank-Verbindung aufgebaut<br>";
+        // echo "Datenbank-Verbindung aufgebaut<br>";
     }
 
     //=====================================================================================================
-    // two day graph
+    // adjustable graph
     // beginning
     //================================================================
     $end_time = time();
     $start_time = (time() - (60 * 60 * 24 * $days));
-    
-    echo $days;
-            
+                
     $sql = "SELECT * FROM `WasserstandAllLive` WHERE epochtime 
                                                 BETWEEN $start_time
                                                 AND $end_time";
@@ -103,10 +92,10 @@
         $yVal_two = $yVal_two . "]";
         
     } else {
-        echo "0 results two-day";
+        echo "0 results for graph adustable";
     }
     //=====================================================================================================
-    // === END two day
+    // === END two day / adjustable
     //==========
 
     $end_time = time();
@@ -138,7 +127,7 @@
         $yVal_w = $yVal_w . "]";
         
     } else {
-        echo "0 results-w";
+        echo "0 results for graph week";
     }
     //=====================================================================================================
 
