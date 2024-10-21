@@ -1,0 +1,5 @@
+AuthType Basic
+AuthName "password required"
+AuthUserFile /users/zehentner/www/.htpasswd
+Require valid-user
+
