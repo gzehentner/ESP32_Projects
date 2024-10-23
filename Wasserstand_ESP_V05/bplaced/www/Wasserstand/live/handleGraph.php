@@ -82,6 +82,7 @@ $days = intval($_POST['days']);
 $end_time = time();
 $start_time = (time() - (60 * 60 * 24 * $days));
 
+
 $sql = "SELECT * FROM `WasserstandAllLive` WHERE epochtime 
                                                 BETWEEN $start_time
                                                 AND $end_time";
@@ -89,6 +90,8 @@ $sql = "SELECT * FROM `WasserstandAllLive` WHERE epochtime
 
 $result = $link->query($sql);
 $myNumRows_two = $result->num_rows;
+
+echo $myNumRows_two;
 
 if ($result->num_rows > 0) {
     // output data of each row
@@ -127,8 +130,9 @@ mysqli_close($link);
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
 
 
+
         <body>
-            <canvas id="Last two days" style="border:2px solid #000000; width:100%;max-width:700px">
+            <canvas id="LastTwoDays" style="border:2px solid #000000; width:100%;max-width:700px">
             </canvas>
 
 
@@ -147,10 +151,41 @@ mysqli_close($link);
                 const graphYlevelErro = [];
                 generateErroData("185", 0, myNumRows_h, 1);
 
-                new Chart("Last two days", {
+                var ctx = document.getElementById("LastTwoDays").getContext("2d");
+                
+                var annotations = [];
+
+                // Iterate through xValues to find day changes
+                for (let i = 1; i < xValues.length; i++) {
+
+                    const partsCurr = xValues[i].split(' - ');
+                    currentDate = partsCurr[0];
+
+                    const partsPrev = xValues[i-1].split(' - ');
+                    prevDate = partsPrev[0];
+                    
+                    if (currentDate !== prevDate) {
+                        annotations.push({
+                            type: 'line',
+                            scaleID: 'x',
+                            value: xValues[i],
+                            borderColor: 'rgba(0, 0, 0, 0.5)',
+                            borderWidth: 2,
+                            label: {
+                                content: currentDate,
+                                enabled: true,
+                                position: 'start'
+                            }
+                        });
+                    }
+                }
+
+                console.log("annotations: ", annotations);
+
+                var myChart = new Chart(ctx, {
                     type: "line",
                     data: {
-                        labels: xValues,
+                        labels: xValues, 
                         datasets: [{
                                 data: yValues,
                                 fill: false,
@@ -183,21 +218,20 @@ mysqli_close($link);
 
                     
                     options: {
-                        title: {
-                            display: true,
-                            text: "Wasserstand - vergangene <?php echo $days ?> Tage xx"
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: "Wasserstand - vergangene <?php echo $days ?> Tage xx"
+                            },
+                            annotation: {
+                                annotations: annotations
+                            }
                         },
                         legend: {
                             display: true,
                             text: "Wasserstand "
                         },
-                        scales: {
-                            y: {
-                                ticks: {
-                                    min: 100,
-                                    max: 200,
-                                }
-                            },
+                        scales: {              
                             y: {
                                 beginAtZero: false, // Default is true, but you can set it to false if not needed
                                 min: 100,
@@ -206,15 +240,12 @@ mysqli_close($link);
                                     display: true,
                                     text: "Wasserstand [cm]",
                                 },
+                            },
+                            x: {
+                                type: 'category',
+                                labels: xValues // ?php echo json_encode($xVal_two); ?>
                             }
-                            // x: {
-                            //     type: 'linear',
-                            //     position: 'bottom',
-                            //     ticks: {
-                            //         stepsize: 10,
-                            //     }
-                            // }
-                        }
+                         }
                     }
                 });
 
