@@ -174,25 +174,31 @@ mysqli_close($link);
                             }
                         ]
                     },
+
+                    
                     options: {
                         title: {
                             display: true,
-                            text: "Wasserstand - vergangene <?php echo $days ?> Tage"
+                            text: "Wasserstand - vergangene <?php echo $days ?> Tage xx"
                         },
                         legend: {
                             display: true,
                             text: "Wasserstand "
                         },
                         scales: {
-                            yAxes: [{
+                            yAxis: [{
                                 ticks: {
                                     min: 100,
-                                    max: 200
+                                    max: 200,
                                 }
-                            }]
-                        },
-                        interaction: {
-                            mode: 'x'
+                            }],
+                            x: {
+                                type: 'linear',
+                                position: 'bottom',
+                                ticks: {
+                                    stepsize: 10000,
+                                }
+                            }
                         }
                     }
                 });
