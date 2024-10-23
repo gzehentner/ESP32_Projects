@@ -11,7 +11,7 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width">
     <link rel='stylesheet' type='text/css' href='../f.css'>
-    <script src='j.js'> </script>
+    
 </head>
 
 <header>
@@ -123,7 +123,9 @@ mysqli_close($link);
     <main>
 
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
+
 
         <body>
             <canvas id="Last two days" style="border:2px solid #000000; width:100%;max-width:700px">
@@ -135,6 +137,10 @@ mysqli_close($link);
                 var xValues = <?php echo $xVal_two; ?>;
                 var yValues = <?php echo $yVal_two; ?>;
                 var myNumRows_h = <?php echo $myNumRows_two ?>;
+
+                console.log("xValues:", xValues);
+                console.log("yValues:", yValues);
+
 
                 const graphYlevelWarn = [];
                 generateWarnData("170", 0, myNumRows_h, 1);
@@ -186,19 +192,28 @@ mysqli_close($link);
                             text: "Wasserstand "
                         },
                         scales: {
-                            yAxis: [{
+                            y: {
                                 ticks: {
                                     min: 100,
                                     max: 200,
                                 }
-                            }],
-                            x: {
-                                type: 'linear',
-                                position: 'bottom',
-                                ticks: {
-                                    stepsize: 10000,
-                                }
+                            },
+                            y: {
+                                beginAtZero: false, // Default is true, but you can set it to false if not needed
+                                min: 100,
+                                max: 200,
+                                title: {
+                                    display: true,
+                                    text: "Wasserstand [cm]",
+                                },
                             }
+                            // x: {
+                            //     type: 'linear',
+                            //     position: 'bottom',
+                            //     ticks: {
+                            //         stepsize: 10,
+                            //     }
+                            // }
                         }
                     }
                 });
