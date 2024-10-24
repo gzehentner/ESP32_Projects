@@ -91,8 +91,6 @@ $sql = "SELECT * FROM `WasserstandAllLive` WHERE epochtime
 $result = $link->query($sql);
 $myNumRows_two = $result->num_rows;
 
-echo $myNumRows_two;
-
 if ($result->num_rows > 0) {
     // output data of each row
     $firstrun = 1;
