@@ -94,9 +94,11 @@ const char index_html[] PROGMEM = R"rawliteral(
       <button onclick="capturePhoto()">CAPTURE PHOTO</button>
       <button onclick="location.reload();">REFRESH PAGE</button>
       <button onclick="injectErrorFunc();">INJECT ERROR</button>
+      <button onclick="debugFunc();">Show Debug Page</button>
     </p>
   </div>
   <div><img src="saved-photo" id="photo" width="70%"></div>
+  <div>
 </body>
 <script>
   var deg = 0;
@@ -118,11 +120,18 @@ const char index_html[] PROGMEM = R"rawliteral(
     xhr.open('GET', "/injectError", true);
     xhr.send();
   }
+  function debugFunc() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "/debug", true);
+    xhr.send();
+  }
 
 </script>
 </html>)rawliteral";
 
-//======================================================================
+
+
+
 void setup() {
 //======================================================================
   // Turn-off the 'brownout detector'
@@ -252,15 +261,34 @@ void setup() {
     request->send_P(200, "text/plain", "Taking Photo");
   });
 
-server.on("/injectError", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/injectError", HTTP_GET, [](AsyncWebServerRequest * request) {
     genError = 1;
-    //request->send_P(200, "text/plain", "Taking Photo and Send");
   });
 
   server.on("/saved-photo", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, FILE_PHOTO, "image/jpg", false);
   });
 
+  // handle DebugPage
+  //======================================================================
+  server.on("/debug", HTTP_GET, [](AsyncWebServerRequest *request){
+    File file = SPIFFS.open("/error.log", "r");
+    if (!file) {
+      request->send_P(500, "text/plain", "Fehler beim Öffnen der Datei");
+      return;
+    }
+    String data = file.readString();
+    file.close();
+
+    String html = "<!DOCTYPE html><html><head><title>Datenanzeige</title></head><body>";
+    html += "<h1>Daten aus SPIFFS</h1>";
+    html += "<pre>" + data + "</pre>";
+    html += "</body></html>";
+
+    request->send(200, "text/html", html);
+
+  });
+  
   // Start server
   server.begin();
 
