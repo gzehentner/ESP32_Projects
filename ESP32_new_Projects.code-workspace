@@ -4,7 +4,7 @@
 			"path": "Wasserstand_ESP_V05"
 		},
 		{
-			"path": "../ESP32_local_Projects/ESP32 Cam Take Photo"
+			"path": "ESP32 Cam Take Photo"
 		}
 	]
 }
