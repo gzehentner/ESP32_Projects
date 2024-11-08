@@ -70,7 +70,8 @@ void capturePhotoSaveSpiffs( void ) {
     // ====================================
     // check if file has been correctly saved in SPIFFS
     // ====================================
-    ok = checkPhoto(SPIFFS);
+    ok = true;
+    Serial.print("checkPhoto"); Serial.println(checkPhoto(SPIFFS));
   } while ( !ok );
 }
 
@@ -113,10 +114,10 @@ void capturePhotoPost( void ) {
         
         // HTTP-POST-Anfrage vorbereiten 
         http.begin(myServerName); 
-        http.addHeader("Content-Type", "multipart/form-data"); 
- 
+        http.addHeader("Content-Type", "multipart/form-data; boundary=boundary");
+
         // ====================================
-        // Bild und Text als Formulardaten hinzufügen 
+        // Bild als Formulardaten hinzufügen 
         String body = "--boundary\r\n"; 
         body += "Content-Disposition: form-data; name=\"image\"; filename=\"image.jpg\"\r\n"; 
         body += "Content-Type: image/jpeg\r\n\r\n"; 
@@ -125,6 +126,12 @@ void capturePhotoPost( void ) {
         body += "Content-Disposition: form-data; name=\"text\"\r\n\r\n"; 
         body += "Hier ist der Text, den du senden möchtest.\r\n"; 
         body += "--boundary--\r\n"; 
+
+        // ====================================
+        // debug prints
+        // ====================================
+        // Serial.print("Length: "); Serial.println(fb->len);
+        // Serial.print("time: "); Serial.println(epochTime);
 
         // ====================================
         // POST-Anfrage senden 
@@ -192,7 +199,7 @@ void capturePhotoPost( void ) {
         file.close();
 
       } else {
-        Serial.println("ErrprCount reset");
+        Serial.println("ErrorCount reset");
         Serial.print("Error-Count: ");
         Serial.println(errCnt_communication);        
         

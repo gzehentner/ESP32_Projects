@@ -30,7 +30,7 @@
 #include <takePhoto.h>    
 #include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
-  camera_fb_t * fb = NULL; // pointer
+  // camera_fb_t * fb = NULL; // pointer
 
 // Replace with your network credentials
 const char* ssid = "Zehentner";
@@ -48,7 +48,7 @@ int genErrorDone = 0;
   const char *myServerName = "http://zehentner.bplaced.net/Wasserstand/life/rec_photo.php"; 
 #else 
  #define SEC_CAPTURE_DIFF 10
- const char *myServerName = "http://zehentner.bplaced.net/Wasserstand/dev/rec_photo.php"; 
+ const char *myServerName = "http://zehentner.bplaced.net/Wasserstand/live/rec_photo.php"; 
 
 #endif
 
@@ -98,7 +98,6 @@ const char index_html[] PROGMEM = R"rawliteral(
     </p>
   </div>
   <div><img src="saved-photo" id="photo" width="70%"></div>
-  <div>
 </body>
 <script>
   var deg = 0;
@@ -304,9 +303,8 @@ void loop() {
   //======================================================================
   // take photo on click
   if (takeNewPhoto) {
-    // capturePhotoSaveSpiffs();
+    capturePhotoSaveSpiffs();
     takeNewPhoto = false;
-    genError = 1;
   }
 
   //======================================================================
@@ -314,7 +312,7 @@ void loop() {
   msecNow = millis();
   if ((msecNow - msecLastCapture)/1000 > SEC_CAPTURE_DIFF)
   {
-    capturePhotoPost();
+    // capturePhotoPost();
     msecLastCapture = msecNow;
   }
   delay(10);
