@@ -70,8 +70,7 @@ void capturePhotoSaveSpiffs( void ) {
     // ====================================
     // check if file has been correctly saved in SPIFFS
     // ====================================
-    ok = true;
-    Serial.print("checkPhoto"); Serial.println(checkPhoto(SPIFFS));
+    ok = checkPhoto(SPIFFS);
   } while ( !ok );
 }
 
@@ -82,6 +81,8 @@ void capturePhotoPost( void ) {
 // ====================================
   camera_fb_t * fb = NULL; // pointer
   bool ok = 0; // Boolean indicating if the picture has been taken correctly
+  unsigned long timeCaptureMs = 0;
+  unsigned long timeNow = 0;
 
   do {
     // ====================================================================
@@ -92,16 +93,22 @@ void capturePhotoPost( void ) {
     if (!fb) {
       Serial.println("Camera capture failed");
       return;
-    } else {
-    // ====================================
-    // on positiv respons of fb, set the ok flag to stop looping within capture
-      ok = 1;
     }
 
+    unsigned long fbLastLength = 0;
+
+    do {
+      fbLastLength = fb->len;
+      delay(1000);
+      Serial.print("Länge: ");Serial.println(fb->len);
+    }
+    while (fbLastLength!=fb->len);
+    
     // ====================================================================
     // Send photo to server
     // ====================================
     if (WiFi.status() == WL_CONNECTED) {
+
 
       /*=================================================================*/
       /*  code for getting time from NTP       */
@@ -152,63 +159,69 @@ void capturePhotoPost( void ) {
       // ====================================================================
       // Debug error.log
       // ====================================================================
-      if (genError==1){
-        httpResponseCode = -1000;
-        genError = 0;
-      }
+      // if (genError==1){
+      //   httpResponseCode = -1000;
+      //   genError = 0;
+      // }
 
 
       // ====================================================================
       // error handling
       // ====================================================================
-      if (httpResponseCode<0) {
+      // if (httpResponseCode<0) {
 
-        File file = SPIFFS.open("/error.log", FILE_APPEND);
-        if (!file) { 
-          Serial.println("Datei öffnen fehlgeschlagen"); 
-          return; 
-        }
+      //   File file = SPIFFS.open("/error.log", FILE_APPEND);
+      //   if (!file) { 
+      //     Serial.println("Datei öffnen fehlgeschlagen"); 
+      //     return; 
+      //   }
 
-        // ==================================
-        // write error message to file
-        String errMessage = "";
-        errMessage =  currentDate + " - " + formattedTime + " - " +  " httpCode = " +  httpResponseCode + "\n";
+      //   // ==================================
+      //   // write error message to file
+      //   String errMessage = "";
+      //   errMessage =  currentDate + " - " + formattedTime + " - " +  " httpCode = " +  httpResponseCode + "\n";
 
-        file.println(errMessage.c_str());
+      //   file.println(errMessage.c_str());
 
-        errCnt_communication++;
+      //   errCnt_communication++;
 
-        Serial.println("Error occured");
-        Serial.print("Error-Count: ");
-        Serial.println(errCnt_communication);
+      //   Serial.println("Error occured");
+      //   Serial.print("Error-Count: ");
+      //   Serial.println(errCnt_communication);
 
-        if (errCnt_communication > ERR_CNT_COMMUNICATION)
-        {
-          // ==================================
-          // reset ESP8266
-          // ==================================
-          errMessage = currentDate + " - " + formattedTime + " - " +  "client connection error - restart triggered\n";
-          file.println(errMessage.c_str());
+      //   if (errCnt_communication > ERR_CNT_COMMUNICATION)
+      //   {
+      //     // ==================================
+      //     // reset ESP8266
+      //     // ==================================
+      //     errMessage = currentDate + " - " + formattedTime + " - " +  "client connection error - restart triggered\n";
+      //     file.println(errMessage.c_str());
 
-          Serial.println("Too much errors. Restrt triggered");
-          file.close();
-          delay(1000);
+      //     Serial.println("Too much errors. Restrt triggered");
+      //     file.close();
+      //     delay(1000);
           
-          ESP.restart();
-        }
-        file.close();
+      //     ESP.restart();
+      //   }
+      //   file.close();
 
-      } else {
-        Serial.println("ErrorCount reset");
-        Serial.print("Error-Count: ");
-        Serial.println(errCnt_communication);        
+      // } else {
+      //   Serial.println("ErrorCount reset");
+      //   Serial.print("Error-Count: ");
+      //   Serial.println(errCnt_communication);        
         
-        errCnt_communication = 0;
-      }
+      //   errCnt_communication = 0;
+      // }
     }
 
+    // check photo
+    if (fb->len>100) {
+      ok = true;
+
+    } else {
+      ok = false;
+    }
     // Return the frame buffer back to the driver for reuse
     esp_camera_fb_return(fb);
-
   } while ( !ok );
 }

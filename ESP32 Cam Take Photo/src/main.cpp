@@ -16,8 +16,8 @@
 #include "esp_timer.h"
 #include "img_converters.h"
 #include "Arduino.h"
-#include "soc/soc.h"           // Disable brownour problems
-#include "soc/rtc_cntl_reg.h"  // Disable brownour problems
+#include "soc/soc.h"           // Disable brownout problems
+#include "soc/rtc_cntl_reg.h"  // Disable brownout problems
 #include "driver/rtc_io.h"
 #include <ESPAsyncWebServer.h>
 #include <StringArray.h>
@@ -47,7 +47,7 @@ int genErrorDone = 0;
   #define SEC_CAPTURE_DIFF 60
   const char *myServerName = "http://zehentner.bplaced.net/Wasserstand/life/rec_photo.php"; 
 #else 
- #define SEC_CAPTURE_DIFF 10
+ #define SEC_CAPTURE_DIFF 20
  const char *myServerName = "http://zehentner.bplaced.net/Wasserstand/live/rec_photo.php"; 
 
 #endif
@@ -165,20 +165,20 @@ void setup() {
 
   //======================================================================
   // print error file
-  Serial.println("Error file:");
-  File file = SPIFFS.open("/error.log", FILE_READ); 
-  if (!file) { 
-    Serial.println("Datei öffnen fehlgeschlagen");
-     return; 
-  }
+  // Serial.println("Error file:");
+  // File file = SPIFFS.open("/error.log", FILE_READ); 
+  // if (!file) { 
+  //   Serial.println("Datei öffnen fehlgeschlagen");
+  //    return; 
+  // }
 
-  // Dateiinhalt lesen und im Terminal ausgeben
-  while (file.available()) {
-    Serial.write(file.read());
-  }
+  // // Dateiinhalt lesen und im Terminal ausgeben
+  // while (file.available()) {
+  //   Serial.write(file.read());
+  // }
 
-  // Datei schließen
-  file.close();
+  // // Datei schließen
+  // file.close();
 
   /*=================================================================*/
   /*====================   Prepare connection to timeserver */
@@ -312,7 +312,7 @@ void loop() {
   msecNow = millis();
   if ((msecNow - msecLastCapture)/1000 > SEC_CAPTURE_DIFF)
   {
-    // capturePhotoPost();
+    capturePhotoPost();
     msecLastCapture = msecNow;
   }
   delay(10);
