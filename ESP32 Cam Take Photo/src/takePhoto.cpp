@@ -94,16 +94,12 @@ void capturePhotoPost( void ) {
       Serial.println("Camera capture failed");
       return;
     }
-
-    unsigned long fbLastLength = 0;
-
-    do {
-      fbLastLength = fb->len;
-      delay(1000);
-      Serial.print("Länge: ");Serial.println(fb->len);
-    }
-    while (fbLastLength!=fb->len);
-    
+   // Überprüfen, ob das Foto vollständig aufgenommen wurde 
+   if (fb->len == 0) { 
+    Serial.println("Foto ist unvollständig oder leer"); 
+    esp_camera_fb_return(fb); 
+    return;
+   }
     // ====================================================================
     // Send photo to server
     // ====================================
@@ -130,9 +126,9 @@ void capturePhotoPost( void ) {
         body += "Content-Type: image/jpeg\r\n\r\n"; 
         body += String((char*)fb->buf, fb->len); 
         body += "\r\n--boundary\r\n"; 
-        body += "Content-Disposition: form-data; name=\"text\"\r\n\r\n"; 
-        body += "Hier ist der Text, den du senden möchtest.\r\n"; 
-        body += "--boundary--\r\n"; 
+        // body += "Content-Disposition: form-data; name=\"text\"\r\n\r\n"; 
+        // body += "Hier ist der Text, den du senden möchtest.\r\n"; 
+        // body += "--boundary--\r\n"; 
 
         // ====================================
         // debug prints
@@ -225,3 +221,97 @@ void capturePhotoPost( void ) {
     esp_camera_fb_return(fb);
   } while ( !ok );
 }
+
+// ========================================================================================================
+void postImageFile() {
+// ========================================================================================================
+
+  // Öffne die JPEG-Datei aus dem SPIFFS
+  File file = SPIFFS.open("/image.jpg", "r");
+  if (!file) {
+    Serial.println("Fehler beim Öffnen der Datei");
+    return;
+  }
+
+  // HTTP-POST-Anfrage vorbereiten
+  HTTPClient http;
+  http.begin(myServerName);
+  http.addHeader("Content-Type", "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW");
+
+  // Bild als Formulardaten hinzufügen
+  String body = "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n";
+  body += "Content-Disposition: form-data; name=\"image\"; filename=\"image.jpg\"\r\n";
+  body += "Content-Type: image/jpeg\r\n\r\n";
+
+  // File meta data
+  Serial.print(" - Size: ");
+  Serial.print(file.size());
+  Serial.println(" bytes");
+
+  // Bilddaten lesen und zum Body hinzufügen
+  while (file.available()) {
+    body += (char)file.read();
+  }
+
+  file.close();
+  body += "\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
+
+  int httpResponseCode = http.POST((uint8_t*)body.c_str(), body.length());
+
+  if (httpResponseCode > 0) {
+    String response = http.getString();
+    Serial.println(httpResponseCode);
+    Serial.println(response);
+  } else {
+    Serial.println("Fehler bei der HTTP-Anfrage");
+  }
+
+  http.end();
+}
+
+// ========================================================================================================
+void postImageOnly() {
+// ========================================================================================================
+
+  // Öffne die JPEG-Datei aus dem SPIFFS
+  File file = SPIFFS.open(FILE_PHOTO, "r");
+  if (!file) {
+    Serial.println("Fehler beim Öffnen der Datei");
+    return;
+  }
+
+
+// Ausgabe der Dateigröße 
+  size_t fileSize = file.size(); 
+  Serial.print("Dateigröße: "); 
+  Serial.print(fileSize); 
+  Serial.println(" Bytes");
+
+  uint8_t *buffer = new uint8_t[fileSize];
+  file.read(buffer, fileSize);
+  file.close();
+
+  //Serial.print("size: "); Serial.println(file.size);
+
+  // HTTP-POST-Anfrage vorbereiten
+  HTTPClient http;
+
+  http.begin(myServerName);
+  http.addHeader("Content-Type", "image/jpeg");
+
+  int httpResponseCode = http.POST(buffer, fileSize);
+
+  if (httpResponseCode > 0) {
+    String response = http.getString();
+    Serial.println(httpResponseCode);
+    Serial.println(response);
+  } else {
+    Serial.println("Fehler bei der HTTP-Anfrage");
+  }
+
+  http.end();
+  delete[] buffer;
+}
+
+
+// ========================================================================================================

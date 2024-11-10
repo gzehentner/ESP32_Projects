@@ -7,6 +7,7 @@
 #define ERR_CNT_COMMUNICATION 5
 
 extern const char *myServerName;
+extern const char *myServerNameFile;
 extern int genError;
 extern int genErrorDone;
 

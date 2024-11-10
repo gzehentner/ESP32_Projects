@@ -45,12 +45,12 @@ int genErrorDone = 0;
 
 #if isLiveSystem == 1
   #define SEC_CAPTURE_DIFF 60
-  const char *myServerName = "http://zehentner.bplaced.net/Wasserstand/life/rec_photo.php"; 
 #else 
  #define SEC_CAPTURE_DIFF 20
- const char *myServerName = "http://zehentner.bplaced.net/Wasserstand/live/rec_photo.php"; 
-
 #endif
+
+const char *myServerName     = "http://zehentner.bplaced.net/Wasserstand/live/rec_photo.php"; 
+const char *myServerNameFile = "http://zehentner.bplaced.net/Wasserstand/live/rec_photo_file.php"; 
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
@@ -312,8 +312,14 @@ void loop() {
   msecNow = millis();
   if ((msecNow - msecLastCapture)/1000 > SEC_CAPTURE_DIFF)
   {
-    capturePhotoPost();
+    Serial.println("capturing photo");
+    capturePhotoSaveSpiffs();
+
+    Serial.println("Sending photo started");
+    postImageOnly();
+
     msecLastCapture = msecNow;
+    Serial.println("Sending photo done");
   }
   delay(10);
 }
