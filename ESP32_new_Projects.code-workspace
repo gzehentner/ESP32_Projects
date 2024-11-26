@@ -2,9 +2,6 @@
 	"folders": [
 		{
 			"path": "Wasserstand_ESP_V05"
-		},
-		{
-			"path": "ESP32 Cam Take Photo"
 		}
 	]
 }
