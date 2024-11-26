@@ -33,7 +33,8 @@
     #define BOARDTYPE ESP32
     // defined in platformio.ini 
     // #define MyUSE_ADC ADS1115_ADC
-    //
+    // defined in platformio.ini
+    //#define MyBoardIsDevC 1
   #else
     #define BOARDTYPE ESP8266          // Board with ESP8266 is used (internal ADC)
     // defined in platformio.ini 
@@ -76,12 +77,19 @@
     // #define GPin_ALL  14 // blau   
     // #define GPout_GND 12 // schwarz
   #else
-    /* -- Pin-Def for ESP32 -- */  // Board159
-    #define GPin_AHH  2  // blau   rot
-    #define GPin_AH  13  // grau   grün
-    #define GPin_AL  12  // lila   gelb
-    // #define GPin_ALL 16  // grün   orange (GPIO16 is not usable, because it is used for PSRAM)
-  
+      #if MyBoardIsDevC == 1
+      // -- Pin-Def for ESP32 Dev C  V2 
+      #define GPin_AHH  2  // blau   rot
+      #define GPin_AH  13  // grau   grün
+      #define GPin_AL  12  // lila   gelb
+      // #define GPin_ALL 16  // grün   orange (GPIO16 is not usable, because it is used for PSRAM)
+    #else
+      // -- Pin-Def for ESP32 Cam
+      #define GPin_AHH  2  // blau   rot
+      #define GPin_AH  13  // grau   grün
+      #define GPin_AL  12  // lila   gelb
+      // #define GPin_ALL 16  // grün   orange (GPIO16 is not usable, because it is used for PSRAM)
+    #endif
   #endif
 
  
@@ -92,8 +100,14 @@
 
     #if BOARDTYPE == ESP32
       #define GET_ANALOG ads.readADC_Differential_0_1()
-      #define I2C_SDA 14
-      #define I2C_SCL 15
+      #if MyBoardIsDevC == 1
+
+        #define I2C_SDA 21
+        #define I2C_SCL 22
+      #else
+        #define I2C_SDA 14
+        #define I2C_SCL 15
+      #endif
     #else
       #define GET_ANALOG ads.readADC_SingleEnded(0)
       #define I2C_SDA 4
