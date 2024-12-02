@@ -11,8 +11,10 @@
 #include <waterlevel.h>
 #include <NoiascaCurrentLoop.h>   // library for analog measurement
 #include <server.h>
-#include <LittleFS.h>
-#include <MyLittleFSLib.h>
+#ifdef use_FS 
+  #include <LittleFS.h> 
+  #include <MyLittleFSLib.h>
+#endif
 
 
 /*=================================================================*/
@@ -168,8 +170,9 @@ String htmlMsg="";
         tempString += ", ";
         tempString += myValueFilteredAct;
         
+        #ifdef use_FS
         appendFile("/level.log", (tempString+ "\n").c_str()); // Append data to the file
-        
+        #endif
         myValueFilteredAct_old = myValueFilteredAct;
 
       } // end of print on change

@@ -157,7 +157,7 @@ known issues: OTA download not possible "not enouth space"
     #include <Adafruit_Sensor.h>
     #include <Adafruit_ADS1X15.h>
     TwoWire I2CSensors = TwoWire(0);
-    Adafruit_Adafruit_ADS1115 ads;
+    Adafruit_ADS1115 ads;
     int16_t adc0;
   #else
     #include <Adafruit_ADS1X15.h>

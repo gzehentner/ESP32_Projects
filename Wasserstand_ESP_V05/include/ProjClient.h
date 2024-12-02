@@ -10,7 +10,7 @@ Include file for client things
 void sendPost();
 //void sendPost_V1();
 //void sendPost_V2();
-void sendPostToAskSensors();
+//void sendPostToAskSensors();
 
 
 #endif
