@@ -22,6 +22,8 @@
 #ifndef WATERLEVEL_DEFINES_H
   #define WATERLEVEL_DEFINES_H
 
+  #include <Arduino.h>
+
   #define VERSION "6.9" // the version of this sketch
 
   // setting for ADC select: MyUSE_ADC
