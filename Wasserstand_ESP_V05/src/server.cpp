@@ -1106,7 +1106,6 @@ void handleGraph_POC()
   Serial.println(message.length());
 
   server.send(200, "text/html", message);
-  
 }
 //*********************************************************************************
 void handleCss()

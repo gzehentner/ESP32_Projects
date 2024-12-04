@@ -129,6 +129,10 @@ known issues: OTA download not possible "not enouth space"
 
   #include <ProjClient.h>
 
+  #include <pumpControl.h>
+  
+  #include <MyLittleFSLib.h>
+
 #else
   #include <Arduino.h>
 
@@ -275,7 +279,9 @@ HeapStat heapInfo;
 
 // GZE: I dont know what this par of code does
 extern char _end;
-extern "C" char *sbrk(int i);
+#if BOARDTYPE == ESP8266
+  extern "C" char *sbrk(int i);
+#endif
 
 char *ramstart = (char *)0x20070000;
 char *ramend = (char *)0x20088000;
@@ -495,6 +501,7 @@ void setup(void) {
     #if BOARDTYPE == ESP32
     /*==================================================================*/
     // prepare I2C interface
+      Serial.println("I2CSensors.begin");
       I2CSensors.begin(I2C_SDA, I2C_SCL, 100000);
     #endif
 
@@ -508,6 +515,7 @@ void setup(void) {
     // check if ADS is runnint
     #if BOARDTYPE == ESP32
       // for ESP32
+      Serial.println("ads.begin");
       if (!ads.begin(0x48, &I2CSensors))
     #else
       // for ESP 8266
@@ -567,13 +575,13 @@ void setup(void) {
   #endif
 
   getSetupIni();
-  readFile("/setup.ini");
+  //readFile("/setup.ini");
   Serial.println();
   Serial.print("pump1_operationTime : ");Serial.println(pump1_operationTime);
   Serial.print("pump2_operationTime : ");Serial.println(pump2_operationTime);
   Serial.print("linkPump            : ");Serial.println(linkPump);
 
-  #define deleteErrLog 1
+  #define deleteErrLog 0
   #if deleteErrLog == 1
     // deleting setupFile
     Serial.println("deleting error.log");
@@ -585,7 +593,7 @@ void setup(void) {
   readFile("/error.log");
  
 
-  listDir("/");  
+  //listDir("/");  
 }
   /*==================================================================*/
   
@@ -673,7 +681,7 @@ void loop(void) {
   // **************************************************************************************************
 
   /* Over the Air UPdate */
-  ArduinoOTA.handle(); // OTA Upload via ArduinoIDE
+  //ArduinoOTA.handle(); // OTA Upload via ArduinoIDE
 
   // **************************************************************************************************
   // **************************************************************************************************

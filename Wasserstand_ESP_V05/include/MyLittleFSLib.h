@@ -9,5 +9,5 @@ void writeFile (const char *path,  const char *message);
 void appendFile(const char *path,  const char *message);
 void renameFile(const char *path1, const char *path2  );
 void deleteFile(const char *path   );
-void listDir   (const char *dirname);
+// void listDir   (const char *dirname);
 #endif

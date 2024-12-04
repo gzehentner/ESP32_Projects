@@ -70,9 +70,9 @@ void getSetupIni();
 // definitions for analog-digital conversion (using external ADS1115)
   #if MyUSE_ADC == ADS1115_ADC
     #if BOARDTYPE == ESP32
-      TwoWire I2CSensors = TwoWire(0);
-      Adafruit_ADS1115 ads;
-      int16_t adc0;
+      // TwoWire I2CSensors = TwoWire(0);
+      extern Adafruit_ADS1115 ads;
+      // int16_t adc0;
     #else
       extern Adafruit_ADS1115 ads;
       //Wire.begin(4,5);
