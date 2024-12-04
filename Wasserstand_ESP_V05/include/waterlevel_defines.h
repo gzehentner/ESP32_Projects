@@ -81,9 +81,9 @@
   #else
       #if MyBoardIsDevC == 1
       // -- Pin-Def for ESP32 Dev C  V2 
-      #define GPin_AHH  2  // blau   rot
-      #define GPin_AH  13  // grau   grün
-      #define GPin_AL  12  // lila   gelb
+      #define GPin_AHH 19  // lila
+      #define GPin_AH  18  // blau
+      #define GPin_AL  17  // grün
       // #define GPin_ALL 16  // grün   orange (GPIO16 is not usable, because it is used for PSRAM)
     #else
       // -- Pin-Def for ESP32 Cam
@@ -118,7 +118,13 @@
 
   #else // use builtin ADC
     #if BOARDTYPE == ESP32
-      Builtin ADC cannot be used with ESP32
+      #if MyBoardIsDevC == 1
+        #define GET_ANALOG analogRead(pin)
+        #define ADC_BIT 11
+        #define Ain_Level 36
+      #else
+        Builtin ADC cannot be used with ESP32
+      #endif
     #endif
 
     #define GET_ANALOG analogRead(pin)
@@ -127,8 +133,12 @@
   #endif
 
   #if BOARDTYPE == ESP32
-        // pin of builtin led
-    const int builtin_led = 4;
+  // pin of builtin led
+    #if (MyBoardIsDevC == 1)
+      const int builtin_led = 2;
+    #else
+      const int builtin_led = 4;
+    #endif
   #else
     #define builtin_led 2 
     #define BLUE_LED builtin_led
