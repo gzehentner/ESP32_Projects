@@ -69,8 +69,9 @@
   /*=================================================================*/
   /* Prepare WaterLevel Application */
 
+  //===================================================
+  // Pinout
 
-  
   #if BOARDTYPE == ESP8266
     /* -- Pin-Def for ESP8266 -- */
     #define GPin_AHH   3 // weiß    // RX
@@ -94,7 +95,9 @@
     #endif
   #endif
 
- 
+  #define GPout_pump1 32
+  #define GPout_pump2 33
+
   // definitions for analog-digital conversion
   #if MyUSE_ADC == ADS1115_ADC
     #define ADC_BIT  15  // only 15 bit for single ended signals
@@ -144,6 +147,9 @@
     #define BLUE_LED builtin_led
     #define PWM_OUT LED_BUILTIN
   #endif
+  //===================================================
+  // End Pinout
+  //===================================================
 
   //**************************************************************
   //**************************************************************

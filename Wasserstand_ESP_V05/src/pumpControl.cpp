@@ -147,4 +147,8 @@ void selectPump() {
         pump1_op = pumpB_op;
     }
 
+    // set output pin to control pump
+    digitalWrite(GPout_pump1,pump1_op);
+    digitalWrite(GPout_pump2,pump2_op);
+
 }

@@ -436,6 +436,12 @@ void setup(void) {
   pinMode(GPin_AH,  INPUT_PULLUP);
   pinMode(GPin_AL,  INPUT_PULLUP);
 
+  digitalWrite(GPout_pump1,0);
+  digitalWrite(GPout_pump2,0);
+  pinMode(GPout_pump1, OUTPUT);
+  pinMode(GPout_pump2, OUTPUT);
+
+
  
   /* ----End Setup WaterLevel ------------------------------------------ */
   /*=================================================================*/
