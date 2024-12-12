@@ -82,6 +82,7 @@
   #else
       #if MyBoardIsDevC == 1
       // -- Pin-Def for ESP32 Dev C  V2 
+      #define GPin_AHHH 20 // only internal pin, not routed on dev board
       #define GPin_AHH 19  // lila
       #define GPin_AH  18  // blau
       #define GPin_AL  17  // grün

@@ -15,6 +15,7 @@ Include file for web-server things
 
 extern int debugLevelSwitches;
 
+extern int simVal_AHHH;
 extern int simVal_AHH;
 extern int simVal_AH ;
 extern int simVal_AL ;
@@ -22,6 +23,13 @@ extern int simVal_ALL;
 
 //extern WebServer server; // declare an instance for the webserver
 extern int sendToClient; // enable sending to client
+
+// **************************************************************************************************
+void handleHtmlFile();
+// **************************************************************************************************
+
+void handleRawText();
+void handleSetTimeSteps();
 
 // **************************************************************************************************
   void handleRoot();

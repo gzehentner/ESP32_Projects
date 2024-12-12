@@ -57,6 +57,7 @@
 #endif
 
 
+int val_AHHH;
 int val_AHH;
 int val_AH;
 int val_AL;
@@ -81,13 +82,61 @@ int sendToClient = 0; // enable sending to client (develop system)
 // variables for simulation
 // **************************************************************************************************
 int debugLevelSwitches=0; // default off
-int simVal_AHH = 1;
-int simVal_AH  = 1;
-int simVal_AL  = 0;
+int simVal_AHHH = 1;
+int simVal_AHH  = 1;
+int simVal_AH   = 1;
+int simVal_AL   = 0;
 // int simVal_ALL = 0;
 
 int firstRun = 1;
 //int reloadDone = 1; // show if reload of handlePage is done
+
+int time_steps = 0;
+
+
+// **************************************************************************************************
+// get html code from file and send
+// *************************************************************************************************
+void handleHtmlFile(){
+  File file = LittleFS.open("/html/test.html", "r");
+  if (!file) {
+    server.send(404, "text/plain", "File not found");
+    return;
+  }
+  String htmlContent = file.readString();
+  server.send(200, "text/html", htmlContent);
+  file.close();
+}
+
+void handleRawText() {
+  const char* htmlContent = 
+      #include "test.php"
+
+    server.send(200, "text/html", htmlContent);
+
+    Serial.println("handleRawText entered");
+    if (server.hasArg("time_steps")) {
+        time_steps = server.arg("time_steps").toInt();
+        Serial.print("Time Steps: ");
+        Serial.println(time_steps);
+        server.send(200, "text/plain", "Time Steps set successfully");
+    } else {
+        server.send(400, "text/plain", "Bad Request");
+    }
+    
+}
+void handleSetTimeSteps() {
+  Serial.println("handleSetTimeSteps entered");
+    if (server.hasArg("time_steps")) {
+        time_steps = server.arg("time_steps").toInt();
+        Serial.print("Time Steps: ");
+        Serial.println(time_steps);
+        server.send(200, "text/plain", "Time Steps set successfully");
+    } else {
+        server.send(400, "text/plain", "Bad Request");
+    }
+}
+
 
 // **************************************************************************************************
 void handleNotFound() {
@@ -238,6 +287,16 @@ void handlePage()
   //************************************************ */
   // display stat of the relais input signals
   // input signals are low active
+  message += F("Level Alarm  very high: <span id='val_AHHH'>");
+  if (val_AHHH == 0)
+  {
+    message += F("active");
+  }
+  else
+  {
+    message += F("--");
+  }
+  message += F("</span><br>");
   message += F("Level Alarm   high: <span id='val_AHH'>");
   if (val_AHH == 0)
   {
@@ -280,7 +339,9 @@ void handlePage()
   message += F("<article>"
                "<h2>Auswertung Wasserstand</h2>");
 
-  if (alarmState == 5) 
+  if (alarmState == 6) 
+    message += F("<message_err> Achtung extremer Starkregen -- beide Pumpen einschalten <br>Wasserstand &gt " Level_AHHH_Str "<br></message_err>");
+  else if (alarmState == 5) 
     message += F("<message_err> Achtung Hochwasser -- Pumpe einschalten <br>Wasserstand &gt " Level_AHH_Str "<br></message_err>");
 
   else if (alarmState == 4)
@@ -324,6 +385,14 @@ void handlePage()
   } else {
     message += F("<p class='off'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
   }
+  
+  if (simVal_AHHH == 0)  // low active => 0 = on = rot = higher than AHHH
+  {
+  message += F("<p class='on_red'><a href='c.php?toggle=0' target='i'>AHHH</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=0' target='i'>AHHH</a></p>\n");
+  }
+  
   if (simVal_AHH == 0)  // low active => 0 = on = rot = higher than AHH
   {
   message += F("<p class='on_red'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
@@ -1298,6 +1367,12 @@ void handleCommand()
       {
         debugLevelSwitches=1;
       }
+    }
+    if (server.arg(0) == "0") // the value for that parameter
+    {
+      Serial.println(F("D232 toggle ahhh"));
+      if (simVal_AHHH == 1) {simVal_AHHH = 0;} else {simVal_AHHH = 1;}
+      digitalWrite(GPin_AHHH, simVal_AHHH);
     }
     if (server.arg(0) == "1") // the value for that parameter
     {

@@ -10,6 +10,7 @@
 extern int val_AH;
 extern int val_AL;
 extern int val_AHH;
+extern int val_AHHH;
 extern int val_ALL;
 
 extern unsigned long seconds_since_startup;      // current second since startup

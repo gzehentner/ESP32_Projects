@@ -432,9 +432,10 @@ void setup(void) {
 
   // prepare relais input / output
 
-  pinMode(GPin_AHH, INPUT_PULLUP);
-  pinMode(GPin_AH,  INPUT_PULLUP);
-  pinMode(GPin_AL,  INPUT_PULLUP);
+  pinMode(GPin_AHHH, INPUT_PULLUP);
+  pinMode(GPin_AHH,  INPUT_PULLUP);
+  pinMode(GPin_AH,   INPUT_PULLUP);
+  pinMode(GPin_AL,   INPUT_PULLUP);
 
   digitalWrite(GPout_pump1,0);
   digitalWrite(GPout_pump2,0);
@@ -473,6 +474,9 @@ void setup(void) {
   // the next two handlers are necessary to receive and show data from another module
   server.on("/d.php", handleData);               // receives data from another module
   server.on("/r.htm", handlePageR);              // show data as received from the remote module
+  server.on("/test.htm",handleHtmlFile);         // test procedure to handle reading html code from file
+  server.on("/testR.htm",handleRawText);         // test procedure to handle reading html code as raw string
+  server.on("/set_time_steps.htm", HTTP_POST, handleSetTimeSteps);
 
 
   // following settings are coming from AdvancedWebServer
@@ -639,24 +643,29 @@ void loop(void) {
   if (debugLevelSwitches != debugLevelSwitches_old) {
     if (debugLevelSwitches == 1) {
       // set default values to last actual values, when debug is switched on 
-      Serial.print("val_AHH: "); Serial.println(val_AHH);
-      Serial.print("val_AH:  "); Serial.println(val_AH);
-      Serial.print("val_AL:  "); Serial.println(val_AL);
-      simVal_AHH = val_AHH;
-      simVal_AH  = val_AH;
-      simVal_AL  = val_AL;
+      Serial.print("val_AHHH: "); Serial.println(val_AHHH);
+      Serial.print("val_AHH:  "); Serial.println(val_AHH);
+      Serial.print("val_AH:   "); Serial.println(val_AH);
+      Serial.print("val_AL:   "); Serial.println(val_AL);
+      // simVal_AHHH = val_AHHH;
+      simVal_AHH =  val_AHH;
+      simVal_AH  =  val_AH;
+      simVal_AL  =  val_AL;
+      pinMode(GPin_AHHH, OUTPUT);
       pinMode(GPin_AHH, OUTPUT);
       pinMode(GPin_AH,  OUTPUT);
       pinMode(GPin_AL,  OUTPUT);
       
-      digitalWrite(GPin_AHH, simVal_AHH);
-      digitalWrite(GPin_AH , simVal_AH);
-      digitalWrite(GPin_AL , simVal_AL);
+      // digitalWrite(GPin_AHHH, simVal_AHHH);
+      digitalWrite(GPin_AHH , simVal_AHH);
+      digitalWrite(GPin_AH  , simVal_AH);
+      digitalWrite(GPin_AL  , simVal_AL);
       Serial.println("debug level enabled");
     } else {
-      pinMode(GPin_AHH, INPUT_PULLUP);
-      pinMode(GPin_AH,  INPUT_PULLUP);
-      pinMode(GPin_AL, INPUT_PULLUP);
+      pinMode(GPin_AHHH, INPUT_PULLUP);
+      pinMode(GPin_AHH , INPUT_PULLUP);
+      pinMode(GPin_AH  , INPUT_PULLUP);
+      pinMode(GPin_AL  , INPUT_PULLUP);
       Serial.println("debug level disabled");
     }
   }
@@ -707,8 +716,10 @@ void loop(void) {
   /* Send Email reusing session   */
   // **************************************************************************************************
 
-  if (executeSendMail)
+  if (false) // GZE debug
+  //if (executeSendMail)
   {
+     Serial.println("Sending email disabled for test");
      executeSendMail = false;
 
     SMTP_Message message;

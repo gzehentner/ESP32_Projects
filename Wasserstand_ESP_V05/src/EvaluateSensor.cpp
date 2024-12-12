@@ -430,7 +430,9 @@ String htmlMsg="";
  * ************************************** */
 void setPegelforSimulation()
 {
-  if ((simVal_AHH==0) and (simVal_AH==0)) {
+  if ((simVal_AHHH==0) and (simVal_AHH==0) and (simVal_AH==0)) {
+    pegel = Level_AHHH + 5;  // for simulation set pegel to high-Alarm-Level plus 5cm
+  } else if ((simVal_AHH==0) and (simVal_AH==0)) {
     pegel = Level_AHH + 5;  // for simulation set pegel to Alarm-Level plus 5cm
   } else if ((simVal_AH==0)) {
     pegel = Level_AH  + 5;  // for simulation set pegel to Warning-Level plus 5cm
