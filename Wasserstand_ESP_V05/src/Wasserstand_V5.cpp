@@ -476,7 +476,7 @@ void setup(void) {
   server.on("/r.htm", handlePageR);              // show data as received from the remote module
   server.on("/test.htm",handleHtmlFile);         // test procedure to handle reading html code from file
   server.on("/testR.htm",handleRawText);         // test procedure to handle reading html code as raw string
-  server.on("/set_time_steps.htm", HTTP_POST, handleSetTimeSteps);
+//  server.on("/set_time_steps.htm", HTTP_POST, handleSetTimeSteps);
 
 
   // following settings are coming from AdvancedWebServer

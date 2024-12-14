@@ -125,17 +125,17 @@ void handleRawText() {
     }
     
 }
-void handleSetTimeSteps() {
-  Serial.println("handleSetTimeSteps entered");
-    if (server.hasArg("time_steps")) {
-        time_steps = server.arg("time_steps").toInt();
-        Serial.print("Time Steps: ");
-        Serial.println(time_steps);
-        server.send(200, "text/plain", "Time Steps set successfully");
-    } else {
-        server.send(400, "text/plain", "Bad Request");
-    }
-}
+// void handleSetTimeSteps() {
+//   Serial.println("handleSetTimeSteps entered");
+//     if (server.hasArg("time_steps")) {
+//         time_steps = server.arg("time_steps").toInt();
+//         Serial.print("Time Steps: ");
+//         Serial.println(time_steps);
+//         server.send(200, "text/plain", "Time Steps set successfully");
+//     } else {
+//         server.send(400, "text/plain", "Bad Request");
+//     }
+// }
 
 
 // **************************************************************************************************

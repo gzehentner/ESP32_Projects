@@ -2,6 +2,10 @@
 	"folders": [
 		{
 			"path": "Wasserstand_ESP_V05"
+		},
+		{
+			"name": "Wasserstand_ESP_V05B",
+			"path": "Wasserstand_ESP_V05B"
 		}
 	]
 }
