@@ -4,7 +4,8 @@
 			"path": "Wasserstand_ESP_V05"
 		},
 		{
-			"path": "ESP32 Cam Take Photo"
+			"name": "Wasserstand_ESP_V05B",
+			"path": "Wasserstand_ESP_V05B"
 		}
 	]
 }

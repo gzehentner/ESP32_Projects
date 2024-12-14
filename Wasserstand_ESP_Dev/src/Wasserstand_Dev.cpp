@@ -1,5 +1,12 @@
 /*
 =============================================
+Spielwiese:
+Anwendung Wasserstand zur Version 6.9
+Bei der Kopie aus dem Live-Programm Wasserstand_V5 wurden eine Datei test.php und eine Funktion mit hinzugefügt, mit dem
+man testen kann, wie man eine HTML-Form zum Eingeben von Daten nutzen kann
+Umbenennung (Projekt und Main-File) in Wasserstand_Dev
+=============================================
+
 Wasserstand_V5
 V6.9
 - Pumpensteuerung implementiert

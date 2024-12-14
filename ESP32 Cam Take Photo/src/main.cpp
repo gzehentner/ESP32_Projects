@@ -140,6 +140,10 @@ void setup() {
   // Serial port for debugging purposes
   Serial.begin(115200);
 
+  // MAC-Adresse ausgeben
+  Serial.print("MAC-Address: "); 
+  Serial.println(WiFi.macAddress());
+
   //======================================================================
   // prepare WiFi
   char myhostname[8] = {"CamDev"};
@@ -200,12 +204,12 @@ void setup() {
 
   /*=================================================================*/
   /* IDE OTA */
-  ArduinoOTA.setHostname(myhostname); // give a name to your ESP for the Arduino IDE
-  ArduinoOTA.begin();                 // OTA Upload via ArduinoIDE https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html
-  ArduinoOTA.setPort(3232); // Or any other available port
+  // ArduinoOTA.setHostname(myhostname); // give a name to your ESP for the Arduino IDE
+  // ArduinoOTA.begin();                 // OTA Upload via ArduinoIDE https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html
+  // ArduinoOTA.setPort(3232); // Or any other available port
 
   // ArduinoOTA.setDebugLevel(3);
-  Serial.println("OTA prepared");
+  // Serial.println("OTA prepared");
 
 
   //======================================================================
@@ -232,12 +236,16 @@ void setup() {
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
 
-  if (psramFound()) {
+  // if (psramFound()) {
+  if (false) {
     config.frame_size = FRAMESIZE_UXGA;
     config.jpeg_quality = 10;
     config.fb_count = 2;
   } else {
+    // for test use SVGA for ever
     config.frame_size = FRAMESIZE_SVGA;
+    //config.frame_size = FRAMESIZE_96X96;
+
     config.jpeg_quality = 12;
     config.fb_count = 1;
   }
