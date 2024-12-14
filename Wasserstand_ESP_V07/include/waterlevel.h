@@ -39,7 +39,6 @@ extern int myAdcFilteredAct;
 
 extern int filterCnt;   
 extern unsigned long previousMillis;             // used to determine intervall of ADC measurement
-extern unsigned long longtermPreviousMillis;     // used to determine intervall since last value saved
 
 extern unsigned long millisNow;   
 
@@ -51,12 +50,6 @@ extern int    ringADC[iRingValueMax+1];
 extern int wrRingPtr;           // index variable for write buffer
 extern int rdRingPtr;            // position to read out of buffer
 
-// variables for longterm ringbuffer
-extern unsigned long ringLongtermTime [iLongtermRingValueMax +1];
-extern int    ringLongtermValue[iLongtermRingValueMax +1];     // ring buffer for display last 50 values
-
-extern int    wrLongtermRingPtr;                  // ring buffer write pointer 
-extern int    rdLongtermRingPtr;                  // ring buffer read pointer 
 
 //*******************************************************************************
 // write values to setup.ini

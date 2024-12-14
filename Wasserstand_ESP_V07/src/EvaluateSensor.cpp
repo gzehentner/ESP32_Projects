@@ -33,7 +33,6 @@ int valueStable = 0;           // value is not stable until the first filtering 
 
 
 unsigned long millisDiff;
-unsigned long longtermMillisDiff;
 
 // variable for simulation
 //    used to hold the actual waterlevel if simulation is switched on
@@ -47,14 +46,6 @@ int    ringValue[iRingValueMax +1];     // ring buffer for display last 50 value
 int    ringADC  [iRingValueMax +1];     // ring buffer for display last 50 adc values
 int    wrRingPtr = 0;                  // ring buffer write pointer 
 int    rdRingPtr = 0;                  // ring buffer read pointer 
-
-/*=================================================================*/
-/* definitions for longterm ring buffer */
-/*=================================================================*/
-unsigned long ringLongtermTime [iLongtermRingValueMax +1];
-int    ringLongtermValue[iLongtermRingValueMax +1];     // ring buffer for display last 50 values
-int    wrLongtermRingPtr = 0;                  // ring buffer write pointer 
-int    rdLongtermRingPtr = 0;                  // ring buffer read pointer 
 
 //int firstRun = 1;
 int printOnChangeActive = 0;
@@ -90,7 +81,6 @@ String htmlMsg="";
     millisNow = millis();
     
     millisDiff = millisNow - previousMillis;
-    longtermMillisDiff = millisNow - longtermPreviousMillis;
 
     // when it is too early, do nothing
     if (millisDiff <= measureInterval) return; // do nothing
@@ -167,32 +157,9 @@ String htmlMsg="";
         tempString += ", ";
         tempString += myValueFilteredAct;
         
-        appendFile("/level.log", (tempString+ "\n").c_str()); // Append data to the file
         myValueFilteredAct_old = myValueFilteredAct;
 
       } // end of print on change
-
-      /*=========================================*/
-      /*=========================================*/
-      /* handle longterm values */
-      /*=========================================*/
-      if (longtermMillisDiff > longtermInterval) 
-      {
-        longtermPreviousMillis = millisNow;
-
-        // write time to ring buffer
-        ringLongtermTime [wrLongtermRingPtr] = epochTime; // myEpochTime;
-
-        // write shortterm value to ring buffer
-        ringLongtermValue[wrLongtermRingPtr] = myValueFilteredAct;  
-
-        // increment write pos
-        if (wrLongtermRingPtr < iLongtermRingValueMax) {
-          wrLongtermRingPtr++;
-        } else  {
-          wrLongtermRingPtr = 0;
-        }
-      }
 
       /*=========================================*/
       myValueFiltered = 0;

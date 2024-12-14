@@ -24,12 +24,6 @@ extern int simVal_ALL;
 //extern WebServer server; // declare an instance for the webserver
 extern int sendToClient; // enable sending to client
 
-// **************************************************************************************************
-void handleHtmlFile();
-// **************************************************************************************************
-
-void handleRawText();
-//void handleSetTimeSteps();
 
 // **************************************************************************************************
   void handleRoot();
@@ -62,28 +56,6 @@ void handleListFiltered();
 /* print graph for short term values*/
 void handleGraph();
 // **************************************************************************************************
-// **************************************************************************************************
-/* print graph for short term values with print on change using google chart*/
-void handleGraph_POC();
-// **************************************************************************************************
-
-// **************************************************************************************************
-/* print graph for longterm values*/
-void handleLongtermGraph();
-// **************************************************************************************************
-
-// **************************************************************************************************
-/* print both graph longterm and shortterm*/
-void handleBothGraph();
-// **************************************************************************************************
-
-#if BOARDTYPE == ESP32
-
-/* =======================================*/
-void drawGraph();
-/* =======================================*/
-#endif
-
 
 // **************************************************************************************************
 // output of stylesheet
@@ -101,10 +73,6 @@ void handleJson();
 // a function in the JavaScript uses fetch API to request a JSON file from the webserver and updates the values on the page if the object names and ID are the same
 void handleJs();
 // **************************************************************************************************
-
-// only first steps
-// void handleSliderJs();
-// void handleSlider();
 
 // **************************************************************************************************
 void handleCommand();

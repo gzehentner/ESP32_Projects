@@ -189,7 +189,6 @@ extern CurrentLoopSensor currentLoopSensor();
 unsigned long seconds_since_startup = 0;      // current second since startup
 
 unsigned long previousMillis = 0;             // used to determine intervall of ADC measurement
-unsigned long longtermPreviousMillis = 0;     //
 unsigned long millisNow      = 0;  
 
 const uint16_t ajaxIntervall = 5;             // intervall for AJAX or fetch API call of website in seconds
@@ -205,18 +204,10 @@ uint32_t clientPreviousSs = 0;                // - clientIntervall;  // last sec
 // select http url to send to: 
 //  - send to Bplaced or an internal device
 //  - select if it is a live system or development
-#ifdef sendToBplaced_sql
-  #if isLiveSystem == 1
-    const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/live/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
-  #else
-    const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/dev/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
-  #endif
+#if isLiveSystem == 1
+  const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/live/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
 #else
-  #if isLiveSystem == 1
-    const char *sendHttpTo = "http://192.168.178.155/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
-  #else 
-    const char *sendHttpTo = "http://192.168.178.164/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
-  #endif
+  const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/dev/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
 #endif
 
 
@@ -457,35 +448,20 @@ void setup(void) {
   // define the pages and other content for the webserver
   server.on("/", handlePage);      // send root page
   server.on("/0.htm", handlePage); // a request can reuse another handler
-  // problems with too big data --> still disabled
-  //server.on("/graph_poc.htm", handleGraph_POC); // display a chart with print on change values based on google graph
   server.on("/graph.htm", handleGraph); // display a chart with shortterm values
-  server.on("/longterm_graph.htm", handleLongtermGraph);
   server.on("/filtered.htm",handleListFiltered);
 
   server.on("/f.css", handleCss); // a stylesheet
   server.on("/j.js", handleJs);   // javscript based on fetch API to update the page
-  //server.on("/jslider.js", handleSliderJs);   // javscript display of slider value
-  // server.on("/j.js",  handleAjax);             // a javascript to handle AJAX/JSON update of the page  https://werner.rothschopf.net/201809_arduino_esp8266_server_client_2_ajax.htm
   server.on("/json", handleJson);    // send data in JSON format
   server.on("/c.php", handleCommand);            // process commands
-                                     //  server.on("/favicon.ico", handle204);          // process commands
+                                     
   server.onNotFound(handleNotFound); // show a typical HTTP Error 404 page
-  //server.on("/slider.htm",handleSlider);
-
+  
   // the next two handlers are necessary to receive and show data from another module
   server.on("/d.php", handleData);               // receives data from another module
   server.on("/r.htm", handlePageR);              // show data as received from the remote module
-  server.on("/test.htm",handleHtmlFile);         // test procedure to handle reading html code from file
-  server.on("/testR.htm",handleRawText);         // test procedure to handle reading html code as raw string
-//  server.on("/set_time_steps.htm", HTTP_POST, handleSetTimeSteps);
-
-
-  // following settings are coming from AdvancedWebServer
-  // server.on("/test.svg", drawGraph);
-  // server.on("/inline", []() {
-  //   server.send(200, "text/plain", "this works as well");
-  // });
+  
 
   server.begin(); // start the webserver
   Serial.println(F("HTTP server started"));
@@ -567,16 +543,6 @@ void setup(void) {
     return;
   }
   
-  // this var is set in platformio.ini (this doesnot work??)
-  #define deleteLogfile 0
-  #if deleteLogfile == 1
-    // deleting logfile
-    Serial.println("deleting logfile");
-    deleteFile("/level.log");
-  #else
-    Serial.println("NOT!!! deleting logfile");
-  #endif
-
   #define deleteSetupFile 0
   #if deleteSetupFile == 1
     // deleting setupFile
@@ -878,36 +844,7 @@ void loop(void) {
     if (receivedString == "r") {
       Serial.println("executing readFile");
       
-    }
-
-    // 'R': read complete file at once 
-    // if (c == 'R') {
-    //   Serial.print("2");
-
-    //   Serial.println("executing readFile");
-    //   readFile("/level.log");
-      
-    // }
-  
-
-    // // "r": read file line by line
-    // if (c == 'r'){
-    //   Serial.print("3");
-    //   // open file for reading and check if it exists
-    //   File file = LittleFS.open("/level.log", "r");
-    //   if (!file) {
-    //     Serial.println("Failed to open file for reading");
-    //     return;
-    //   }
-
-    //   while (file.available()) { 
-    //     String fileData = "";
-    
-    //     fileData  = file.read();
-    //     Serial.print ("fileData : "); Serial.println(fileData);
-    
-    //   }
-    
+    }    
    }
    #endif //useSerialInput
 
