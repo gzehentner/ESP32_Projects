@@ -253,10 +253,13 @@ int value = 0;
 #define AUTHOR_PASSWORD "lwecoyvlkmordnly"
 
 /* Recipient email address */
+#define RECIPIENT_EMAIL_LIVE "gzehentner@web.de"
+#define RECIPIENT_EMAIL_DEV  "gzehentner@t-online.de"
+
 #if isLiveSystem == 1
-  #define RECIPIENT_EMAIL "gzehentner@web.de"
+  #define RECIPIENT_EMAIL RECIPIENT_EMAIL_LIVE
 #else
-  #define RECIPIENT_EMAIL "gzehentner@t-online.de"
+  #define RECIPIENT_EMAIL RECIPIENT_EMAIL_DEV
 #endif
 
 /* Declare the global used SMTPSession object for SMTP transport */
@@ -533,45 +536,78 @@ void setup(void) {
 
   //==========================================
   // prepare logfile
-
-  // Serial.println("Formatting LittleFS filesystem");
-  // LittleFS.format();
+  bool fsOK = false;
 
   Serial.println("Mount LittleFS");
+
   if (!LittleFS.begin()) {
-    Serial.println("LittleFS mount failed");
-    return;
-  }
-  
-  #define deleteSetupFile 0
-  #if deleteSetupFile == 1
-    // deleting setupFile
-    Serial.println("deleting setupFile");
-    deleteFile("/setup.ini");
-  #else
-    Serial.println("NOT!!! deleting setup.ini");
-  #endif
+    Serial.println("LittleFS mount failed, trying to format");
 
-  getSetupIni();
-  //readFile("/setup.ini");
-  Serial.println();
-  Serial.print("pump1_operationTime : ");Serial.println(pump1_operationTime);
-  Serial.print("pump2_operationTime : ");Serial.println(pump2_operationTime);
-  Serial.print("linkPump            : ");Serial.println(linkPump);
+    if (!LittleFS.format()) {
+        Serial.println("LittleFS format failed");
 
-  #define deleteErrLog 0
-  #if deleteErrLog == 1
-    // deleting setupFile
-    Serial.println("deleting error.log");
-    deleteFile("/error.log");
-  #else
-    Serial.println("NOT!!! deleting error.log");
-  #endif
-
-  readFile("/error.log");
+    } else {
  
+        Serial.println("format succeeded, try to mount agait");
+        if (!LittleFS.begin()) {
+          Serial.println("mount failed again");
+        } else {
+          Serial.println("mount succeeded");
+          fsOK = true;
+        }
+    }
+  } else {
+    fsOK = true;
+  }
+ 
+ if (fsOK) {
+ 
+          //=============================================================================================
+          // handling setup.ini
+          //=============================================================================================
+          #define deleteSetupFile 0
+          #if deleteSetupFile == 1
+            // deleting setupFile
+            Serial.println("deleting setupFile");
+            deleteFile("/setup.ini");
+          #else
+            Serial.println("NOT!!! deleting setup.ini");
+          #endif
 
-  //listDir("/");  
+          getSetupIni();
+          //readFile("/setup.ini");
+          Serial.println();
+          Serial.print("pump1_operationTime : ");Serial.println(pump1_operationTime);
+          Serial.print("pump2_operationTime : ");Serial.println(pump2_operationTime);
+          Serial.print("linkPump            : ");Serial.println(linkPump);
+
+          //=============================================================================================
+          // handling error lot
+          //=============================================================================================
+          #define deleteErrLog 0
+          #if deleteErrLog == 1
+            // deleting setupFile
+            Serial.println("deleting error.log");
+            deleteFile("/error.log");
+          #else
+            Serial.println("NOT!!! deleting error.log");
+          #endif
+          if (!LittleFS.exists("/error.log")) {
+            Serial.println("error.log doesnt exist; generating a new one");
+            
+            String errMessage = "";
+            errMessage =  currentDate ;
+            errMessage += " - " ;
+            errMessage += formattedTime; 
+            errMessage += " - " ;
+            errMessage +=  "init error-file\n";
+            appendFile("/error.log", errMessage.c_str());
+          }
+
+          readFile("/error.log");
+        }
+  
+    //listDir("/");  
 }
   /*==================================================================*/
   
@@ -684,12 +720,8 @@ void loop(void) {
   /* Send Email reusing session   */
   // **************************************************************************************************
 
-  if (false) // GZE debug
-  //if (executeSendMail)
+  if (executeSendMail)
   {
-     Serial.println("Sending email disabled for test");
-     executeSendMail = false;
-
     SMTP_Message message;
     
     /* The attachment data item */
@@ -701,8 +733,12 @@ void loop(void) {
     message.sender.email = AUTHOR_EMAIL;
     message.subject = subject;
 
-    message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL);
-
+    if (debugLevelSwitches==1) {
+      // during simulation we send to web.de, because there is a huge delay on t-online.de
+        message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL_LIVE);
+    } else {
+      message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL);
+    }
     // htmlMsg already set by Evaluate Sensor
     message.html.content = htmlMsg;
     message.text.content = F("");
@@ -900,11 +936,20 @@ void smtpCallback(SMTP_Status status)
 void getSetupIni()
 //*******************************************************************************
 {
-  // open file for reading and check if it exists
+  // check if file exists, if not, generate one with zero values
+  if (!LittleFS.exists("/setup.ini"))
+  {
+    Serial.println("setup.ini does not exist / generate a new file");
+    Serial.println("Calling putSetupIni");
+    putSetupIni();
+  }
+  // open file for reading
   File file = LittleFS.open("/setup.ini", "r");
   if (!file) {
     Serial.println("Failed to open setup.ini for reading");
     return;
+  } else {
+    Serial.println("setup.ini successfully opened for reading");
   }
 
   // read from file line by line
@@ -962,14 +1007,19 @@ void getSetupIni()
 void putSetupIni()
 //*******************************************************************************
 {
+    Serial.println("putSetupIni entered");
     String tempString="";
 
-    tempString += "pump1_operationTime="    + String(pump1_operationTime);
-    tempString += ";\npump2_operationTime=" + String(pump2_operationTime);
-    tempString += ";\nlinkPump="            + String(linkPump);
-    tempString += ";\n";
+    tempString += String("pump1_operationTime=") ;
+    tempString += String(pump1_operationTime);
+    tempString += String(";\npump2_operationTime=");
+    tempString += String(pump2_operationTime);
+    tempString += String(";\nlinkPump=");
+    tempString += String(linkPump);
+    tempString += String(";\n");
 
     writeFile("/setup.ini", (tempString).c_str()); // Append data to the file
+    Serial.println("data appended");
   
         
 }

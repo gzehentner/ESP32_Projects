@@ -72,31 +72,57 @@ void sendPost()
   itoa(epochTime, val, 10);
   strcat(message, val);
 
+  strcat(message, "&pump1_operationTime=");
+  itoa(pump1_operationTime, val, 10);
+  strcat(message, val);
+
+  strcat(message, "&pump2_operationTime=");
+  itoa(pump2_operationTime, val, 10);
+  strcat(message, val);
+
+
   client.begin(wificlient, sendHttpTo);                                        // Specify request destination
   client.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Specify content-type header
   int httpCode = client.POST(message);                                         // Send the request
   client.writeToStream(&Serial);                                               // Debug only: Output of received data
-  Serial.print(F("\nhttpCode: "));                                             
+  Serial.print(F("\nhttpCode: "));
   Serial.println(httpCode);  
   Serial.print(F("\nmessage: "));                                                  // Print HTTP return code;
   Serial.println(message);
   client.end();  //Close connection
 
+  if (simError == 1) {
+    httpCode = -66;
+    simError = 0;   // reset after one error
+  }
+  if (simReboot == 1) {
+    httpCode = -99; // do not reset; 
+  }
   // error handling
   if (httpCode<0) {
 
     // write to file
     String errMessage = "";
-    errMessage =  currentDate + " - " + formattedTime + " - " +  " httpCode = " +  httpCode + "\n";
-  //  appendFile("/error.log", errMessage.c_str());
+    errMessage =  currentDate ;
+    errMessage += " - " ;
+    errMessage += formattedTime; 
+    errMessage += " - " ;
+    errMessage +=  " httpCode = ";
+    errMessage +=  httpCode ;
+    errMessage += "\n";
+    appendFile("/error.log", errMessage.c_str());
 
     errCnt_communication++;
 
     if (errCnt_communication > ERR_CNT_COMMUNICATION)
     {
       // reset ESP8266
-      errMessage = currentDate + " - " + formattedTime + " - " +  "client connection error - restart triggered\n";
-    //  appendFile("/error.log", errMessage.c_str());
+      errMessage =  currentDate ;
+      errMessage += " - " ;
+      errMessage += formattedTime; 
+      errMessage += " - " ;
+      errMessage +=  "client connection error - restart triggered\n";
+      appendFile("/error.log", errMessage.c_str());
       ESP.restart();
     }
   } else {

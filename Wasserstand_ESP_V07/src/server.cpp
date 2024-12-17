@@ -86,6 +86,8 @@ int simVal_AHHH = 1;
 int simVal_AHH  = 1;
 int simVal_AH   = 1;
 int simVal_AL   = 0;
+int simError    = 0;    //  sim one failed sendPost (ProjClient.cpp)
+int simReboot   = 0;    //  force reboot due to many failed transmissions to client
 // int simVal_ALL = 0;
 
 int firstRun = 1;
@@ -310,47 +312,61 @@ void handlePage()
   "</p>");
   if (debugLevelSwitches == 1) // simulation aktiv = rot
   {
-    message += F("<p class='on_red'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
+    message += F("<p class='on_red'><a href='c.php?toggle=a' target='i' onclick='reloadPage()' >Debug</a></p>\n");
   } else {
-    message += F("<p class='off'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
+    message += F("<p class='off'><a href='c.php?toggle=a' target='i' onclick='reloadPage()'>Debug</a></p>\n");
   }
   
   if (simVal_AHHH == 0)  // low active => 0 = on = rot = higher than AHHH
   {
-  message += F("<p class='on_red'><a href='c.php?toggle=0' target='i'>AHHH</a></p>\n");
+  message += F("<p class='on_red'><a href='c.php?toggle=0' target='i' onclick='reloadPage()'>AHHH</a></p>\n");
   } else {
-  message += F("<p class='off'><a href='c.php?toggle=0' target='i'>AHHH</a></p>\n");
+  message += F("<p class='off'><a href='c.php?toggle=0' target='i' onclick='reloadPage()'>AHHH</a></p>\n");
   }
   
   if (simVal_AHH == 0)  // low active => 0 = on = rot = higher than AHH
   {
-  message += F("<p class='on_red'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
+  message += F("<p class='on_red'><a href='c.php?toggle=1' target='i' onclick='reloadPage()'>AHH</a></p>\n");
   } else {
-  message += F("<p class='off'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
+  message += F("<p class='off'><a href='c.php?toggle=1' target='i' onclick='reloadPage()'>AHH</a></p>\n");
   }
   if (simVal_AH == 0) // low active => higher than AH
   {
-  message += F("<p class='on_red'><a href='c.php?toggle=2' target='i'>AH</a></p>\n");
+  message += F("<p class='on_red'><a href='c.php?toggle=2' target='i' onclick='reloadPage()'>AH</a></p>\n");
   } else {
-  message += F("<p class='off'><a href='c.php?toggle=2' target='i'>AH</a></p>\n");
+  message += F("<p class='off'><a href='c.php?toggle=2' target='i' onclick='reloadPage()'>AH</a></p>\n");
   }
   if (simVal_AL == 0)  // low active => 0 = on = green => lower! than
   {
-  message += F("<p class='on_green'><a href='c.php?toggle=3' target='i'>AL</a></p>\n");
+  message += F("<p class='on_green'><a href='c.php?toggle=3' target='i' onclick='reloadPage()'>AL</a></p>\n");
   } else {
-  message += F("<p class='off'><a href='c.php?toggle=3' target='i'>AL</a></p>\n");
+  message += F("<p class='off'><a href='c.php?toggle=3' target='i' onclick='reloadPage()'>AL</a></p>\n");
   }
   
-  message += F("<p class='off'><a href='c.php?toggle=5' target='i'>LED</a></p>\n"
+  if (simError == 1)  // 
+  {
+  message += F("<p class='on_red'><a href='c.php?toggle=6' target='i' onclick='reloadPage()'>Error</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=6' target='i' onclick='reloadPage()'>non error</a></p>\n");
+  }
+  if (simReboot == 1)  // 
+  {
+  message += F("<p class='on_red'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>Reboot</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>non reboot</a></p>\n");
+  }
+  
+  message += F("<p class='off'><a href='c.php?toggle=5' target='i' onclick='reloadPage()'>LED</a></p>\n"
   "<iframe name='i' style='display:none' ></iframe>\n" // hack to keep the button press in the window
   //-----------------------------------------------------------------------------------------
   // end of simulation
   "</article>\n");
 
+
+
  //-----------------------------------------------------------------------------------------
   // Print error buffer
   message += F("<article>\n"
-
 
   //-----------------------------------------------------------------------------------------
   "<h2>Print errorbuffer</h2>\n" 
@@ -358,30 +374,30 @@ void handlePage()
   "<br>Dieses Wird hier angezeigt"
   "</p>");
 
-   // open file for reading and check if it exists
-  // File file = LittleFS.open("/error.log", "r");
-  // if (!file) {
-  // //  Serial.println("Failed to open error.log nf for reading");
-  //   message += "<br>File not found";
+  // open file for reading and check if it exists
+  File file = LittleFS.open("/error.log", "r");
+  if (!file) {
+    Serial.println("Failed to open error.log nf for reading");
+    message += "<br>File not found";
     
-  // } else {
+  } else {
 
-  //   // read from file line by line
-  //   // prepare loop
-  //   // define locals
-  //   char c;
+    // read from file line by line
+    // prepare loop
+    // define locals
+    char c;
     
-  //   while (file.available()) { 
-  //     c = file.read();
+    while (file.available()) { 
+      c = file.read();
 
-  //     if  (c=='\n'){
-  //       message += "<br>";
-  //     } else {
-  //       message += c;
-  //     }
-  //   }
-  //   file.close();
-  // }
+      if  (c=='\n'){
+        message += "<br>";
+      } else {
+        message += c;
+      }
+    }
+    file.close();
+  }
   //-----------------------------------------------------------------------------------------
  
     addBottom(message);
@@ -802,12 +818,48 @@ void handleCommand()
       { // toggle: if the pin was on - switch it of and vice versa
         digitalWrite(builtin_led, LOW);
         sendToClient = 1;  // enable sending to client in Wasserstand_V5.cpp
+        Serial.println("sendToClient = 1");
       }
       else
       {
         digitalWrite(builtin_led, HIGH);
         if (isLiveSystem==0) {
           sendToClient = 0;  // disable sending to client in dev version ofWasserstand_V5.cpp
+          Serial.println("sendToClient = 0");
+        }
+      }
+    }
+    if (server.arg(0) == "6") 
+    {
+      Serial.println(F("D232 toggle error generation"));
+      if (simError==1)
+      { // toggle error generation
+        simError = 0;
+        Serial.println("simError off");
+      }
+      else
+      {
+        // force error with sendPost to bplaced; response with negative code is forced
+        if (debugLevelSwitches==1) {
+          simError = 1;
+          Serial.println("simError on");
+        }
+      }
+    }
+    if (server.arg(0) == "7") 
+    {
+      Serial.println(F("D232 toggle reboot generation"));
+      if (simReboot==1)
+      { // toggle error generation
+        simReboot = 0;
+        Serial.println("simReboot off");
+      }
+      else
+      {
+        // force error with sendPost to bplaced; response with negative code is forced
+        if (debugLevelSwitches==1) {
+          simReboot = 1;
+          Serial.println("simReboot on");
         }
       }
     }

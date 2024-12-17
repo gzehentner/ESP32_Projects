@@ -20,6 +20,9 @@ extern int simVal_AHH;
 extern int simVal_AH ;
 extern int simVal_AL ;
 extern int simVal_ALL;
+extern int simError  ;    //  sim one failed sendPost (ProjClient.cpp)
+extern int simReboot ;    //  force reboot due to many failed transmissions to client
+
 
 //extern WebServer server; // declare an instance for the webserver
 extern int sendToClient; // enable sending to client
