@@ -115,7 +115,6 @@ known issues: OTA download not possible "not enouth space"
 // use time.h from Arduino.h 
 #include "time.h"                   // for time() ctime()
 
-#include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
 
   #include "soc/soc.h"            // disable brownout detector
@@ -135,14 +134,17 @@ known issues: OTA download not possible "not enouth space"
   
   #include <MyLittleFSLib.h>
 
-#else
+#else // ESP8266
   #include <Arduino.h>
+  
+  #include <ESP8266WiFi.h>
+  #include <WiFiClient.h>
+  #include <ESP8266WebServer.h>
 
   #include <waterlevel.h>
 
   #include <ESP_Mail_Client.h>
   #include <ESP8266mDNS.h>  // Bonjour/multicast DNS, finds the device on network by name
-  #include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
 
   #include <server.h>
   #include <timeserver.h>
@@ -156,6 +158,8 @@ known issues: OTA download not possible "not enouth space"
   
   #include <MyLittleFSLib.h>
 #endif
+
+#include <ElegantOTA.h>
 
 #if MyUSE_ADC == ADS1115_ADC
   #if BOARDTYPE == ESP32
@@ -465,16 +469,16 @@ void setup(void) {
   server.on("/d.php", handleData);               // receives data from another module
   server.on("/r.htm", handlePageR);              // show data as received from the remote module
   
+  server.on("/ota.htm", []() {
+      server.send(200, "text/plain", "Hi! This is ElegantOTA Demo.");
+  });
 
+  ElegantOTA.begin(&server);    // Start ElegantOTA
   server.begin(); // start the webserver
   Serial.println(F("HTTP server started"));
   /*=====================   end fo prepare webserver  ===============*/
   
-  /*=================================================================*/
-  /* IDE OTA */
-  ArduinoOTA.setHostname(myhostname); // give a name to your ESP for the Arduino IDE
-  ArduinoOTA.begin();                 // OTA Upload via ArduinoIDE https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html
-
+  
 
 
   
@@ -695,13 +699,10 @@ void loop(void) {
     clientPreviousSs = seconds_since_startup;
   }
   server.handleClient();
+  ElegantOTA.loop();
+  
 
-  // **************************************************************************************************
-  // **************************************************************************************************
-
-  /* Over the Air UPdate */
-  //ArduinoOTA.handle(); // OTA Upload via ArduinoIDE
-
+  
   // **************************************************************************************************
   // **************************************************************************************************
   /* evaluate water level */
@@ -733,12 +734,13 @@ void loop(void) {
     message.sender.email = AUTHOR_EMAIL;
     message.subject = subject;
 
-    if (debugLevelSwitches==1) {
-      // during simulation we send to web.de, because there is a huge delay on t-online.de
-        message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL_LIVE);
+    // somtimes we want to use web.de for test, because t-online has a huge delay
+    if (useLiveMail==1) {
+      message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL_LIVE);
     } else {
       message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL);
     }
+    
     // htmlMsg already set by Evaluate Sensor
     message.html.content = htmlMsg;
     message.text.content = F("");

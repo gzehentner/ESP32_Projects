@@ -24,7 +24,7 @@
 
   #include <Arduino.h>
 
-  #define VERSION "6.9" // the version of this sketch
+  #define VERSION "7.0" // the version of this sketch
 
   // setting for ADC select: MyUSE_ADC
   #define internADC 0
@@ -302,5 +302,5 @@
     #define timeToSecondPump 10    // unit: timeUnit_opTime (seconds)
   #endif
 
-
 #endif
+

@@ -77,6 +77,7 @@ int remoteLastMessage;
 int remoteMessagesSucessfull;
 
 int sendToClient = 0; // enable sending to client (develop system)
+int useLiveMail  = 0; // to check the email send process, we want to use the live email address, because t-online is very slow
 
 // **************************************************************************************************
 // variables for simulation
@@ -110,7 +111,11 @@ void handleNotFound() {
   message += "\n";
 
   for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+    message += String(" "); 
+    message += String(server.argName(i)) ;
+    message += ": " ;
+    message += server.arg(i) ;
+    message += "\n";
   }
 
   server.send(404, "text/plain", message);
@@ -137,6 +142,7 @@ void addTop(String &message)
   message += F("<nav>" 
                   "<a href=\"/\">[Home]</a> <a href=\"filtered.htm\">[Value History]</a>" 
                   "<a href=\"graph.htm\">[Shorterm Graph]</a>" 
+                  "<a href=\"update\">[OTA update]</a>" 
                   "</nav></header>"
                "<main>");
 }
@@ -296,6 +302,27 @@ void handlePage()
   //-----------------------------------------------------------------------------------------
   // End of show message depending of alarmstate
   message += F("</article>");
+  message += F("<head>"
+"    <title>Seite neu laden</title>                         "
+"    <script>                                               "
+"        function reloadPage() {                            "
+"            if (!sessionStorage.getItem('reloaded')) {     "
+"                sessionStorage.setItem('reloaded', 'true');"
+"                setTimeout(function() {                    "
+"                   location.reload();                      "
+"                }, 200);                                   "
+"            }                                              "
+"        }                                                  "
+"                                                           "
+"        window.onload = function() {                       "
+"            sessionStorage.removeItem('reloaded');         "
+"            console.log('Die Seite wurde neu geladen.');  "
+"        };                                                 "
+"    </script>                                              "
+"</head>                                                    "
+"</html>                                                    ");
+
+
 
   //-----------------------------------------------------------------------------------------
   // Simulation
@@ -353,11 +380,23 @@ void handlePage()
   {
   message += F("<p class='on_red'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>Reboot</a></p>\n");
   } else {
-  message += F("<p class='off'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>non reboot</a></p>\n");
+  message += F("<p class='off'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>nRboot</a></p>\n");
+  }
+  if (useLiveMail == 1)  // 
+  {
+  message += F("<p class='on_green'><a href='c.php?toggle=8' target='i' onclick='reloadPage()'>LiveMail</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=8' target='i' onclick='reloadPage()'>DevMail</a></p>\n");
   }
   
-  message += F("<p class='off'><a href='c.php?toggle=5' target='i' onclick='reloadPage()'>LED</a></p>\n"
-  "<iframe name='i' style='display:none' ></iframe>\n" // hack to keep the button press in the window
+  if (sendToClient == 1)  // 
+  {
+  message += F("<p class='on_green'><a href='c.php?toggle=5' target='i' onclick='reloadPage()'>Post</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=5' target='i' onclick='reloadPage()'>nPost</a></p>\n");
+  }
+  
+  message += F("<iframe name='i' style='display:none' title='Tooltip' ></iframe>\n" // hack to keep the button press in the window
   //-----------------------------------------------------------------------------------------
   // end of simulation
   "</article>\n");
@@ -813,7 +852,7 @@ void handleCommand()
     }
     if (server.arg(0) == "5") // the value for that parameter(led))
     {
-      Serial.println(F("D232 toggle LED"));
+      Serial.println(F("D232 toggle sendToClient"));
       if (digitalRead(builtin_led))
       { // toggle: if the pin was on - switch it of and vice versa
         digitalWrite(builtin_led, LOW);
@@ -860,6 +899,23 @@ void handleCommand()
         if (debugLevelSwitches==1) {
           simReboot = 1;
           Serial.println("simReboot on");
+        }
+      }
+    }
+if (server.arg(0) == "8") 
+    {
+      Serial.println(F("D232 toggle useLiveMail"));
+      if (useLiveMail==1)
+      { // toggle usage of mail address
+        useLiveMail = 0;
+        Serial.println("useLiveMail off");
+      }
+      else
+      {
+        // use web.de
+        if (debugLevelSwitches==1) {
+          useLiveMail = 1;
+          Serial.println("useLiveMail on");
         }
       }
     }
