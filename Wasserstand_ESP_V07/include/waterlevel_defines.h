@@ -24,7 +24,7 @@
 
   #include <Arduino.h>
 
-  #define VERSION "6.9" // the version of this sketch
+  #define VERSION "7.0" // the version of this sketch
 
   // setting for ADC select: MyUSE_ADC
   #define internADC 0
@@ -211,11 +211,9 @@
   #ifdef SIM_VALUES
     const int  filterCntMax = 10;  // how many measurements are take for filter
                             // cycle time for myvalue: measureInterval * filterCntMax  -> 100 ms
-    const unsigned long  longtermInterval = 10000;  // time between two saved values in longterm in ms
   #else
     const int  filterCntMax = 600;  //   / how many measurements are take for filter
                             // cycle time for myvalue: measureInterval * filterCntMax  -> here 60s
-    const unsigned long  longtermInterval = 1000*60*60*6; // four times a day
   #endif
 
   //**************************************************************
@@ -225,7 +223,6 @@
     //*****************
     // length of ring buffer
     #define iRingValueMax  1000 // new value every three minutes --> 720: buffer for one complete day (but then we get heap overflow)
-    #define iLongtermRingValueMax 120 // 10// 120 // 370 // one value a day, buffer for one year (now we have four values a day so we have one month)
     //*****************
     // maximum lines to be printed and points in graph
     const int maxLines  = 1000;
@@ -305,5 +302,5 @@
     #define timeToSecondPump 10    // unit: timeUnit_opTime (seconds)
   #endif
 
-
 #endif
+

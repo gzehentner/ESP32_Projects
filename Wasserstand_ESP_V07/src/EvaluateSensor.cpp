@@ -33,7 +33,6 @@ int valueStable = 0;           // value is not stable until the first filtering 
 
 
 unsigned long millisDiff;
-unsigned long longtermMillisDiff;
 
 // variable for simulation
 //    used to hold the actual waterlevel if simulation is switched on
@@ -48,14 +47,6 @@ int    ringADC  [iRingValueMax +1];     // ring buffer for display last 50 adc v
 int    wrRingPtr = 0;                  // ring buffer write pointer 
 int    rdRingPtr = 0;                  // ring buffer read pointer 
 
-/*=================================================================*/
-/* definitions for longterm ring buffer */
-/*=================================================================*/
-unsigned long ringLongtermTime [iLongtermRingValueMax +1];
-int    ringLongtermValue[iLongtermRingValueMax +1];     // ring buffer for display last 50 values
-int    wrLongtermRingPtr = 0;                  // ring buffer write pointer 
-int    rdLongtermRingPtr = 0;                  // ring buffer read pointer 
-
 //int firstRun = 1;
 int printOnChangeActive = 0;
 
@@ -63,6 +54,8 @@ int printOnChangeActive = 0;
 // global variables for send mail
 /*=================================================================*/
 String subject="";
+String subjectAddon = "";
+
 String htmlMsg="";
 
 /* END Variables for CurrentLoop */
@@ -90,7 +83,6 @@ String htmlMsg="";
     millisNow = millis();
     
     millisDiff = millisNow - previousMillis;
-    longtermMillisDiff = millisNow - longtermPreviousMillis;
 
     // when it is too early, do nothing
     if (millisDiff <= measureInterval) return; // do nothing
@@ -167,32 +159,9 @@ String htmlMsg="";
         tempString += ", ";
         tempString += myValueFilteredAct;
         
-        appendFile("/level.log", (tempString+ "\n").c_str()); // Append data to the file
         myValueFilteredAct_old = myValueFilteredAct;
 
       } // end of print on change
-
-      /*=========================================*/
-      /*=========================================*/
-      /* handle longterm values */
-      /*=========================================*/
-      if (longtermMillisDiff > longtermInterval) 
-      {
-        longtermPreviousMillis = millisNow;
-
-        // write time to ring buffer
-        ringLongtermTime [wrLongtermRingPtr] = epochTime; // myEpochTime;
-
-        // write shortterm value to ring buffer
-        ringLongtermValue[wrLongtermRingPtr] = myValueFilteredAct;  
-
-        // increment write pos
-        if (wrLongtermRingPtr < iLongtermRingValueMax) {
-          wrLongtermRingPtr++;
-        } else  {
-          wrLongtermRingPtr = 0;
-        }
-      }
 
       /*=========================================*/
       myValueFiltered = 0;
@@ -361,6 +330,9 @@ String htmlMsg="";
     subject.reserve(50);
     htmlMsg.reserve(200);
 
+          if (useLiveMail==1) {
+            subjectAddon = "Übung - ";
+          }
     if (alarmStateOld > 0)
     { // alarmStateOld == 0 means, it is the first run / dont send mail at the first run
       if (alarmStateOld < alarmState)
@@ -369,19 +341,20 @@ String htmlMsg="";
         {
           // send warning mail
           Serial.println(F("warning mail should be sent"));
-          subject = F("Pegel Zehentner -- Warnung ");
+
+          subject = subjectAddon +  F("Pegel Zehentner -- Warnung ");
           htmlMsg = F("<p>Wasserstand Zehentner ist in den Warnbereich gestiegen <br>");
-          htmlMsg += F("Pegelstand über die Web-Seite: </p>; // <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
+          htmlMsg += F("Pegelstand über die Web-Seite: </p>; // <a href='http://zehentner.bplaced.net/Wasserstand/live/handleGraph.php'>Wasserstand-Messung</a> beobachten </p>");
           executeSendMail = true;
         }
         else if (alarmState == 5)
         {
           // send alarm mail
           Serial.println("alarm mail should be sent");
-          subject = F("Pegel Zehentner -- Alarm ");
+          subject = subjectAddon +  F("Pegel Zehentner -- Alarm ");
           htmlMsg = F("<p>Wasserstand Zehentner ist jetzt im Alarmbareich<br>");
           htmlMsg += F("es muss umgehend eine Pumpe in Betrieb genommen werden. <br>");
-          htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
+          htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.bplaced.net/Wasserstand/live/handleGraph.php'>Wasserstand-Messung</a> beobachten </p>");
           executeSendMail = true;
         }
       }
@@ -391,16 +364,16 @@ String htmlMsg="";
         {
           // info that level comes from alarm and goes to warning
           Serial.println(F("level decreasing, now warning"));
-          subject = F("Pegel Zehentner -- Warnung ");
+          subject = subjectAddon +  F("Pegel Zehentner -- Warnung ");
           htmlMsg = F("<p>Wasserstand Zehentner ist wieder zurück in den Warnbereich gesunken<br>");
-          htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.dynv6.net:400'>Wasserstand-Messung</a> beobachten </p>");
+          htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.bplaced.net/Wasserstand/live/handleGraph.php'>Wasserstand-Messung</a> beobachten </p>");
           executeSendMail = true;
         }
         else if (alarmState == 3)
         {
           // info that level is now ok
           Serial.println(F("level decreased to OK"));
-          subject = F("Pegel Zehentner -- OK ");
+          subject = subjectAddon +  F("Pegel Zehentner -- OK ");
           htmlMsg = F("<p>Wasserstand Zehentner ist wieder im Normalbereich</p>");
           executeSendMail = true;
         }

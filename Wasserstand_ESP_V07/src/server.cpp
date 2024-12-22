@@ -77,6 +77,7 @@ int remoteLastMessage;
 int remoteMessagesSucessfull;
 
 int sendToClient = 0; // enable sending to client (develop system)
+int useLiveMail  = 0; // to check the email send process, we want to use the live email address, because t-online is very slow
 
 // **************************************************************************************************
 // variables for simulation
@@ -86,56 +87,14 @@ int simVal_AHHH = 1;
 int simVal_AHH  = 1;
 int simVal_AH   = 1;
 int simVal_AL   = 0;
+int simError    = 0;    //  sim one failed sendPost (ProjClient.cpp)
+int simReboot   = 0;    //  force reboot due to many failed transmissions to client
 // int simVal_ALL = 0;
 
 int firstRun = 1;
 //int reloadDone = 1; // show if reload of handlePage is done
 
 int time_steps = 0;
-
-
-// **************************************************************************************************
-// get html code from file and send
-// *************************************************************************************************
-void handleHtmlFile(){
-  File file = LittleFS.open("/html/test.html", "r");
-  if (!file) {
-    server.send(404, "text/plain", "File not found");
-    return;
-  }
-  String htmlContent = file.readString();
-  server.send(200, "text/html", htmlContent);
-  file.close();
-}
-
-void handleRawText() {
-  const char* htmlContent = 
-      #include "test.php"
-
-    server.send(200, "text/html", htmlContent);
-
-    Serial.println("handleRawText entered");
-    if (server.hasArg("time_steps")) {
-        time_steps = server.arg("time_steps").toInt();
-        Serial.print("Time Steps: ");
-        Serial.println(time_steps);
-        server.send(200, "text/plain", "Time Steps set successfully");
-    } else {
-        server.send(400, "text/plain", "Bad Request");
-    }
-    
-}
-// void handleSetTimeSteps() {
-//   Serial.println("handleSetTimeSteps entered");
-//     if (server.hasArg("time_steps")) {
-//         time_steps = server.arg("time_steps").toInt();
-//         Serial.print("Time Steps: ");
-//         Serial.println(time_steps);
-//         server.send(200, "text/plain", "Time Steps set successfully");
-//     } else {
-//         server.send(400, "text/plain", "Bad Request");
-//     }
-// }
 
 
 // **************************************************************************************************
@@ -152,42 +111,17 @@ void handleNotFound() {
   message += "\n";
 
   for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+    message += String(" "); 
+    message += String(server.argName(i)) ;
+    message += ": " ;
+    message += server.arg(i) ;
+    message += "\n";
   }
 
   server.send(404, "text/plain", message);
   // digitalWrite(builtin_led, 0);
 }
 
-// **************************************************************************************************
-// to be used later
-// **************************************************************************************************
-
-// void drawGraph() {
-//   String out = "";
-//   char temp[100];
-//   out += "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"400\" height=\"150\">\n";
-//   out += "<rect width=\"400\" height=\"150\" fill=\"rgb(250, 230, 210)\" stroke-width=\"1\" stroke=\"rgb(0, 0, 0)\" />\n";
-//   out += "<g stroke=\"black\">\n";
-//   int y = rand() % 130;
-//   for (int x = 10; x < 390; x += 10) {
-//     int y2 = rand() % 130;
-//     sprintf(temp, "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke-width=\"1\" />\n", x, 140 - y, x + 10, 140 - y2);
-//     out += temp;
-//     y = y2;
-//   }
-//   out += "</g>\n</svg>\n";
-
-//   server.send(200, "image/svg+xml", out);
-// }
-
-
-// **************************************************************************************************
-// void handle204()
-// **************************************************************************************************
-// {
-//   server.send(204); // this page doesn't send back content
-// }
 
 // **************************************************************************************************
 /* add a header  to each page including refs for all other pages */
@@ -205,8 +139,11 @@ void addTop(String &message)
               "</head>");
   message += F("<body>");
   message += F("<header><h1>" TXT_BOARDNAME " - Board " TXT_BOARDID "</h1>");
-  message += F("<nav> <a href=\"/\">[Home]</a> <a href=\"filtered.htm\">[Value History]</a>" 
-               "<a href=\"longterm_graph.htm\">[Longterm Graph]</a>" "<a href=\"graph.htm\">[Shorterm Graph]</a> <a href=\"graph_poc.htm\">[PrintOnChange-Graph]</a> </nav></header>"
+  message += F("<nav>" 
+                  "<a href=\"/\">[Home]</a> <a href=\"filtered.htm\">[Value History]</a>" 
+                  "<a href=\"graph.htm\">[Shorterm Graph]</a>" 
+                  "<a href=\"update\">[OTA update]</a>" 
+                  "</nav></header>"
                "<main>");
 }
 
@@ -365,6 +302,27 @@ void handlePage()
   //-----------------------------------------------------------------------------------------
   // End of show message depending of alarmstate
   message += F("</article>");
+  message += F("<head>"
+"    <title>Seite neu laden</title>                         "
+"    <script>                                               "
+"        function reloadPage() {                            "
+"            if (!sessionStorage.getItem('reloaded')) {     "
+"                sessionStorage.setItem('reloaded', 'true');"
+"                setTimeout(function() {                    "
+"                   location.reload();                      "
+"                }, 200);                                   "
+"            }                                              "
+"        }                                                  "
+"                                                           "
+"        window.onload = function() {                       "
+"            sessionStorage.removeItem('reloaded');         "
+"            console.log('Die Seite wurde neu geladen.');  "
+"        };                                                 "
+"    </script>                                              "
+"</head>                                                    "
+"</html>                                                    ");
+
+
 
   //-----------------------------------------------------------------------------------------
   // Simulation
@@ -381,57 +339,73 @@ void handlePage()
   "</p>");
   if (debugLevelSwitches == 1) // simulation aktiv = rot
   {
-    message += F("<p class='on_red'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
+    message += F("<p class='on_red'><a href='c.php?toggle=a' target='i' onclick='reloadPage()' >Debug</a></p>\n");
   } else {
-    message += F("<p class='off'><a href='c.php?toggle=a' target='i'>Debug</a></p>\n");
+    message += F("<p class='off'><a href='c.php?toggle=a' target='i' onclick='reloadPage()'>Debug</a></p>\n");
   }
   
   if (simVal_AHHH == 0)  // low active => 0 = on = rot = higher than AHHH
   {
-  message += F("<p class='on_red'><a href='c.php?toggle=0' target='i'>AHHH</a></p>\n");
+  message += F("<p class='on_red'><a href='c.php?toggle=0' target='i' onclick='reloadPage()'>AHHH</a></p>\n");
   } else {
-  message += F("<p class='off'><a href='c.php?toggle=0' target='i'>AHHH</a></p>\n");
+  message += F("<p class='off'><a href='c.php?toggle=0' target='i' onclick='reloadPage()'>AHHH</a></p>\n");
   }
   
   if (simVal_AHH == 0)  // low active => 0 = on = rot = higher than AHH
   {
-  message += F("<p class='on_red'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
+  message += F("<p class='on_red'><a href='c.php?toggle=1' target='i' onclick='reloadPage()'>AHH</a></p>\n");
   } else {
-  message += F("<p class='off'><a href='c.php?toggle=1' target='i'>AHH</a></p>\n");
+  message += F("<p class='off'><a href='c.php?toggle=1' target='i' onclick='reloadPage()'>AHH</a></p>\n");
   }
   if (simVal_AH == 0) // low active => higher than AH
   {
-  message += F("<p class='on_red'><a href='c.php?toggle=2' target='i'>AH</a></p>\n");
+  message += F("<p class='on_red'><a href='c.php?toggle=2' target='i' onclick='reloadPage()'>AH</a></p>\n");
   } else {
-  message += F("<p class='off'><a href='c.php?toggle=2' target='i'>AH</a></p>\n");
+  message += F("<p class='off'><a href='c.php?toggle=2' target='i' onclick='reloadPage()'>AH</a></p>\n");
   }
   if (simVal_AL == 0)  // low active => 0 = on = green => lower! than
   {
-  message += F("<p class='on_green'><a href='c.php?toggle=3' target='i'>AL</a></p>\n");
+  message += F("<p class='on_green'><a href='c.php?toggle=3' target='i' onclick='reloadPage()'>AL</a></p>\n");
   } else {
-  message += F("<p class='off'><a href='c.php?toggle=3' target='i'>AL</a></p>\n");
+  message += F("<p class='off'><a href='c.php?toggle=3' target='i' onclick='reloadPage()'>AL</a></p>\n");
   }
   
-  // message += "<script>";
-  // message += "function changeColor() { window.location.href = '/c.php?reloaded=false'; }"; // Add query parameter
-  // message += "window.onload = function() {";
-  // if (debugLevelSwitches == 1) {
-  //     message += "document.getElementById('colorButton').style.backgroundColor = 'red';";
-  // }
-  // message += "}";
-  // message += "</script>";
-
-  message += F("<p class='off'><a href='c.php?toggle=5' target='i'>LED</a></p>\n"
-  "<iframe name='i' style='display:none' ></iframe>\n" // hack to keep the button press in the window
+  if (simError == 1)  // 
+  {
+  message += F("<p class='on_red'><a href='c.php?toggle=6' target='i' onclick='reloadPage()'>Error</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=6' target='i' onclick='reloadPage()'>non error</a></p>\n");
+  }
+  if (simReboot == 1)  // 
+  {
+  message += F("<p class='on_red'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>Reboot</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>nRboot</a></p>\n");
+  }
+  if (useLiveMail == 1)  // 
+  {
+  message += F("<p class='on_green'><a href='c.php?toggle=8' target='i' onclick='reloadPage()'>LiveMail</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=8' target='i' onclick='reloadPage()'>DevMail</a></p>\n");
+  }
+  
+  if (sendToClient == 1)  // 
+  {
+  message += F("<p class='on_green'><a href='c.php?toggle=5' target='i' onclick='reloadPage()'>Post</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=5' target='i' onclick='reloadPage()'>nPost</a></p>\n");
+  }
+  
+  message += F("<iframe name='i' style='display:none' title='Tooltip' ></iframe>\n" // hack to keep the button press in the window
   //-----------------------------------------------------------------------------------------
   // end of simulation
   "</article>\n");
 
-  
+
+
  //-----------------------------------------------------------------------------------------
   // Print error buffer
   message += F("<article>\n"
-
 
   //-----------------------------------------------------------------------------------------
   "<h2>Print errorbuffer</h2>\n" 
@@ -439,126 +413,35 @@ void handlePage()
   "<br>Dieses Wird hier angezeigt"
   "</p>");
 
-   // open file for reading and check if it exists
-  // File file = LittleFS.open("/error.log", "r");
-  // if (!file) {
-  // //  Serial.println("Failed to open error.log nf for reading");
-  //   message += "<br>File not found";
+  // open file for reading and check if it exists
+  File file = LittleFS.open("/error.log", "r");
+  if (!file) {
+    Serial.println("Failed to open error.log nf for reading");
+    message += "<br>File not found";
     
-  // } else {
+  } else {
 
-  //   // read from file line by line
-  //   // prepare loop
-  //   // define locals
-  //   char c;
+    // read from file line by line
+    // prepare loop
+    // define locals
+    char c;
     
-  //   while (file.available()) { 
-  //     c = file.read();
+    while (file.available()) { 
+      c = file.read();
 
-  //     if  (c=='\n'){
-  //       message += "<br>";
-  //     } else {
-  //       message += c;
-  //     }
-  //   }
-  //   file.close();
-  // }
+      if  (c=='\n'){
+        message += "<br>";
+      } else {
+        message += c;
+      }
+    }
+    file.close();
+  }
   //-----------------------------------------------------------------------------------------
  
-  // // add slider for waterlevel
-  // message += F("<article>\n"
-  // "<h2>Slider</h2>\n" 
-  // "<div class='slidecontainer'>\n"
-  // "<input type='range' min='1' max='100' value='50' class='slider' id='myRange'>\n"
-  // "</div>");
-
-  //message += "<script> location.reload(); </script>";
-
-  // we are ready with reload
-  //reloadDone = 1;
-
-  addBottom(message);
+    addBottom(message);
   server.send(200, "text/html", message);
 }
-//*********************************************************************************
-void handleSlider()
-//*********************************************************************************
-{
-  String message;
-  addTop(message);
-
-  message += F(
-
-               "<!DOCTYPE html>"
-               "<html>"
-               "<head>"
-               "<meta name='viewport' content='width=device-width, initial-scale=1'>"
-               "<style>"
-               ".slidecontainer {"
-               "  width: 100%;"
-               "}"
-               ""
-               ".slider {"
-               "  -webkit-appearance: none;"
-               "  width: 100%;"
-               "  height: 25px;"
-               "  background: #d3d3d3;"
-               "  outline: none;"
-               "  opacity: 0.7;"
-               "  -webkit-transition: .2s;"
-               "  transition: opacity .2s;"
-               "}"
-               ""
-               ".slider:hover {"
-               "  opacity: 1;"
-               "}"
-               ""
-               ".slider::-webkit-slider-thumb {"
-               "  -webkit-appearance: none;"
-               "  appearance: none;"
-               "  width: 25px;"
-               "  height: 25px;"
-               "  background: #04AA6D;"
-               "  cursor: pointer;"
-               "}"
-               ""
-               ".slider::-moz-range-thumb {"
-               "  width: 25px;"
-               "  height: 25px;"
-               "  background: #04AA6D;"
-               "  cursor: pointer;"
-               "}"
-               "</style>"
-               "</head>"
-               "<body>"
-               ""
-               "<h1>Custom Range Slider</h1>"
-               "<p>Drag the slider to display the current value.</p>"
-               ""
-               "<div class='slidecontainer'>"
-               "  <input type='range' min='1' max='100' value='50' class='slider' id='myRange'>"
-               "  <p>Value: <span id='demo'></span></p>"
-               "</div>"
-               ""
-               "<script>"
-               "var slider = document.getElementById('myRange');"
-               "var output = document.getElementById('demo');"
-               "output.innerHTML = slider.value;"
-               ""
-               "slider.oninput = function() {"
-               "  output.innerHTML = this.value;"
-               "}"
-               "</script>"
-               ""
-               "</body>"
-               "</html>");
-
-              addBottom(message);
-              server.send(200, "text/html", message);
-};
-//*********************************************************************************
-
-
 
 //*********************************************************************************
 /* print value history*/
@@ -568,10 +451,6 @@ void handleListFiltered()
   // what string length do we need?
   //   listing shortterm 
   //   - per line 25
-  //   - 100 lines
-  //   listing longterm
-  //   - per line 25
-  //   - 120 lines
   //  sum: 550 character without header and footer
   // 1 - message length: 513
   // 2 - message length: 3909
@@ -627,44 +506,7 @@ void handleListFiltered()
     iLine--;
     
   }
-  message += F("</pre></article>");
-
-  //----------------------------------------------------------
-  // longterm values
-  //----------------------------------------------------------
-  message += F("<article>"
-              "<h2>Wasserstand Zehentner Teisendorf</h2>" 
-              "<p>Longtterm values<br>Index ");
-  message += filterCnt;             
-  message += "<br> </p>";
-
-  // create header of table
-  message += "<pre>rdRingPtr  Time     Value <br>";
   
-  // read out ringbuffer and display values, but not more than maxLines lines
-  iLine = iLongtermRingValueMax;
-  for ( rdLongtermRingPtr = wrLongtermRingPtr+1; (rdLongtermRingPtr != wrLongtermRingPtr); ){
-
-    // print only the last lines
-    if (iLine <= maxLines) {
-      message += rdLongtermRingPtr;
-      message += "       ";
-      
-      formatDateAndTime(formattedTimeL, formattedDateL, ringLongtermTime[rdLongtermRingPtr]);
-      message += formattedTimeL;
-      
-      message += "  ";
-      message += ringLongtermValue[rdLongtermRingPtr];
-       message += "<br>";
-    }
-    if (rdLongtermRingPtr<iLongtermRingValueMax) {
-      rdLongtermRingPtr++;
-    } else {
-      rdLongtermRingPtr = 0;
-    }
-    iLine--;
-
-  }
   message += F("</pre></article><br>");
 
   addBottom(message);
@@ -674,7 +516,7 @@ void handleListFiltered()
   Serial.println(message.length());
 }
 //*********************************************************************************
-/* print both graph longterm and shortterm*/
+/* print graph shortterm*/
 void handleGraph()
 //*********************************************************************************
 {
@@ -849,334 +691,6 @@ void handleGraph()
 }
 
 //*********************************************************************************
-/* print graph longterm*/
-void handleLongtermGraph()
-//*********************************************************************************
-{
-  String graphLongtermXValues = "";     // values for graph (displayed)
-  graphLongtermXValues.reserve(2000);
-
-  String graphLongtermYValues = "";
-  graphLongtermYValues.reserve(500);
-
-  String formattedTimeL= "";
-  String formattedDateL= "";
-
-  int noValues = 0;
-  int iPoint = iLongtermRingValueMax;
-
-  // prepare values for graph
-  graphLongtermXValues  = "const xValues = [";
-  graphLongtermYValues  = "const yValues = [";
-
-
-  // read out ringbuffer and create the vector to display as graph
-  for ( rdLongtermRingPtr = wrLongtermRingPtr+1; rdLongtermRingPtr != wrLongtermRingPtr; ){
-    
-    // if there is a valid time set (time="" means there is no value written since last startup)
-    if (ringLongtermTime[rdLongtermRingPtr] != 0) {
-      if (iPoint <= maxPoints) {
-
-        // fill X values time
-        graphLongtermXValues += "\"";
-
-        formatDateAndTime(formattedTimeL, formattedDateL, ringLongtermTime[rdLongtermRingPtr]);
-        graphLongtermXValues += formattedTimeL;
-
-        graphLongtermXValues += "\", ";
-        // take value and place it to the string for graph
-        graphLongtermYValues += ringLongtermValue[rdLongtermRingPtr];
-        graphLongtermYValues += ", ";
-        noValues ++;
-      }   
-    }
-    if (rdLongtermRingPtr<iLongtermRingValueMax) {
-      rdLongtermRingPtr++;
-    } else {
-      rdLongtermRingPtr = 0;
-    }
-    iPoint--;  
-
-    }
-  
-    // enclose the generated strings with necessary brakets
-    firstRun = 0;
-    graphLongtermXValues += "];";
-    graphLongtermYValues += "];";
-
-  Serial.print("graphLongtermXValues: "); 
-  Serial.println(graphLongtermXValues.length());
-  Serial.print("graphLongtermYValues: "); 
-  Serial.println(graphLongtermYValues.length());
-
-
-  
-  String message;
-  message.reserve(5000);
-
-  addTop(message);
-
-
-  message += F("<article>"
-               "<h2>Wasserstand Zehentner Teisendorf</h2>" 
-               "<p>Line Graph<br> - Longterm values </p> "); 
-
-  message += "<br>filterCnt= ";
-  message += filterCnt;
-
-  // print when a new value arrives
-  message += F("<br><br>  Zeit: ");
-  message += formattedTime;
-  message += F("   Wasserstand aktuell: ");
-  message += myValueFilteredAct;
-  message += "</article>";
-
-  message += "<script"
-               " src=\"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js\">"
-               "</script>";
-  
-  /* handle longterm */
-  message += "<body><canvas id=\"Longterm_chart\" style=\"width:100%;max-width:700px\"></canvas>";
-
-  message += "<script>";
-  message += graphLongtermXValues; 
-  message += graphLongtermYValues; 
-  
-  message += "const graphYlevelWarn = [];";
-  message += "generateWarnData(\"";
-  message += Level_AH;
-  message += "\",0,";
-  message += noValues;
-  message +=",1);";
-
-  message += "const graphYlevelErro = [];";
-  message += "generateErroData(\"";
-  message += Level_AHH;
-  message += "\",0,";
-  message += noValues;
-  message +=",1);";
-  
-
-  message +=  "new Chart(\"Longterm_chart\", {";
-  message +=  " type: \"line\",";
-  message +=  " data: {";
-  message +=  "   labels: xValues,";
-  message +=  "   datasets: [{";
-  message +=  "     fill: false,";
-  message +=  "     lineTension: 1,";
-  message +=  "     pointRadius: 2,";
-  message +=  "     backgroundColor: \"rgba(0,0,255,1.0)\",";
-  message +=  "     borderColor: \"rgba(0,0,255,0.5)\",";
-  message +=  "     label: \"Wasserstand [cm]\",";
-  message +=  "     data: yValues";
-  message +=  "     },{";
-  message +=  "     fill: false,";
-  message +=  "     lineTension: 0,";
-  message +=  "     pointRadius: 0,";
-  message +=  "     backgroundColor: \"rgba(0,255,0,0)\",";
-  message +=  "     borderColor: \"rgba(0,255,0,0.3)\",";
-  message +=  "     label: \"Warnschwelle: ";
-  message +=  Level_AH;
-  message +=  " cm\",";
-  message +=  "     data: graphYlevelWarn";
-  message +=  "     },{";
-  message +=  "     fill: false,";
-  message +=  "     lineTension: 0,";
-  message +=  "     pointRadius: 0,";
-  message +=  "     backgroundColor: \"rgba(255,0,0,0)\",";
-  message +=  "     borderColor: \"rgba(255,0,0,0.3)\",";
-  message +=  "     label: \"Alarmschwelle: ";
-  message +=  Level_AHH;
-  message +=  " cm\",";
-  message +=  "     data: graphYlevelErro";
-  message +=  "   }]";
-  message +=  " },";
-  message +=  " options: {";
-  message +=  "   title: {";
-  message +=  "   display: false,";
-  message +=  "   text: \"Wasserstand in cm\"";
-  message +=  "   },";
-  message +=  "   legend: {display: true, text: \"Wasserstand \"},";
-  message +=  "   scales: {";
-  message +=  "     yAxes: [{ticks: {min: 100, max:200}}]";
-  message +=  "   }";
-  message +=  " }";
-  message +=  " });";
-  message +=  " function generateWarnData(value, i1, i2, step = 1) {";
-  message +=  "     for (let x = i1; x <= i2; x += step) {";
-  message +=  "       ;";
-  message +=  "       graphYlevelWarn.push(eval(value));";
-  message +=  "     }";
-  message +=  "   }";
-  message +=  " function generateErroData(value, i1, i2, step = 1) {";
-  message +=  "     for (let x = i1; x <= i2; x += step) {";
-  message +=  "       ;";
-  message +=  "       graphYlevelErro.push(eval(value));";
-  message +=  "     }";
-  message +=  "   }";
-  message +=  "</script></body>";
-
-  addBottom(message);
-
-  Serial.print("message: "); 
-  Serial.println(message.length());
-
-  server.send(200, "text/html", message);
-  
-  graphLongtermXValues = "";                     // erase all values
-  graphLongtermYValues = "";
-
-}
-//*********************************************************************************
-
-//*********************************************************************************
-/* print shortterm graph with google chart 
-     google chart allows print on change values */
-
-void handleGraph_POC()
-//*********************************************************************************
-{
-  String formattedTimeL= "";
-  String formattedDateL= "";
-
-  String message;
-  message.reserve(20000);
-
-  String messageLine="";
-
-  addTop(message);
-
-  message += F("<article>"
-               "<h2>Wasserstand Zehentner Teisendorf</h2>" 
-               "<p>Line Graph -- Shortterm values<br> </p> "); 
-
-  message += "<br>filterCnt= ";
-  message += filterCnt;
-
-  // print when a new value arrives
-  message += F("<br><br>  Zeit: ");
-  message += formattedTime;
-  message += F("   Wasserstand aktuell: ");
-  message += myValueFilteredAct;
-  message += "</article>";
-  
-
-  //============================================================
-  // prepare google chart
-  message += "\
-  <div id=\"ShortTermChart\" style=\"max-width:700px; height:400px\"></div>\
-  <script src=\"https://www.gstatic.com/charts/loader.js\"></script>\
-  <script>\
-  \
-  google.charts.load('current',{packages:['corechart']});\
-  google.charts.setOnLoadCallback(drawChart);\
-  \
-  function drawChart() {\
-   ";
-
-
-
-  // prepare values for graph
-  message += "// set data \n \
-              const data = google.visualization.arrayToDataTable([ \
-              ['epochtime', 'Wasserstand']";
-  
-  //******************************************************
-  //******************************************************
-  // read data from logfile
-  //******************************************************
-  
-  // open file for reading and check if it exists
-  File file = LittleFS.open("/level.log", "r");
-  if (!file) {
-    Serial.println("Failed to open level.log for reading");
-    return;
-  }
-
-  // read from file line by line
-  // prepare loop
-  // define locals
-  char c;
-  String FileContent="";
-  int isTime = 1;
-  String DataTime; 
-  String DataValue;
-  
-  messageLine = "";
-
-  while (file.available()) { 
-
-    c = file.read();
-
-    if  (c=='\n'){
-      // with every new line switch to receiving time
-      isTime=1;
-
-      // fill Y values: level
-      messageLine += ",";
-      messageLine += DataValue;
-      messageLine += "]";
-      DataValue="";
-
-    } else if (c==','){
-      // with every comma switch to value
-      isTime=0;
-
-      // fill X values time
-      messageLine += ",[";
-      formatDateAndTime(formattedTimeL, formattedDateL, DataTime.toInt());
-      messageLine += "'"+formattedDateL + " " + formattedTimeL+"'";
-      //messageLine += DataTime;
-      DataTime="";
-
-    } else if (c==' '){
-      // do nothing
-    } else {
-
-      // get char and add to appropriate string
-      if (isTime==1){
-        DataTime+= c;
-      } else {
-        DataValue+= c;
-      }
-    }
-    //noValues ++;
-  }
-  file.close();
-
-  // enclose the generated strings with necessary brakets
-  firstRun = 0;
-  message += messageLine;
-
-  message += "]);";
-
-   message += "\
-  // Set Options\n \
-  const options = {\
-    title: 'Wasserstand Zehentner Teisendorf',\
-    hAxis: {title: 'Datum/Zeit'},\
-    vAxis: {title: 'Wasserstamd [cm]'},\
-    legend: 'none'\
-  }; ";
-  
-
-   message += "\
-  // Draw Chart \n \
-  const chart = new google.visualization.LineChart(document.getElementById('ShortTermChart'));\
-  chart.draw(data, options);\
-  }\
-  </script>\
-  ";
-  
-
-  addBottom(message);
-
-  Serial.print("message: "); 
-  Serial.println(message.length());
-
-  server.send(200, "text/html", message);
-}
-//*********************************************************************************
 void handleCss()
 //*********************************************************************************
 {
@@ -1197,7 +711,7 @@ void handleCss()
               "section {margin-bottom:0.2em;clear:both;}"
               "table{border-collapse:separate;border-spacing:0 0.2em}"
               "th, td{background-color:#C0C0C0}"
-              "button{margin-top:0.3em}"
+              "button {margin-top:0.3em; color: black !important;}" // Added color: black !important;
               "footer p{font-size:0.8em;color:dimgray;background:silver;text-align:center;margin-bottom:5px}"
               "nav{background-color:silver;margin:1px;padding:5px;font-size:0.8em}"
               "nav a{color:dimgrey;padding:10px;text-decoration:none}"
@@ -1210,49 +724,7 @@ void handleCss()
               "message_ok  {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:green ;width:19em;text-align:center}"
               "message_warn{color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:orange;width:19em;text-align:center}"
               "message_err {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:red   ;width:19em;text-align:center}"
-              // //=========================================================================
-              // ".slidecontainer {"
-              // "  width: 100%; /* Width of the outside container */"
-              // "}"
-              // ""
-              // "/* The slider itself */"
-              // ".slider {"
-              // "  -webkit-appearance: none;  /* Override default CSS styles */"
-              // "  appearance: none;"
-              // "  width: 100%; /* Full-width */"
-              // "  height: 25px; /* Specified height */"
-              // "  background: #d3d3d3; /* Grey background */"
-              // "  outline: none; /* Remove outline */"
-              // "  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */"
-              // "  -webkit-transition: .2s; /* 0.2 seconds transition on hover */"
-              // "  transition: opacity .2s;"
-              // "}"
-              // ""
-              // "/* Mouse-over effects */"
-              // ".slider:hover {"
-              // "  opacity: 1; /* Fully shown on mouse-over */"
-              // "}"
-              // ""
-              // "/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */"
-              // ".slider::-webkit-slider-thumb {"
-              // "  -webkit-appearance: none; /* Override default look */"
-              // "  appearance: none;"
-              // "  width: 25px; /* Set a specific slider handle width */"
-              // "  height: 25px; /* Slider handle height */"
-              // "  background: #04AA6D; /* Green background */"
-              // "  cursor: pointer; /* Cursor on hover */"
-              // "}"
-              // ""
-              // ".slider::-moz-range-thumb {"
-              // "  width: 25px; /* Set a specific slider handle width */"
-              // "  height: 25px; /* Slider handle height */"
-              // "  background: #04AA6D; /* Green background */"
-              // "  cursor: pointer; /* Cursor on hover */"
-              // "}"
-              // ""
-              //=========================================================================
-              
-              );
+            );
   server.send(200, "text/css", message);
 }
 
@@ -1313,27 +785,6 @@ void handleJs()
 
   server.send(200, "text/javascript", message);
 }
-
-//*********************************************************************************
-// // Create a dynamic range slider to display the current value, with JavaScript:
-// void handleSliderJs()
-// {
-//*********************************************************************************
-//   String message;
-//   message += F("const url ='json';\n"
-//                "var slider = document.getElementById('myRange');"
-//                "var output = document.getElementById('demo');"
-//                "output.innerHTML = slider.value; // Display the default slider value"
-
-//                "// Update the current slider value (each time you drag the slider handle)"
-//                "slider.oninput = function() {"
-//                "  output.innerHTML = this.value;"
-//                "}");
-
-//   server.send(200, "text/javascript", message);
-// }
-//*********************************************************************************
-
 
 //*********************************************************************************
 void handleCommand()
@@ -1401,17 +852,70 @@ void handleCommand()
     }
     if (server.arg(0) == "5") // the value for that parameter(led))
     {
-      Serial.println(F("D232 toggle LED"));
+      Serial.println(F("D232 toggle sendToClient"));
       if (digitalRead(builtin_led))
       { // toggle: if the pin was on - switch it of and vice versa
         digitalWrite(builtin_led, LOW);
         sendToClient = 1;  // enable sending to client in Wasserstand_V5.cpp
+        Serial.println("sendToClient = 1");
       }
       else
       {
         digitalWrite(builtin_led, HIGH);
         if (isLiveSystem==0) {
           sendToClient = 0;  // disable sending to client in dev version ofWasserstand_V5.cpp
+          Serial.println("sendToClient = 0");
+        }
+      }
+    }
+    if (server.arg(0) == "6") 
+    {
+      Serial.println(F("D232 toggle error generation"));
+      if (simError==1)
+      { // toggle error generation
+        simError = 0;
+        Serial.println("simError off");
+      }
+      else
+      {
+        // force error with sendPost to bplaced; response with negative code is forced
+        if (debugLevelSwitches==1) {
+          simError = 1;
+          Serial.println("simError on");
+        }
+      }
+    }
+    if (server.arg(0) == "7") 
+    {
+      Serial.println(F("D232 toggle reboot generation"));
+      if (simReboot==1)
+      { // toggle error generation
+        simReboot = 0;
+        Serial.println("simReboot off");
+      }
+      else
+      {
+        // force error with sendPost to bplaced; response with negative code is forced
+        if (debugLevelSwitches==1) {
+          simReboot = 1;
+          Serial.println("simReboot on");
+        }
+      }
+    }
+if (server.arg(0) == "8") 
+    {
+      Serial.println(F("D232 toggle useLiveMail"));
+      if (useLiveMail==1)
+      { // toggle usage of mail address
+        useLiveMail = 0;
+        Serial.println("useLiveMail off");
+      }
+      else
+      {
+        // use web.de
+        if (debugLevelSwitches==1) {
+          useLiveMail = 1;
+          Serial.println("useLiveMail on");
         }
       }
     }

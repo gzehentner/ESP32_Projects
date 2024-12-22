@@ -115,7 +115,6 @@ known issues: OTA download not possible "not enouth space"
 // use time.h from Arduino.h 
 #include "time.h"                   // for time() ctime()
 
-#include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
 
   #include "soc/soc.h"            // disable brownout detector
@@ -135,14 +134,17 @@ known issues: OTA download not possible "not enouth space"
   
   #include <MyLittleFSLib.h>
 
-#else
+#else // ESP8266
   #include <Arduino.h>
+  
+  #include <ESP8266WiFi.h>
+  #include <WiFiClient.h>
+  #include <ESP8266WebServer.h>
 
   #include <waterlevel.h>
 
   #include <ESP_Mail_Client.h>
   #include <ESP8266mDNS.h>  // Bonjour/multicast DNS, finds the device on network by name
-  #include <ArduinoOTA.h>        // OTA Upload via ArduinoIDE
 
   #include <server.h>
   #include <timeserver.h>
@@ -156,6 +158,8 @@ known issues: OTA download not possible "not enouth space"
   
   #include <MyLittleFSLib.h>
 #endif
+
+#include <ElegantOTA.h>
 
 #if MyUSE_ADC == ADS1115_ADC
   #if BOARDTYPE == ESP32
@@ -189,7 +193,6 @@ extern CurrentLoopSensor currentLoopSensor();
 unsigned long seconds_since_startup = 0;      // current second since startup
 
 unsigned long previousMillis = 0;             // used to determine intervall of ADC measurement
-unsigned long longtermPreviousMillis = 0;     //
 unsigned long millisNow      = 0;  
 
 const uint16_t ajaxIntervall = 5;             // intervall for AJAX or fetch API call of website in seconds
@@ -205,18 +208,10 @@ uint32_t clientPreviousSs = 0;                // - clientIntervall;  // last sec
 // select http url to send to: 
 //  - send to Bplaced or an internal device
 //  - select if it is a live system or development
-#ifdef sendToBplaced_sql
-  #if isLiveSystem == 1
-    const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/live/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
-  #else
-    const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/dev/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
-  #endif
+#if isLiveSystem == 1
+  const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/live/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
 #else
-  #if isLiveSystem == 1
-    const char *sendHttpTo = "http://192.168.178.155/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
-  #else 
-    const char *sendHttpTo = "http://192.168.178.164/d.php"; // the module will send information to that server/resource. Use an URI or an IP address
-  #endif
+  const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/dev/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
 #endif
 
 
@@ -262,10 +257,13 @@ int value = 0;
 #define AUTHOR_PASSWORD "lwecoyvlkmordnly"
 
 /* Recipient email address */
+#define RECIPIENT_EMAIL_LIVE "gzehentner@web.de"
+#define RECIPIENT_EMAIL_DEV  "gzehentner@t-online.de"
+
 #if isLiveSystem == 1
-  #define RECIPIENT_EMAIL "gzehentner@web.de"
+  #define RECIPIENT_EMAIL RECIPIENT_EMAIL_LIVE
 #else
-  #define RECIPIENT_EMAIL "gzehentner@t-online.de"
+  #define RECIPIENT_EMAIL RECIPIENT_EMAIL_DEV
 #endif
 
 /* Declare the global used SMTPSession object for SMTP transport */
@@ -457,45 +455,30 @@ void setup(void) {
   // define the pages and other content for the webserver
   server.on("/", handlePage);      // send root page
   server.on("/0.htm", handlePage); // a request can reuse another handler
-  // problems with too big data --> still disabled
-  //server.on("/graph_poc.htm", handleGraph_POC); // display a chart with print on change values based on google graph
   server.on("/graph.htm", handleGraph); // display a chart with shortterm values
-  server.on("/longterm_graph.htm", handleLongtermGraph);
   server.on("/filtered.htm",handleListFiltered);
 
   server.on("/f.css", handleCss); // a stylesheet
   server.on("/j.js", handleJs);   // javscript based on fetch API to update the page
-  //server.on("/jslider.js", handleSliderJs);   // javscript display of slider value
-  // server.on("/j.js",  handleAjax);             // a javascript to handle AJAX/JSON update of the page  https://werner.rothschopf.net/201809_arduino_esp8266_server_client_2_ajax.htm
   server.on("/json", handleJson);    // send data in JSON format
   server.on("/c.php", handleCommand);            // process commands
-                                     //  server.on("/favicon.ico", handle204);          // process commands
+                                     
   server.onNotFound(handleNotFound); // show a typical HTTP Error 404 page
-  //server.on("/slider.htm",handleSlider);
-
+  
   // the next two handlers are necessary to receive and show data from another module
   server.on("/d.php", handleData);               // receives data from another module
   server.on("/r.htm", handlePageR);              // show data as received from the remote module
-  server.on("/test.htm",handleHtmlFile);         // test procedure to handle reading html code from file
-  server.on("/testR.htm",handleRawText);         // test procedure to handle reading html code as raw string
-//  server.on("/set_time_steps.htm", HTTP_POST, handleSetTimeSteps);
+  
+  server.on("/ota.htm", []() {
+      server.send(200, "text/plain", "Hi! This is ElegantOTA Demo.");
+  });
 
-
-  // following settings are coming from AdvancedWebServer
-  // server.on("/test.svg", drawGraph);
-  // server.on("/inline", []() {
-  //   server.send(200, "text/plain", "this works as well");
-  // });
-
+  ElegantOTA.begin(&server);    // Start ElegantOTA
   server.begin(); // start the webserver
   Serial.println(F("HTTP server started"));
   /*=====================   end fo prepare webserver  ===============*/
   
-  /*=================================================================*/
-  /* IDE OTA */
-  ArduinoOTA.setHostname(myhostname); // give a name to your ESP for the Arduino IDE
-  ArduinoOTA.begin();                 // OTA Upload via ArduinoIDE https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html
-
+  
 
 
   
@@ -557,55 +540,78 @@ void setup(void) {
 
   //==========================================
   // prepare logfile
-
-  // Serial.println("Formatting LittleFS filesystem");
-  // LittleFS.format();
+  bool fsOK = false;
 
   Serial.println("Mount LittleFS");
+
   if (!LittleFS.begin()) {
-    Serial.println("LittleFS mount failed");
-    return;
-  }
-  
-  // this var is set in platformio.ini (this doesnot work??)
-  #define deleteLogfile 0
-  #if deleteLogfile == 1
-    // deleting logfile
-    Serial.println("deleting logfile");
-    deleteFile("/level.log");
-  #else
-    Serial.println("NOT!!! deleting logfile");
-  #endif
+    Serial.println("LittleFS mount failed, trying to format");
 
-  #define deleteSetupFile 0
-  #if deleteSetupFile == 1
-    // deleting setupFile
-    Serial.println("deleting setupFile");
-    deleteFile("/setup.ini");
-  #else
-    Serial.println("NOT!!! deleting setup.ini");
-  #endif
+    if (!LittleFS.format()) {
+        Serial.println("LittleFS format failed");
 
-  getSetupIni();
-  //readFile("/setup.ini");
-  Serial.println();
-  Serial.print("pump1_operationTime : ");Serial.println(pump1_operationTime);
-  Serial.print("pump2_operationTime : ");Serial.println(pump2_operationTime);
-  Serial.print("linkPump            : ");Serial.println(linkPump);
-
-  #define deleteErrLog 0
-  #if deleteErrLog == 1
-    // deleting setupFile
-    Serial.println("deleting error.log");
-    deleteFile("/error.log");
-  #else
-    Serial.println("NOT!!! deleting error.log");
-  #endif
-
-  readFile("/error.log");
+    } else {
  
+        Serial.println("format succeeded, try to mount agait");
+        if (!LittleFS.begin()) {
+          Serial.println("mount failed again");
+        } else {
+          Serial.println("mount succeeded");
+          fsOK = true;
+        }
+    }
+  } else {
+    fsOK = true;
+  }
+ 
+ if (fsOK) {
+ 
+          //=============================================================================================
+          // handling setup.ini
+          //=============================================================================================
+          #define deleteSetupFile 0
+          #if deleteSetupFile == 1
+            // deleting setupFile
+            Serial.println("deleting setupFile");
+            deleteFile("/setup.ini");
+          #else
+            Serial.println("NOT!!! deleting setup.ini");
+          #endif
 
-  //listDir("/");  
+          getSetupIni();
+          //readFile("/setup.ini");
+          Serial.println();
+          Serial.print("pump1_operationTime : ");Serial.println(pump1_operationTime);
+          Serial.print("pump2_operationTime : ");Serial.println(pump2_operationTime);
+          Serial.print("linkPump            : ");Serial.println(linkPump);
+
+          //=============================================================================================
+          // handling error lot
+          //=============================================================================================
+          #define deleteErrLog 0
+          #if deleteErrLog == 1
+            // deleting setupFile
+            Serial.println("deleting error.log");
+            deleteFile("/error.log");
+          #else
+            Serial.println("NOT!!! deleting error.log");
+          #endif
+          if (!LittleFS.exists("/error.log")) {
+            Serial.println("error.log doesnt exist; generating a new one");
+            
+            String errMessage = "";
+            errMessage =  currentDate ;
+            errMessage += " - " ;
+            errMessage += formattedTime; 
+            errMessage += " - " ;
+            errMessage +=  "init error-file\n";
+            appendFile("/error.log", errMessage.c_str());
+          }
+
+          readFile("/error.log");
+        }
+  
+    //listDir("/");  
 }
   /*==================================================================*/
   
@@ -693,13 +699,10 @@ void loop(void) {
     clientPreviousSs = seconds_since_startup;
   }
   server.handleClient();
+  ElegantOTA.loop();
+  
 
-  // **************************************************************************************************
-  // **************************************************************************************************
-
-  /* Over the Air UPdate */
-  //ArduinoOTA.handle(); // OTA Upload via ArduinoIDE
-
+  
   // **************************************************************************************************
   // **************************************************************************************************
   /* evaluate water level */
@@ -718,12 +721,8 @@ void loop(void) {
   /* Send Email reusing session   */
   // **************************************************************************************************
 
-  if (false) // GZE debug
-  //if (executeSendMail)
+  if (executeSendMail)
   {
-     Serial.println("Sending email disabled for test");
-     executeSendMail = false;
-
     SMTP_Message message;
     
     /* The attachment data item */
@@ -735,8 +734,13 @@ void loop(void) {
     message.sender.email = AUTHOR_EMAIL;
     message.subject = subject;
 
-    message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL);
-
+    // somtimes we want to use web.de for test, because t-online has a huge delay
+    if (useLiveMail==1) {
+      message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL_LIVE);
+    } else {
+      message.addRecipient(F("Schorsch"), RECIPIENT_EMAIL);
+    }
+    
     // htmlMsg already set by Evaluate Sensor
     message.html.content = htmlMsg;
     message.text.content = F("");
@@ -878,36 +882,7 @@ void loop(void) {
     if (receivedString == "r") {
       Serial.println("executing readFile");
       
-    }
-
-    // 'R': read complete file at once 
-    // if (c == 'R') {
-    //   Serial.print("2");
-
-    //   Serial.println("executing readFile");
-    //   readFile("/level.log");
-      
-    // }
-  
-
-    // // "r": read file line by line
-    // if (c == 'r'){
-    //   Serial.print("3");
-    //   // open file for reading and check if it exists
-    //   File file = LittleFS.open("/level.log", "r");
-    //   if (!file) {
-    //     Serial.println("Failed to open file for reading");
-    //     return;
-    //   }
-
-    //   while (file.available()) { 
-    //     String fileData = "";
-    
-    //     fileData  = file.read();
-    //     Serial.print ("fileData : "); Serial.println(fileData);
-    
-    //   }
-    
+    }    
    }
    #endif //useSerialInput
 
@@ -963,11 +938,20 @@ void smtpCallback(SMTP_Status status)
 void getSetupIni()
 //*******************************************************************************
 {
-  // open file for reading and check if it exists
+  // check if file exists, if not, generate one with zero values
+  if (!LittleFS.exists("/setup.ini"))
+  {
+    Serial.println("setup.ini does not exist / generate a new file");
+    Serial.println("Calling putSetupIni");
+    putSetupIni();
+  }
+  // open file for reading
   File file = LittleFS.open("/setup.ini", "r");
   if (!file) {
     Serial.println("Failed to open setup.ini for reading");
     return;
+  } else {
+    Serial.println("setup.ini successfully opened for reading");
   }
 
   // read from file line by line
@@ -1025,14 +1009,19 @@ void getSetupIni()
 void putSetupIni()
 //*******************************************************************************
 {
+    Serial.println("putSetupIni entered");
     String tempString="";
 
-    tempString += "pump1_operationTime="    + String(pump1_operationTime);
-    tempString += ";\npump2_operationTime=" + String(pump2_operationTime);
-    tempString += ";\nlinkPump="            + String(linkPump);
-    tempString += ";\n";
+    tempString += String("pump1_operationTime=") ;
+    tempString += String(pump1_operationTime);
+    tempString += String(";\npump2_operationTime=");
+    tempString += String(pump2_operationTime);
+    tempString += String(";\nlinkPump=");
+    tempString += String(linkPump);
+    tempString += String(";\n");
 
     writeFile("/setup.ini", (tempString).c_str()); // Append data to the file
+    Serial.println("data appended");
   
         
 }

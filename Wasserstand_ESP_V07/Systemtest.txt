@@ -1,0 +1,66 @@
+Testprozedur:
+=========================================================================
+1) Testen der Wasserstands-Überwachung (Vorbereiten)
+=========================================================================
+  - Debug-Schalter auf ein
+  - DevMail Schalter anklicken -->  LiveMail
+  - nPost Schalter anklicken --> Post
+2) Durchführen Level-Buttons betätigen
+    - Kontrolle durch Hinschauen
+        - Rohdaten
+        - Text in Auswertung Wasserstand
+        - Shortterm Graph
+        - auf bplaced die "dev" Grafik
+    - AL-> grau
+    ---------------------------- Test1: eine Pumpe läuft auf Dauer im Wechsel
+    - AH -> rot
+        - Email Warning
+    - Level-Button AHH -> rot
+        - eine Pumpe (LED) muss starten
+        - Email Alarm
+    - AHH -> aus 
+        - schnell genug 
+        - eine Pumpe muss im Wechsel laufen (40s)
+        - Email Warning
+    - AH -> aus
+         - Email OK
+      - Mail auf  -->  DevMail
+    ------------------------------- Test2: zweite Pumpe läuft zeitverzögert an
+    - AH und AHH -> ein
+        - Email Warnung und Alarm
+        - warten
+        - zweite Pumpe muss nach kurzer Wartezeit einschalten (10s)
+    - AHH -> aus // AH -> aus
+        - beide Pumpen müssen ausschalten
+        - Email Warning und OK
+        - Hinweis: wenn man nur AHH aus und wieder einschaltet, läuft die Warte zeit zur 2.Pumpe weiter
+    ----------------------------------- Test3: beide Pumpen starten sofort
+    - kurz hintereinander AH - AHH - AHHH einschalten
+        - beide Pumpen müssen einschalten 
+        - Email Warnung und Alarm
+    - AHHH - AHH - AH ausschalten
+        - beide Pumpen gehen aus
+        - Email Warning und OK
+    ------------------------------------
+    - Prüfen
+        - auf den Grafen muss der richtige Ablauf zu sehen sein
+        - Einheit Pumpenbetriebszeit im Dev-Betrieb: 1s
+        - Einschaltdauer der Pumpen merken (wird be bplaced angezeigt)
+            (nur wenn Post eingeschaltet ist)
+            Nach dem Reboot test müssen die Werte wieder passen
+=========================================================================
+3) Übertragungsfehler
+=========================================================================
+    - einfacher Fehler
+        - nPost einschalten
+        - error Button klicken (wird nach Auslösen eines Errors automatisch zurückgesetzt)
+        - Meldung im Fehlerfenster Eror=66
+    - mehrfacher Fehler und Reboot
+        - Rboot einschalten
+        - Reboot muss ausgeführt werden (Terminal Ausgabe)
+        - Pumpen Betriebsdauer muss wieder passen
+
+
+
+
+      

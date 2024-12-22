@@ -2,6 +2,10 @@
 	"folders": [
 		{
 			"path": "Wasserstand_ESP_V07"
+		},
+		{
+			"name": "OTA Beispiel",
+			"path": "../ESP32_local_Projects/OTA Beispiel"
 		}
 	]
 }
