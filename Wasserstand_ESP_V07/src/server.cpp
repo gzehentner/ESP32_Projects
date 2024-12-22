@@ -711,7 +711,7 @@ void handleCss()
               "section {margin-bottom:0.2em;clear:both;}"
               "table{border-collapse:separate;border-spacing:0 0.2em}"
               "th, td{background-color:#C0C0C0}"
-              "button{margin-top:0.3em}"
+              "button {margin-top:0.3em; color: black !important;}" // Added color: black !important;
               "footer p{font-size:0.8em;color:dimgray;background:silver;text-align:center;margin-bottom:5px}"
               "nav{background-color:silver;margin:1px;padding:5px;font-size:0.8em}"
               "nav a{color:dimgrey;padding:10px;text-decoration:none}"
