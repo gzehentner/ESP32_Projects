@@ -804,20 +804,28 @@ void loop(void) {
   // **************************************************************************************************
   #ifdef DEBUG_PRINT_RAW
   // **************************************************************************************************
-    /*=================================================================*/
-    // read analog value via I2C for debug
-    // not used in live system
-    //===========================================
-    const int loc_maxAdc_value = 0x7FFF;
-    float voltage=0.0;
+    if (millis() - previousMillisCyclicPrint > WaitingTimeCyclicPrint)
+    {
 
-    Serial.println("=================================");
-    adc0 = ads.readADC_Differential_0_1();
-    Serial.print("Analog input pin 0: "); Serial.println(adc0);
+      /*=================================================================*/
+      // read analog value via I2C for debug
+      // not used in live system
+      //===========================================
+      const int loc_maxAdc_value = 0x7FFF;
+      float voltage=0.0;
 
-  // voltage = ads.computeVolts(adc0);   
-  // Serial.print("Voltage: "); Serial.println(voltage);
+      Serial.println("=================================");
+      adc0 = GET_ANALOG;
+      //adc0 = ads.readADC_Differential_0_1();
+      Serial.print("Analog input pin 0: "); Serial.println(adc0);
+      Serial.print("myValueFiltered: "); Serial.println(myValueFiltered);
 
+    // voltage = ads.computeVolts(adc0);   
+    // Serial.print("Voltage: "); Serial.println(voltage);
+    
+      previousMillisCyclicPrint = millis();
+
+    }
    #endif // DEBUG_PRINT_RAW
   // **************************************************************************************************
 

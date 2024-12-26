@@ -58,7 +58,7 @@
           the board settings / die Einstellungen der verschiedenen Boards
   ********************************************************************/
   #if isLiveSystem == 1
-    #define TXT_BOARDID "164"                   // an ID for the board
+    #define TXT_BOARDID "174"                   // an ID for the board
     #define TXT_BOARDNAME "Wasserstand " // the name of the board
     #define CSS_MAINCOLOR "blue"                // don't get confused by the different webservers and use different colors
   #else
@@ -105,7 +105,8 @@
     #define Ain_Level 0  // input = adc 
 
     #if BOARDTYPE == ESP32
-      #define GET_ANALOG ads.readADC_Differential_0_1()
+      #define GET_ANALOG ads.readADC_SingleEnded(0)
+
       #if MyBoardIsDevC == 1
 
         #define I2C_SDA 21
@@ -303,4 +304,3 @@
   #endif
 
 #endif
-
