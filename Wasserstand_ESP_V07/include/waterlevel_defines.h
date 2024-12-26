@@ -275,7 +275,7 @@
 
   // value offset
   // adapt measured value to TS [cm]
-  #define valOffset 0.
+  #define valOffset -3
  
   /*=================================================================*/
   /* Parameter for CurrentLoop */
