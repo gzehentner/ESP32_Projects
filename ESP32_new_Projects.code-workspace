@@ -6,6 +6,9 @@
 		{
 			"name": "OTA Beispiel",
 			"path": "../ESP32_local_Projects/OTA Beispiel"
+		},
+		{
+			"path": "ESP32 Cam Take Photo"
 		}
 	]
 }

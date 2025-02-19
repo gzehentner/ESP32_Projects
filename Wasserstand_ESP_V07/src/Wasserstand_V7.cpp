@@ -209,9 +209,9 @@ uint32_t clientPreviousSs = 0;                // - clientIntervall;  // last sec
 //  - send to Bplaced or an internal device
 //  - select if it is a live system or development
 #if isLiveSystem == 1
-  const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/live/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
+  const char *sendHttpTo = "https://zehentner.bplaced.net/Wasserstand/live/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
 #else
-  const char *sendHttpTo = "http://zehentner.bplaced.net/Wasserstand/dev/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
+  const char *sendHttpTo = "https://zehentner.bplaced.net/Wasserstand/dev/data_sql.php"; // the module will send information to that server/resource. Use an URI or an IP address
 #endif
 
 
