@@ -25,10 +25,11 @@
 #include <FS.h>
 #include <timeserver.h>
 
+#include <ElegantOTA.h>
+
 #include <main.h>
 
 #include <takePhoto.h>    
-#include <ArduinoOTA.h>   // OTA Upload via ArduinoIDE
 
   // camera_fb_t * fb = NULL; // pointer
 
@@ -202,16 +203,6 @@ void setup() {
   Serial.print("IP Address: http://");
   Serial.println(WiFi.localIP());
 
-  /*=================================================================*/
-  /* IDE OTA */
-  // ArduinoOTA.setHostname(myhostname); // give a name to your ESP for the Arduino IDE
-  // ArduinoOTA.begin();                 // OTA Upload via ArduinoIDE https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html
-  // ArduinoOTA.setPort(3232); // Or any other available port
-
-  // ArduinoOTA.setDebugLevel(3);
-  // Serial.println("OTA prepared");
-
-
   //======================================================================
   // OV2640 camera module
   camera_config_t config;
@@ -257,6 +248,9 @@ void setup() {
     ESP.restart();
   }
 
+   // Initialisiere den ElegantOTA Server 
+   ElegantOTA.begin(&server); 
+
   //======================================================================
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
@@ -295,7 +289,12 @@ void setup() {
     request->send(200, "text/html", html);
 
   });
-  
+    
+    server.on("/update", HTTP_GET, [](AsyncWebServerRequest * request) {
+      request->send(200, "text/plain", "Hi! This is ElegantOTA Demo. From Schorsch");
+      });
+ 
+
   // Start server
   server.begin();
 
@@ -304,10 +303,9 @@ void setup() {
 
 void loop() {
 
-  //======================================================================
-  /* Over the Air UPdate */
-  ArduinoOTA.handle(); // OTA Upload via ArduinoIDE
-
+ 
+  ElegantOTA.loop();
+  
   //======================================================================
   // take photo on click
   if (takeNewPhoto) {
@@ -331,4 +329,3 @@ void loop() {
   }
   delay(10);
 }
-
