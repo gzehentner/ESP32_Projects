@@ -24,7 +24,7 @@
 
   #include <Arduino.h>
 
-  #define VERSION "7.0" // the version of this sketch
+  #define VERSION "7.1" // the version of this sketch
 
   // setting for ADC select: MyUSE_ADC
   #define internADC 0

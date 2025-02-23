@@ -52,6 +52,7 @@ Testprozedur:
 3) Übertragungsfehler
 =========================================================================
     - einfacher Fehler
+        - DebugLevelSwitch einschalten
         - nPost einschalten
         - error Button klicken (wird nach Auslösen eines Errors automatisch zurückgesetzt)
         - Meldung im Fehlerfenster Eror=66
