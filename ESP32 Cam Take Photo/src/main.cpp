@@ -20,12 +20,12 @@
 #include "soc/rtc_cntl_reg.h"  // Disable brownout problems
 #include "driver/rtc_io.h"
 #include <ESPAsyncWebServer.h>
-#include <StringArray.h>
+//#include <StringArray.h>
 #include <SPIFFS.h>
 #include <FS.h>
 #include <timeserver.h>
 
-#include <ElegantOTA.h>
+//#include <ElegantOTA.h>
 
 #include <main.h>
 
@@ -249,7 +249,7 @@ void setup() {
   }
 
    // Initialisiere den ElegantOTA Server 
-   ElegantOTA.begin(&server); 
+  //  ElegantOTA.begin(&server); 
 
   //======================================================================
   // Route for root / web page
@@ -290,9 +290,9 @@ void setup() {
 
   });
     
-    server.on("/update", HTTP_GET, [](AsyncWebServerRequest * request) {
-      request->send(200, "text/plain", "Hi! This is ElegantOTA Demo. From Schorsch");
-      });
+    // server.on("/update", HTTP_GET, [](AsyncWebServerRequest * request) {
+    //   request->send(200, "text/plain", "Hi! This is ElegantOTA Demo. From Schorsch");
+    //   });
  
 
   // Start server
@@ -304,7 +304,7 @@ void setup() {
 void loop() {
 
  
-  ElegantOTA.loop();
+  // ElegantOTA.loop();
   
   //======================================================================
   // take photo on click
