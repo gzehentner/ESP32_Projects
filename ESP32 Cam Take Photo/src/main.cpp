@@ -11,6 +11,10 @@
   copies or substantial portions of the Software.
 *********/
 
+#ifdef useElegantOTA
+  #define ELEGANTOTA_USE_ASYNC_WEBSERVER 1
+#endif
+
 #include "WiFi.h"
 #include "esp_camera.h"
 #include "esp_timer.h"
@@ -20,12 +24,16 @@
 #include "soc/rtc_cntl_reg.h"  // Disable brownout problems
 #include "driver/rtc_io.h"
 #include <ESPAsyncWebServer.h>
-#include <StringArray.h>
+//#include <StringArray.h>
 #include <SPIFFS.h>
 #include <FS.h>
 #include <timeserver.h>
 
-#include <ElegantOTA.h>
+// #include <AsyncElegantOTA.h>
+
+#ifdef useElegantOTA
+  #include <ElegantOTA.h>
+#endif
 
 #include <main.h>
 
@@ -36,6 +44,8 @@
 // Replace with your network credentials
 const char* ssid = "Zehentner";
 const char* password = "ElisabethScho";
+
+
 
 // variables and constants
 long msecLastCapture = 0;
@@ -50,8 +60,8 @@ int genErrorDone = 0;
  #define SEC_CAPTURE_DIFF 20
 #endif
 
-const char *myServerName     = "http://zehentner.bplaced.net/Wasserstand/live/rec_photo.php"; 
-const char *myServerNameFile = "http://zehentner.bplaced.net/Wasserstand/live/rec_photo_file.php"; 
+const char *myServerName     = "https://zehentner.bplaced.net/Wasserstand/live/rec_photo.php"; 
+const char *myServerNameFile = "https://zehentner.bplaced.net/Wasserstand/live/rec_photo_file.php"; 
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
@@ -88,7 +98,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 </head>
 <body>
   <div id="container">
-    <h2>ESP32-CAM Last Photo</h2>
+    <h2>ESP32-CAM Last Photo xy</h2>
     <p>It might take more than 5 seconds to capture a photo.</p>
     <p>
       <button onclick="rotatePhoto();">ROTATE</button>
@@ -248,10 +258,13 @@ void setup() {
     ESP.restart();
   }
 
-   // Initialisiere den ElegantOTA Server 
-   ElegantOTA.begin(&server); 
+  #ifdef useElagantOTA
+     // Initialisiere den ElegantOTA Server 
+     ElegantOTA.begin(&server); 
+  #endif
 
   //======================================================================
+
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send_P(200, "text/html", index_html);
@@ -304,7 +317,9 @@ void setup() {
 void loop() {
 
  
-  ElegantOTA.loop();
+  #ifdef useElegantOTA
+    ElegantOTA.loop();
+  #endif
   
   //======================================================================
   // take photo on click
