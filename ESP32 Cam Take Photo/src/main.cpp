@@ -11,6 +11,11 @@
   copies or substantial portions of the Software.
 *********/
 
+#include <U8g2lib.h>
+#include <Wire.h>
+#include <display_lib.h>
+ 
+
 #ifdef useElegantOTA
   #define ELEGANTOTA_USE_ASYNC_WEBSERVER 1
 #endif
@@ -50,18 +55,25 @@ const char* password = "ElisabethScho";
 // variables and constants
 long msecLastCapture = 0;
 long msecNow         = 0;
+long msecLastPrint   = 0;
+long msecNowPrint    = 0;
+long msecTick        = 0;
+
+// count of communication errors
+long errCnt_WiFi = 0;
 
 int genError = 0;
 int genErrorDone = 0;
 
 #if isLiveSystem == 1
   #define SEC_CAPTURE_DIFF 60
+  const char *myServerName     = "https://zehentner.bplaced.net/Wasserstand/live/rec_photo.php"; 
+  const char *myServerNameFile = "https://zehentner.bplaced.net/Wasserstand/live/rec_photo_file.php"; 
 #else 
- #define SEC_CAPTURE_DIFF 20
-#endif
-
-const char *myServerName     = "https://zehentner.bplaced.net/Wasserstand/live/rec_photo.php"; 
-const char *myServerNameFile = "https://zehentner.bplaced.net/Wasserstand/live/rec_photo_file.php"; 
+  #define SEC_CAPTURE_DIFF 20
+  const char *myServerName     = "https://zehentner.bplaced.net/Wasserstand/dev/rec_photo.php"; 
+  const char *myServerNameFile = "https://zehentner.bplaced.net/Wasserstand/dev/rec_photo_file.php"; 
+ #endif
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
@@ -146,6 +158,10 @@ void setup() {
 //======================================================================
   // Turn-off the 'brownout detector'
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+
+  u8g2.begin();
+  u8g2_prepare();
+  msecTick = 0;
 
   //======================================================================
   // Serial port for debugging purposes
@@ -255,6 +271,15 @@ void setup() {
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
     Serial.printf("Camera init failed with error 0x%x", err);
+    // prepare display
+    u8g2.clearBuffer();
+    u8g2_prepare();
+
+    // prepare first line
+    u8g2.setCursor(0, 0);
+    u8g2.print("Camera init failed with error 0x%x");
+    u8g2.print(err);
+    
     ESP.restart();
   }
 
@@ -312,6 +337,9 @@ void setup() {
   server.begin();
 
   msecLastCapture = millis(); 
+  msecLastPrint = millis();
+  // count seconds
+
 }
 
 void loop() {
@@ -332,6 +360,7 @@ void loop() {
   // take photo every n miliseconds and post it to external server
   msecNow = millis();
   if ((msecNow - msecLastCapture)/1000 > SEC_CAPTURE_DIFF)
+  // if (false)
   {
     Serial.println("capturing photo");
     capturePhotoSaveSpiffs();
@@ -341,6 +370,48 @@ void loop() {
 
     msecLastCapture = msecNow;
     Serial.println("Sending photo done");
+
+    // reset msecTick with every capture
+    msecTick = 0;
   }
-  delay(10);
+
+  //======================================================================
+  // print strint on display every second
+
+  if ((msecNow - msecLastPrint)/1000 > 1)
+  {
+    
+    msecLastPrint = msecNow;
+    
+    // prepare display
+    u8g2.clearBuffer();
+    u8g2_prepare();
+
+    // prepare first line
+    u8g2.setCursor(0, 0);
+    u8g2.print("last: ");
+    u8g2.print(msecTick);
+    
+    // second line below
+  
+    if (WiFi.status() != WL_CONNECTED)  {
+      u8g2.setCursor(0, 12);
+      u8g2.print("WiFi status: ");
+      u8g2.print(WiFi.status());
+    }
+    else {
+      u8g2.setCursor(0, 12);
+      u8g2.print("WiFi connected");
+    }
+
+    u8g2.setCursor(0, 24);
+    u8g2.print("ErrCnt:");
+    u8g2.print(errCnt_WiFi);
+
+    u8g2.sendBuffer();
+    msecTick++;
+
+  }
+
+
 }
