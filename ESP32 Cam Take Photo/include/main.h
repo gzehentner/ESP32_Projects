@@ -11,4 +11,5 @@ extern const char *myServerNameFile;
 extern int genError;
 extern int genErrorDone;
 
+
 #endif

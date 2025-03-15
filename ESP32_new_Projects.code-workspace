@@ -1,14 +1,11 @@
 {
 	"folders": [
 		{
-			"path": "Wasserstand_ESP_V07"
-		},
-		{
-			"name": "OTA Beispiel",
-			"path": "../ESP32_local_Projects/OTA Beispiel"
-		},
-		{
 			"path": "ESP32 Cam Take Photo"
+		},
+		{
+			"name": "DisplayI2C",
+			"path": "../ESP32_local_Projects/DisplayI2C"
 		}
 	]
 }
