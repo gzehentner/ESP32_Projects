@@ -60,6 +60,14 @@ Testprozedur:
         - Rboot einschalten
         - Reboot muss ausgeführt werden (Terminal Ausgabe)
         - Pumpen Betriebsdauer muss wieder passen
+=========================================================================
+4) Watchdog Timer prüfen
+=========================================================================
+    - DebugLevelSwitch einschalten
+    - WD ok anklicken, um WD err einzuschalten
+        - dadurch wird ein 11s delay aktiviert
+        - nach 10s geht der ESP in reboot
+        - nach dem Reboot ist simTimeout wieder ausgeschaltet ("WD ok")
 
 
 

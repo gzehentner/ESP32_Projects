@@ -150,18 +150,21 @@ wificlient.setCACert(root_ca_chain);
     appendFile("/error.log", errMessage.c_str());
 
     errCnt_communication++;
-
-    if (errCnt_communication > ERR_CNT_COMMUNICATION)
-    {
-      // reset ESP8266
-      errMessage =  currentDate ;
-      errMessage += " - " ;
-      errMessage += formattedTime; 
-      errMessage += " - " ;
-      errMessage +=  "client connection error - restart triggered\n";
-      appendFile("/error.log", errMessage.c_str());
-      ESP.restart();
-    }
+    
+    // ein Neustart wg fehlerhafter Kommunikation führt zu instabilem System
+    // am wichtigsten ist die Pumpensteuerung
+    
+    // if (errCnt_communication > ERR_CNT_COMMUNICATION)
+    // {
+    //   // reset ESP8266
+    //   errMessage =  currentDate ;
+    //   errMessage += " - " ;
+    //   errMessage += formattedTime; 
+    //   errMessage += " - " ;
+    //   errMessage +=  "client connection error - restart triggered\n";
+    //   appendFile("/error.log", errMessage.c_str());
+    //   ESP.restart();
+    // }
   } else {
     // reset to zero, when communication is running again
     errCnt_communication = 0;
