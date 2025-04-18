@@ -24,7 +24,7 @@
 
   #include <Arduino.h>
 
-  #define VERSION "7.1" // the version of this sketch
+  #define VERSION "7.2" // the version of this sketch
 
   // setting for ADC select: MyUSE_ADC
   #define internADC 0
@@ -166,6 +166,9 @@
   extern int remoteLastMessage;
   extern int remoteMessagesSucessfull;
 
+
+// Watchdog timeout in seconds
+#define WDT_TIMEOUT 10  // Reset if loop takes longer than 10 seconds
 
 
 

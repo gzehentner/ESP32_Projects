@@ -160,6 +160,7 @@ known issues: OTA download not possible "not enouth space"
 #endif
 
 #include <ElegantOTA.h>
+#include "esp_task_wdt.h"  // Include ESP32 Watchdog Timer library
 
 #if MyUSE_ADC == ADS1115_ADC
   #if BOARDTYPE == ESP32
@@ -365,6 +366,15 @@ void setup(void) {
   Serial.print(__DATE__);
   Serial.print(F(" "));
   Serial.println(__TIME__);
+
+  // Check the reason for the last reset
+  esp_reset_reason_t resetReason = esp_reset_reason();
+  if (resetReason == ESP_RST_TASK_WDT || resetReason == ESP_RST_WDT) {
+    Serial.println("Reboot caused by Watchdog Timer!");
+  } else {
+    Serial.print("Reboot reason: ");
+    Serial.println(resetReason);
+  }
 
    /*=================  Connect to WIFI */
   char myhostname[8] = {"esp"};
@@ -612,6 +622,10 @@ void setup(void) {
         }
   
     //listDir("/");  
+
+  // Initialize the Watchdog Timer
+  esp_task_wdt_init(WDT_TIMEOUT, true);  // Enable panic so ESP32 resets
+  esp_task_wdt_add(NULL);  // Add the current task (loop) to the Watchdog
 }
   /*==================================================================*/
   
@@ -624,6 +638,13 @@ void setup(void) {
  
 
 void loop(void) {
+
+  // Reset the Watchdog Timer at the beginning of each loop iteration
+  if (simTimeout == 1) {
+    delay((WDT_TIMEOUT+1)*1000); // wait for WDT_TIMEOUT plus 1 second to simulate a timeout
+    simTimeout = 0; // reset the timeout flag
+  }
+  esp_task_wdt_reset();
 
   // **************************************************************************************************
   // ===============================================================================

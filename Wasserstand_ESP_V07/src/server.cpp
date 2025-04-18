@@ -89,6 +89,7 @@ int simVal_AH   = 1;
 int simVal_AL   = 0;
 int simError    = 0;    //  sim one failed sendPost (ProjClient.cpp)
 int simReboot   = 0;    //  force reboot due to many failed transmissions to client
+int simTimeout = 0;     //  sim timeout of watchdog timer
 // int simVal_ALL = 0;
 
 int firstRun = 1;
@@ -381,6 +382,12 @@ void handlePage()
   message += F("<p class='on_red'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>Reboot</a></p>\n");
   } else {
   message += F("<p class='off'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>nRboot</a></p>\n");
+  }
+  if (simTimeout == 1)  // 
+  {
+  message += F("<p class='on_red'><a href='c.php?toggle=9' target='i' onclick='reloadPage()'>WD Err</a></p>\n");
+  } else {
+  message += F("<p class='off'><a href='c.php?toggle=9' target='i' onclick='reloadPage()'>WD ok</a></p>\n");
   }
   if (useLiveMail == 1)  // 
   {
@@ -899,6 +906,23 @@ void handleCommand()
         if (debugLevelSwitches==1) {
           simReboot = 1;
           Serial.println("simReboot on");
+        }
+      }
+    }
+    if (server.arg(0) == "9") 
+    {
+      Serial.println(F("D232 toggle timeout generation"));
+      if (simTimeout==1)
+      { // toggle error generation
+        simTimeout = 0;
+        Serial.println("simTimeout off");
+      }
+      else
+      {
+        // force error with sendPost to bplaced; response with negative code is forced
+        if (debugLevelSwitches==1) {
+          simTimeout = 1;
+          Serial.println("simTimeout on");
         }
       }
     }
