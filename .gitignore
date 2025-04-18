@@ -1,4 +1,4 @@
-*/*.code-workspace*
+*.code-workspace*
 NTP_DST
 NTP_DST/*
 ESP32_new_Projects.code-workspace
