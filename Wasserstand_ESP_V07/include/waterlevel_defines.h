@@ -203,6 +203,13 @@
 
   #endif
 
+  //**************************************************************
+  // set to 1 to delete the appropirate file
+  #define deleteSetupFile 0
+
+  #define deleteErrLog 0
+
+
   // END: Debug and Simulation settings used in development board
   //**************************************************************
 

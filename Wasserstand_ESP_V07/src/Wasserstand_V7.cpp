@@ -579,7 +579,6 @@ void setup(void) {
           //=============================================================================================
           // handling setup.ini
           //=============================================================================================
-          #define deleteSetupFile 0
           #if deleteSetupFile == 1
             // deleting setupFile
             Serial.println("deleting setupFile");
@@ -598,7 +597,6 @@ void setup(void) {
           //=============================================================================================
           // handling error lot
           //=============================================================================================
-          #define deleteErrLog 0
           #if deleteErrLog == 1
             // deleting setupFile
             Serial.println("deleting error.log");
