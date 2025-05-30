@@ -707,9 +707,8 @@ void loop(void) {
   {
     // sendPostToAskSensors(); // subscription cancelled
 
-    // send to client in live system on any case
-    // send to client in develop system only on demand
-    if ((sendToClient==1) || (isLiveSystem==1)) {
+    
+    if ((sendToClient==1)) {
       if (valueStable>0) {
         sendPost();
         //sendPost_V2();

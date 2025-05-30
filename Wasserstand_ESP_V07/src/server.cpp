@@ -76,7 +76,7 @@ int remoteAL;
 int remoteLastMessage;
 int remoteMessagesSucessfull;
 
-int sendToClient = 0; // enable sending to client (develop system)
+int sendToClient = isLiveSystem; // enable sending to client default is dependent on isLiveSystem
 int useLiveMail  = 0; // to check the email send process, we want to use the live email address, because t-online is very slow
 
 // **************************************************************************************************
@@ -869,10 +869,10 @@ void handleCommand()
       else
       {
         digitalWrite(builtin_led, HIGH);
-        if (isLiveSystem==0) {
+        //if (isLiveSystem==0) {
           sendToClient = 0;  // disable sending to client in dev version ofWasserstand_V5.cpp
           Serial.println("sendToClient = 0");
-        }
+        //}
       }
     }
     if (server.arg(0) == "6") 
