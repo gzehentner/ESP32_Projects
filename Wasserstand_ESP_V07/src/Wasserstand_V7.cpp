@@ -159,6 +159,9 @@ known issues: OTA download not possible "not enouth space"
   #include <MyLittleFSLib.h>
 #endif
 
+#include <TelnetStream.h>
+#include <debugPrint.h>
+
 #include <ElegantOTA.h>
 #include "esp_task_wdt.h"  // Include ESP32 Watchdog Timer library
 
@@ -362,6 +365,12 @@ void setup(void) {
   Serial.println("Serial is ready to accept input");
   //------------------------
 
+  
+  /*=================================================================*/
+  // print board information
+
+  
+  
   Serial.println(F("\n" TXT_BOARDNAME "\nVersion: " VERSION " Board " TXT_BOARDID " "));
   Serial.print(__DATE__);
   Serial.print(F(" "));
@@ -396,6 +405,22 @@ void setup(void) {
   Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  /*======================================================================*/
+  // setup TelnetStream
+  TelnetStream.begin();
+
+  delay(5000); // wait for 500 milliseconds to ensure TelnetStream is ready 
+
+  debugPrintln("TelnetStream started");
+  TelnetStream.println("TelnetStream started");
+
+  TelnetStream.println("");
+  TelnetStream.print("Connected to ");
+  TelnetStream.println(ssid);
+  TelnetStream.print("IP address: ");
+  TelnetStream.println(WiFi.localIP());
+
 
   #if BOARDTYPE == ESP32
 
@@ -624,8 +649,8 @@ void setup(void) {
   // Initialize the Watchdog Timer
   esp_task_wdt_init(WDT_TIMEOUT, true);  // Enable panic so ESP32 resets
   esp_task_wdt_add(NULL);  // Add the current task (loop) to the Watchdog
+
 }
-  /*==================================================================*/
   
 
 /*****************************************************************************************************************
@@ -866,7 +891,7 @@ void loop(void) {
       // Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
       // Serial.print(" linkPump : ");Serial.println(linkPump);
       
-      
+      TelnetStream.println("Test TelnetStream: ");
 
       previousMillisCyclicPrint = millis();
     }
@@ -967,17 +992,17 @@ void getSetupIni()
   // check if file exists, if not, generate one with zero values
   if (!LittleFS.exists("/setup.ini"))
   {
-    Serial.println("setup.ini does not exist / generate a new file");
-    Serial.println("Calling putSetupIni");
+    debugPrintln("setup.ini does not exist / generate a new file");
+    debugPrintln("Calling putSetupIni");
     putSetupIni();
   }
   // open file for reading
   File file = LittleFS.open("/setup.ini", "r");
   if (!file) {
-    Serial.println("Failed to open setup.ini for reading");
+    debugPrintln("Failed to open setup.ini for reading");
     return;
   } else {
-    Serial.println("setup.ini successfully opened for reading");
+    debugPrintln("setup.ini successfully opened for reading");
   }
 
   // read from file line by line
