@@ -331,7 +331,7 @@ WiFiUDP ntpUDP;
 //--------------------------------------------------------------------
 
 unsigned long previousMillisCyclicPrint;
-unsigned long WaitingTimeCyclicPrint = 1000;
+unsigned long WaitingTimeCyclicPrint = 5000;
 
 unsigned long previousMillis_halfSecondAction;
 unsigned long halfSecond;
@@ -892,10 +892,38 @@ void loop(void) {
       // Serial.print(" linkPump : ");Serial.println(linkPump);
       
       TelnetStream.println("Test TelnetStream: ");
-
+      log();
       previousMillisCyclicPrint = millis();
     }
   #endif
+
+    errMessage =  currentDate ;
+    errMessage += " - " ;
+    errMessage += formattedTime; 
+    errMessage += " - " ;
+    errMessage +=  "client connection error - restart triggered\n";
+    //   appendFile("/error.log", errMessage.c_str());
+    //   ESP.restart();
+  // Telnetstream read
+    switch (TelnetStream.read()) {
+    case 'R':
+    TelnetStream.stop();
+    delay(100);
+    ESP.restart();
+      break;
+    case 'C':
+      TelnetStream.println("bye bye");
+      TelnetStream.flush();
+      TelnetStream.stop();
+      break;
+  }
+
+  // static unsigned long next;
+  // if (millis() - next > 5000) {
+  //   next = millis();
+  //   log();
+  // }
+
 
 
   controlPump();
@@ -1075,4 +1103,17 @@ void putSetupIni()
     Serial.println("data appended");
   
         
+}  
+
+  void log() {
+  static int i = 0;
+
+  char timeStr[20];
+  // sprintf(timeStr, "%02d-%02d-%02d %02d:%02d:%02d", year(), month(), day(), hour(), minute(), second());
+
+  TelnetStream.print(i++);
+  TelnetStream.print(" ");
+  TelnetStream.print(timeStr);
+  TelnetStream.print(" A0: ");
+  TelnetStream.println(analogRead(A0));
 }
