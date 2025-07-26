@@ -159,8 +159,8 @@ known issues: OTA download not possible "not enouth space"
   #include <MyLittleFSLib.h>
 #endif
 
-#include <TelnetStream.h>
-#include <debugPrint.h>
+// #include <TelnetStream.h>
+// #include <debugPrint.h>
 
 #include <ElegantOTA.h>
 #include "esp_task_wdt.h"  // Include ESP32 Watchdog Timer library
@@ -241,6 +241,7 @@ char input[64];
 bool inputReadingCompleted = false;
 
 long lastMillis=0;
+int timeTickForCyclicPrint = 0;
 
 
 int doPrint = 0;
@@ -331,7 +332,7 @@ WiFiUDP ntpUDP;
 //--------------------------------------------------------------------
 
 unsigned long previousMillisCyclicPrint;
-unsigned long WaitingTimeCyclicPrint = 5000;
+unsigned long WaitingTimeCyclicPrint = 1000;
 
 unsigned long previousMillis_halfSecondAction;
 unsigned long halfSecond;
@@ -408,18 +409,18 @@ void setup(void) {
 
   /*======================================================================*/
   // setup TelnetStream
-  TelnetStream.begin();
+  // TelnetStream.begin();
 
-  delay(5000); // wait for 500 milliseconds to ensure TelnetStream is ready 
+  // delay(5000); // wait for 500 milliseconds to ensure TelnetStream is ready 
 
-  debugPrintln("TelnetStream started");
-  TelnetStream.println("TelnetStream started");
+  // debugPrintln("TelnetStream started");
+  // TelnetStream.println("TelnetStream started");
 
-  TelnetStream.println("");
-  TelnetStream.print("Connected to ");
-  TelnetStream.println(ssid);
-  TelnetStream.print("IP address: ");
-  TelnetStream.println(WiFi.localIP());
+  // TelnetStream.println("");
+  // TelnetStream.print("Connected to ");
+  // TelnetStream.println(ssid);
+  // TelnetStream.print("IP address: ");
+  // TelnetStream.println(WiFi.localIP());
 
 
   #if BOARDTYPE == ESP32
@@ -871,31 +872,45 @@ void loop(void) {
     }
    #endif // DEBUG_PRINT_RAW
   // **************************************************************************************************
-
-
-  
-  // **************************************************************************************************
-  #ifdef DEBUG_PRINT_CYCLIC
-  // **************************************************************************************************
-    if (millis() - previousMillisCyclicPrint > WaitingTimeCyclicPrint)
+    // generate a time tick for cyclic operations; e.g. debug print, but also blink LED
+   if (millis() - previousMillisCyclicPrint > WaitingTimeCyclicPrint)
     {
-      // Serial.print(formattedTime);
-      // heapInfo.collect();
-      // heapInfo.print();
-      
-      //Serial.print("millisNow : ");Serial.print(opTime_millisNow);Serial.print(" millisDiff : ");Serial.println(opTime_millisDiff);
-      // Serial.print(myValueFilteredAct);
-      // Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
-      // Serial.print("  ");
-      // Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  Op time 1 : "); Serial.print(pump1_operationTime);
-      // Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
-      // Serial.print(" linkPump : ");Serial.println(linkPump);
-      
-      TelnetStream.println("Test TelnetStream: ");
-      log();
+      timeTickForCyclicPrint = 1;
       previousMillisCyclicPrint = millis();
+    } else {
+      timeTickForCyclicPrint = 0;
+    } 
+  
+    // **************************************************************************************************
+    #ifdef DEBUG_PRINT_CYCLIC
+    // **************************************************************************************************
+        // Serial.print(formattedTime);
+        // heapInfo.collect();
+        // heapInfo.print();
+        
+        //Serial.print("millisNow : ");Serial.print(opTime_millisNow);Serial.print(" millisDiff : ");Serial.println(opTime_millisDiff);
+        // Serial.print(myValueFilteredAct);
+        // Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
+        // Serial.print("  ");
+        // Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  Op time 1 : "); Serial.print(pump1_operationTime);
+        // Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
+        // Serial.print(" linkPump : ");Serial.println(linkPump);
+        
+        // TelnetStream.println("Test TelnetStream: ");
+        // log();
+
+        
+    #endif
+
+    if (timeTickForCyclicPrint == 1) {
+      if (digitalRead(builtin_led) == HIGH) {
+        digitalWrite(builtin_led, LOW);
+      } else {
+        digitalWrite(builtin_led, HIGH);
+      }
     }
-  #endif
+
+    String errMessage = "";
 
     errMessage =  currentDate ;
     errMessage += " - " ;
@@ -905,18 +920,18 @@ void loop(void) {
     //   appendFile("/error.log", errMessage.c_str());
     //   ESP.restart();
   // Telnetstream read
-    switch (TelnetStream.read()) {
-    case 'R':
-    TelnetStream.stop();
-    delay(100);
-    ESP.restart();
-      break;
-    case 'C':
-      TelnetStream.println("bye bye");
-      TelnetStream.flush();
-      TelnetStream.stop();
-      break;
-  }
+  //   switch (TelnetStream.read()) {
+  //   case 'R':
+  //   TelnetStream.stop();
+  //   delay(100);
+  //   ESP.restart();
+  //     break;
+  //   case 'C':
+  //     TelnetStream.println("bye bye");
+  //     TelnetStream.flush();
+  //     TelnetStream.stop();
+  //     break;
+  // }
 
   // static unsigned long next;
   // if (millis() - next > 5000) {
@@ -1020,17 +1035,17 @@ void getSetupIni()
   // check if file exists, if not, generate one with zero values
   if (!LittleFS.exists("/setup.ini"))
   {
-    debugPrintln("setup.ini does not exist / generate a new file");
-    debugPrintln("Calling putSetupIni");
+    Serial.println("setup.ini does not exist / generate a new file");
+    Serial.println("Calling putSetupIni");
     putSetupIni();
   }
   // open file for reading
   File file = LittleFS.open("/setup.ini", "r");
   if (!file) {
-    debugPrintln("Failed to open setup.ini for reading");
+    Serial.println("Failed to open setup.ini for reading");
     return;
   } else {
-    debugPrintln("setup.ini successfully opened for reading");
+    Serial.println("setup.ini successfully opened for reading");
   }
 
   // read from file line by line
@@ -1105,15 +1120,15 @@ void putSetupIni()
         
 }  
 
-  void log() {
-  static int i = 0;
+  // void log() {
+//   static int i = 0;
 
-  char timeStr[20];
-  // sprintf(timeStr, "%02d-%02d-%02d %02d:%02d:%02d", year(), month(), day(), hour(), minute(), second());
+//   char timeStr[20];
+//   // sprintf(timeStr, "%02d-%02d-%02d %02d:%02d:%02d", year(), month(), day(), hour(), minute(), second());
 
-  TelnetStream.print(i++);
-  TelnetStream.print(" ");
-  TelnetStream.print(timeStr);
-  TelnetStream.print(" A0: ");
-  TelnetStream.println(analogRead(A0));
-}
+//   TelnetStream.print(i++);
+//   TelnetStream.print(" ");
+//   TelnetStream.print(timeStr);
+//   TelnetStream.print(" A0: ");
+//   TelnetStream.println(analogRead(A0));
+// }

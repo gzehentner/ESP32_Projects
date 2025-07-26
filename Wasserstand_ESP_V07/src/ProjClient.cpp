@@ -8,8 +8,8 @@
 #include <pumpControl.h>
 #include <timeserver.h>
 #include <MyLittleFSLib.h>
-#include <TelnetStream.h>
-#include <debugPrint.h>
+// #include <TelnetStream.h>
+// #include <debugPrint.h>
 
   #if BOARDTYPE == ESP32
   // for Send-Mail
@@ -141,12 +141,12 @@ wificlient.setCACert(root_ca_chain);
   Serial.print(F("\nmessage: "));                                                  // Print HTTP return code;
   Serial.println(message);
 
-  client.writeToStream(&TelnetStream); // Debug only: Output of received data to Telnet
+  // client.writeToStream(&TelnetStream); // Debug only: Output of received data to Telnet
 
-  TelnetStream.print(F("\nhttpCode: "));
-  TelnetStream.println(httpCode);  
-  TelnetStream.print(F("\nmessage: "));                                                  // Print HTTP return code;
-  TelnetStream.println(message);
+  // TelnetStream.print(F("\nhttpCode: "));
+  // TelnetStream.println(httpCode);  
+  // TelnetStream.print(F("\nmessage: "));                                                  // Print HTTP return code;
+  // TelnetStream.println(message);
 
   client.end();  //Close connection
 

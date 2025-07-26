@@ -140,7 +140,7 @@
   #if BOARDTYPE == ESP32
   // pin of builtin led
     #if (MyBoardIsDevC == 1)
-      const int builtin_led = 2;
+      const int builtin_led = 26;
     #else
       const int builtin_led = 4;
     #endif
