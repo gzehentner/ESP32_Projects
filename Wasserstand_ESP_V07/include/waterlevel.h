@@ -50,6 +50,8 @@ extern int    ringADC[iRingValueMax+1];
 extern int wrRingPtr;           // index variable for write buffer
 extern int rdRingPtr;            // position to read out of buffer
 
+extern int timeTickForCyclicPrint; // used in loop()
+
 
 //*******************************************************************************
 // write values to setup.ini

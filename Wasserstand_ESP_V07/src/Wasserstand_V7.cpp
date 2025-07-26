@@ -159,6 +159,9 @@ known issues: OTA download not possible "not enouth space"
   #include <MyLittleFSLib.h>
 #endif
 
+// #include <TelnetStream.h>
+// #include <debugPrint.h>
+
 #include <ElegantOTA.h>
 #include "esp_task_wdt.h"  // Include ESP32 Watchdog Timer library
 
@@ -238,6 +241,7 @@ char input[64];
 bool inputReadingCompleted = false;
 
 long lastMillis=0;
+int timeTickForCyclicPrint = 0;
 
 
 int doPrint = 0;
@@ -362,6 +366,12 @@ void setup(void) {
   Serial.println("Serial is ready to accept input");
   //------------------------
 
+  
+  /*=================================================================*/
+  // print board information
+
+  
+  
   Serial.println(F("\n" TXT_BOARDNAME "\nVersion: " VERSION " Board " TXT_BOARDID " "));
   Serial.print(__DATE__);
   Serial.print(F(" "));
@@ -396,6 +406,22 @@ void setup(void) {
   Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  /*======================================================================*/
+  // setup TelnetStream
+  // TelnetStream.begin();
+
+  // delay(5000); // wait for 500 milliseconds to ensure TelnetStream is ready 
+
+  // debugPrintln("TelnetStream started");
+  // TelnetStream.println("TelnetStream started");
+
+  // TelnetStream.println("");
+  // TelnetStream.print("Connected to ");
+  // TelnetStream.println(ssid);
+  // TelnetStream.print("IP address: ");
+  // TelnetStream.println(WiFi.localIP());
+
 
   #if BOARDTYPE == ESP32
 
@@ -624,8 +650,8 @@ void setup(void) {
   // Initialize the Watchdog Timer
   esp_task_wdt_init(WDT_TIMEOUT, true);  // Enable panic so ESP32 resets
   esp_task_wdt_add(NULL);  // Add the current task (loop) to the Watchdog
+
 }
-  /*==================================================================*/
   
 
 /*****************************************************************************************************************
@@ -846,31 +872,73 @@ void loop(void) {
     }
    #endif // DEBUG_PRINT_RAW
   // **************************************************************************************************
-
-
-  
-  // **************************************************************************************************
-  #ifdef DEBUG_PRINT_CYCLIC
-  // **************************************************************************************************
-    if (millis() - previousMillisCyclicPrint > WaitingTimeCyclicPrint)
+    // generate a time tick for cyclic operations; e.g. debug print, but also blink LED
+   if (millis() - previousMillisCyclicPrint > WaitingTimeCyclicPrint)
     {
-      // Serial.print(formattedTime);
-      // heapInfo.collect();
-      // heapInfo.print();
-      
-      //Serial.print("millisNow : ");Serial.print(opTime_millisNow);Serial.print(" millisDiff : ");Serial.println(opTime_millisDiff);
-      // Serial.print(myValueFilteredAct);
-      // Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
-      // Serial.print("  ");
-      // Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  Op time 1 : "); Serial.print(pump1_operationTime);
-      // Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
-      // Serial.print(" linkPump : ");Serial.println(linkPump);
-      
-      
-
+      timeTickForCyclicPrint = 1;
       previousMillisCyclicPrint = millis();
+    } else {
+      timeTickForCyclicPrint = 0;
+    } 
+  
+    // **************************************************************************************************
+    #ifdef DEBUG_PRINT_CYCLIC
+    // **************************************************************************************************
+        // Serial.print(formattedTime);
+        // heapInfo.collect();
+        // heapInfo.print();
+        
+        //Serial.print("millisNow : ");Serial.print(opTime_millisNow);Serial.print(" millisDiff : ");Serial.println(opTime_millisDiff);
+        // Serial.print(myValueFilteredAct);
+        // Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
+        // Serial.print("  ");
+        // Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  Op time 1 : "); Serial.print(pump1_operationTime);
+        // Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
+        // Serial.print(" linkPump : ");Serial.println(linkPump);
+        
+        // TelnetStream.println("Test TelnetStream: ");
+        // log();
+
+        
+    #endif
+
+    if (timeTickForCyclicPrint == 1) {
+      if (digitalRead(builtin_led) == HIGH) {
+        digitalWrite(builtin_led, LOW);
+      } else {
+        digitalWrite(builtin_led, HIGH);
+      }
     }
-  #endif
+
+    String errMessage = "";
+
+    errMessage =  currentDate ;
+    errMessage += " - " ;
+    errMessage += formattedTime; 
+    errMessage += " - " ;
+    errMessage +=  "client connection error - restart triggered\n";
+    //   appendFile("/error.log", errMessage.c_str());
+    //   ESP.restart();
+  // Telnetstream read
+  //   switch (TelnetStream.read()) {
+  //   case 'R':
+  //   TelnetStream.stop();
+  //   delay(100);
+  //   ESP.restart();
+  //     break;
+  //   case 'C':
+  //     TelnetStream.println("bye bye");
+  //     TelnetStream.flush();
+  //     TelnetStream.stop();
+  //     break;
+  // }
+
+  // static unsigned long next;
+  // if (millis() - next > 5000) {
+  //   next = millis();
+  //   log();
+  // }
+
 
 
   controlPump();
@@ -1050,4 +1118,17 @@ void putSetupIni()
     Serial.println("data appended");
   
         
-}
+}  
+
+  // void log() {
+//   static int i = 0;
+
+//   char timeStr[20];
+//   // sprintf(timeStr, "%02d-%02d-%02d %02d:%02d:%02d", year(), month(), day(), hour(), minute(), second());
+
+//   TelnetStream.print(i++);
+//   TelnetStream.print(" ");
+//   TelnetStream.print(timeStr);
+//   TelnetStream.print(" A0: ");
+//   TelnetStream.println(analogRead(A0));
+// }
