@@ -21,16 +21,16 @@
 // unsigned long pump2_operationTime = 0;  // operating time for pump B in minutes
 // int linkPump = 0;
 
-// physical pump is operating
-int pump1_op = 0;
-int pump2_op = 0;
+// // physical pump is operating
+// int pump1_op = 0;
+// int pump2_op = 0;
 
-// logical pumpis operating
-int pumpA_op = 0; // indicator, that pumpA is running
-int pumpB_op = 0; // indicator, that pumpB is running
+// // logical pumpis operating
+// int pumpA_op = 0; // indicator, that pumpA is running
+// int pumpB_op = 0; // indicator, that pumpB is running
 
 //*******************************************************************************
-void measureOperatingTime(PumpStatus &pumpStatus)
+void measureOperatingTime(PumpStatus &pumpStatus, PumpControl &pumpControl)
 //*******************************************************************************
 {
     // local variables
@@ -48,13 +48,13 @@ void measureOperatingTime(PumpStatus &pumpStatus)
 
         opTime_previousMillis = opTime_millisNow;
 
-        if (pump1_op == 1)
+        if (pumpControl.pump1_op == 1)
         {
             // in case of pump A is running, add actual runtime to operationTime (millis * timUnit_opTime)
             pumpStatus.pump1_operationTime += opTime_millisDiff / timeUnit_opTime;
         }
 
-        if (pump2_op == 1)
+        if (pumpControl.pump2_op == 1)
         {
             // in case of pump B is running, add actual runtime to operationTime (millis * timUnit_opTime)
             pumpStatus.pump2_operationTime += opTime_millisDiff / timeUnit_opTime;
@@ -63,7 +63,7 @@ void measureOperatingTime(PumpStatus &pumpStatus)
 }
 
 //*******************************************************************************
-void controlPump()
+void controlPump(PumpControl &pumpControl)
 {
     //*******************************************************************************
 
@@ -76,7 +76,7 @@ void controlPump()
 
     // if A is running and B not we generate a start pulse for B after timeToSecondPump
     //  pulse is blocked when B is already running
-    if ((((start2ndPump_millisNow - startPumpA_millis) / timeUnit_opTime) > timeToSecondPump) && (pumpA_op == 1) && (pumpB_op == 0))
+    if ((((start2ndPump_millisNow - startPumpA_millis) / timeUnit_opTime) > timeToSecondPump) && (pumpControl.pumpA_op == 1) && (pumpControl.pumpB_op == 0))
     {
         start2ndPumpNow = 1;
     }
@@ -84,35 +84,35 @@ void controlPump()
     // if waterlevel comes over bodenplatte start both pumps immediately
     if (alarmState >= 6)
     {
-        pumpA_op = 1;
-        pumpB_op = 1;
+        pumpControl.pumpA_op = 1;
+        pumpControl.pumpB_op = 1;
     }
     // if waterlevel too high and pumpA not running -> start first pump
-    if ((alarmState >= 5) && (pumpA_op == 0))
+    if ((alarmState >= 5) && (pumpControl.pumpA_op == 0))
     {
-        pumpA_op = 1;
+        pumpControl.pumpA_op = 1;
     }
     // if after the timeout we are still at alarmState 5, start second pump
     else if ((alarmState >= 5) && (start2ndPumpNow == 1))
     {
-        pumpB_op = 1;
+        pumpControl.pumpB_op = 1;
         start2ndPumpNow = 0; // only a pulse
     }
     else if (alarmState <= 3)
     { // waterlevel back to normal -> stop both pumps
-        pumpA_op = 0;
-        pumpB_op = 0;
+        pumpControl.pumpA_op = 0;
+        pumpControl.pumpB_op = 0;
     }
 
     // remember time, wenn pumpA is started
-    if (pumpA_op == 0)
+    if (pumpControl.pumpA_op == 0)
     {
         startPumpA_millis = millis();
     }
 }
 
 //*******************************************************************************
-void selectPump(PumpStatus &pumpStatus)
+void selectPump(PumpStatus &pumpStatus, PumpControl &pumpControl)
 {
     //*******************************************************************************
     // link logic pumpA/B to physical available pump1/2
@@ -144,16 +144,16 @@ void selectPump(PumpStatus &pumpStatus)
 
     if (pumpStatus.linkPump == 0)
     {
-        pump1_op = pumpA_op;
-        pump2_op = pumpB_op;
+        pumpControl.pump1_op = pumpControl.pumpA_op;
+        pumpControl.pump2_op = pumpControl.pumpB_op;
     }
     else
     {
-        pump2_op = pumpA_op;
-        pump1_op = pumpB_op;
+        pumpControl.pump2_op = pumpControl.pumpA_op;
+        pumpControl.pump1_op = pumpControl.pumpB_op;
     }
 
     // set output pin to control pump
-    digitalWrite(GPout_pump1, pump1_op);
-    digitalWrite(GPout_pump2, pump2_op);
+    digitalWrite(GPout_pump1, pumpControl.pump1_op);
+    digitalWrite(GPout_pump2, pumpControl.pump2_op);
 }

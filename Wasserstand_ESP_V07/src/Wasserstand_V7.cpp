@@ -641,7 +641,8 @@ void loop(void)
 {
 
   // local variables
-  PumpStatus pumpStatus; // create a PumpControl object to manage pump states
+  PumpStatus pumpStatus;   // create a PumpControl object to manage pump states
+  PumpControl pumpControl; // create a PumpControl object to manage pump operations
 
   // Reset the Watchdog Timer at the beginning of each loop iteration
   if (simTimeout == 1)
@@ -726,7 +727,7 @@ void loop(void)
     {
       if (valueStable > 0)
       {
-        sendPost(pumpStatus);
+        sendPost(pumpStatus, pumpControl);
         // sendPost_V2();
       }
     }
@@ -886,9 +887,9 @@ void loop(void)
   }
 #endif
 
-  controlPump();
-  selectPump(pumpStatus);
-  measureOperatingTime(pumpStatus);
+  controlPump(pumpControl);
+  selectPump(pumpStatus, pumpControl);
+  measureOperatingTime(pumpStatus, pumpControl);
 
   // input command via serial interface
   //**************************************************************************************

@@ -72,7 +72,7 @@ const char *root_ca_chain =
 
 int errCnt_communication = 0;
 
-void sendPost(PumpStatus &pumpStatus)
+void sendPost(PumpStatus &pumpStatus, PumpControl &pumpControl)
 // send data as POST to another webserver
 // V3 no Arduino String class for sending data
 {
@@ -109,11 +109,11 @@ void sendPost(PumpStatus &pumpStatus)
   strcat(message, val);
 
   strcat(message, "&pump1_op=");
-  itoa(pump1_op, val, 10);
+  itoa(pumpControl.pump1_op, val, 10);
   strcat(message, val);
 
   strcat(message, "&pump2_op=");
-  itoa(pump2_op, val, 10);
+  itoa(pumpControl.pump2_op, val, 10);
   strcat(message, val);
 
   strcat(message, "&epochTime=");

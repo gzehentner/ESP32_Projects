@@ -26,21 +26,19 @@ struct PumpStatus
 // extern unsigned long pump1_operationTime; // operating time for pump A in minutes
 // extern unsigned long pump2_operationTime; // operating time for pump B in minutes
 
-extern int pumpA_op; // indicator, that pumpA is running
-extern int pumpB_op; // indicator, that pumpB is running
+struct PumpControl
+{
+    int pump1_op; // indicator, that pump1 is running
+    int pump2_op; // indicator, that pump2 is running
 
-extern int pump1_op; // indicator, that pump1 is running
-extern int pump2_op; // indicator, that pump2 is running
-
-// extern int linkPump; // logical connection
-// 0:  1 <-> A  // 2 <-> B
-// 1:  1 <-> B  // 2 <-> A
+    int pumpA_op; // indicator, that pumpA is running
+    int pumpB_op; // indicator, that pumpB is running
+};
 
 //*******************************************************************************
 
-void measureOperatingTime(PumpStatus &pumpStatus);
-void controlPump();
-
-void selectPump(PumpStatus &pumpStatus);
+void measureOperatingTime(PumpStatus &pumpStatus, PumpControl &pumpControl);
+void controlPump(PumpControl &pumpControl);
+void selectPump(PumpStatus &pumpStatus, PumpControl &pumpControl);
 
 #endif
