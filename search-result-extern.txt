@@ -1,0 +1,148 @@
+# Query: extern 
+# ContextLines: 1
+
+77 results - 8 files
+
+include\EvaluateSensor.h:
+  10  
+  11:   extern int printOnChangeActive;
+  12:   extern int valueStable;
+  13  
+  14:   extern String subject;
+  15:   extern String htmlMsg;
+  16    
+
+include\pumpControl.h:
+  16  
+  17: extern unsigned long pump1_operationTime;  // operating time for pump A in minutes
+  18: extern unsigned long pump2_operationTime;  // operating time for pump B in minutes
+  19  
+  20: extern int pumpA_op;       // indicator, that pumpA is running
+  21: extern int pumpB_op;       // indicator, that pumpB is running
+  22  
+  23: extern int pump1_op;       // indicator, that pump1 is running
+  24: extern int pump2_op;       // indicator, that pump2 is running
+  25  
+  26: extern int linkPump;       // logical connection
+  27                             // 0:  1 <-> A  // 2 <-> B
+
+  29  
+  30: extern unsigned long opTime_millisNow;
+  31: extern unsigned long opTime_millisDiff;
+  32: extern unsigned long opTime_previousMillis;
+  33  
+  34: extern unsigned long start2ndPump_millisNow;
+  35: extern unsigned long start2ndPumpNow;
+  36: extern unsigned long startPumpA_millis;
+  37  
+
+include\server.h:
+  12      #include <ESP8266WebServer.h> // for the webserver
+  13:     extern ESP8266WebServer server; // declare an instance for the webserver
+  14  #endif
+  15  
+  16: extern int debugLevelSwitches;
+  17  
+  18: extern int simVal_AHHH;
+  19: extern int simVal_AHH;
+  20: extern int simVal_AH ;
+  21: extern int simVal_AL ;
+  22: extern int simVal_ALL;
+  23: extern int simError  ;    //  sim one failed sendPost (ProjClient.cpp)
+  24: extern int simReboot ;    //  force reboot due to many failed transmissions to client
+  25: extern int simTimeout; // force timeout error for testing purposes
+  26  
+  27  
+  28: //extern WebServer server; // declare an instance for the webserver
+  29: extern int sendToClient; // enable sending to client
+  30: extern int useLiveMail ; // to check the email send process, we want to use the live email address, because t-online is very slow
+  31  
+
+include\timeserver.h:
+  15  // declare global variables
+  16: extern String currentDate;   // hold the current date
+  17: extern String formattedTime; // hold the current time
+  18  
+  19: extern time_t epochTime;
+  20  
+
+include\waterlevel_defines.h:
+  159    //**************************************************************
+  160:   extern int remoteBoardId;
+  161:   extern int remoteLevelAct;
+  162:   extern int remoteDebugLevelSwitches;
+  163:   extern int remoteAHH;
+  164:   extern int remoteAH;
+  165:   extern int remoteAL;
+  166:   extern int remoteLastMessage;
+  167:   extern int remoteMessagesSucessfull;
+  168  
+
+include\waterlevel.h:
+   9  
+  10: extern int val_AH;
+  11: extern int val_AL;
+  12: extern int val_AHH;
+  13: extern int val_AHHH;
+  14: extern int val_ALL;
+  15  
+  16: extern unsigned long seconds_since_startup;      // current second since startup
+  17: extern unsigned long seconds_since_startup_last; // value of ss out of the last loop run
+  18: extern const uint16_t ajaxIntervall;             // intervall for AJAX or fetch API call of website in seconds
+  19: extern uint32_t clientPreviousSs;                // - clientIntervall;
+  20                                                   // last second when data was sent to server
+  21  
+  22: extern const uint16_t clientIntervall; // intervall to send data to a server in seconds. Set to 0 if you don't want to send data
+  23: extern const char *sendHttpTo;         // the module will send information to that server/resource. Use an URI or an IP address
+  24  
+  25: // extern int inByte;
+  26: // extern int incomingByte; // for incoming serial data
+  27  
+  28: extern int alarmStateRelais   ; // actual state of alarm derived from relais
+  29: extern int alarmStateRelaisOld; // previous value of alarmStateRelais
+  30: extern int alarmStateLevel    ; // actual state of alarm derived from measured water level
+  31: extern int alarmStateLevelOld ; // previous value of alarmStateLevel
+  32: extern int alarmState   ;       // worst case value of both alarmState
+  33: extern int alarmStateOld;       // previous value of alarmState
+  34  
+  35: extern bool executeSendMail;
+  36  
+  37: extern int myValueFilteredAct; // actual result for display in web page
+  38: extern int myAdcFilteredAct;
+  39  
+  40: extern int filterCnt;   
+  41: extern unsigned long previousMillis;             // used to determine intervall of ADC measurement
+  42  
+  43: extern unsigned long millisNow;   
+  44  
+  45  // variables for shortterm ringbuffer
+  46: extern unsigned long ringTime[iRingValueMax+1];    // ring buffer for display last n values
+  47: extern int    ringValue[iRingValueMax+1];
+  48: extern int    ringADC[iRingValueMax+1];
+  49  
+  50: extern int wrRingPtr;           // index variable for write buffer
+  51: extern int rdRingPtr;            // position to read out of buffer
+  52  
+
+  67        // TwoWire I2CSensors = TwoWire(0);
+  68:       extern Adafruit_ADS1115 ads;
+  69        // int16_t adc0;
+  70      #else
+  71:       extern Adafruit_ADS1115 ads;
+  72        //Wire.begin(4,5);
+
+src\server.cpp:
+  35    //WebServer server(80); // an instance for the webserver
+  36:   extern WebServer server; // declare an instance for the webserver
+  37  
+
+src\Wasserstand_V7.cpp:
+  183  
+  184: extern CurrentLoopSensor currentLoopSensor();
+  185  
+
+  281  // GZE: I dont know what this par of code does
+  282: extern char _end;
+  283  #if BOARDTYPE == ESP8266
+  284:   extern "C" char *sbrk(int i);
+  285  #endif
