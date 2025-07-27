@@ -328,7 +328,7 @@ void flushInput()
 }
 
 // variables for toplevel
-PumpStatus pumpControl; // create a pump control object
+PumpStatus pumpStatus; // create a pump control object
 
 /*****************************************************************************************************************
  *****************************************************************************************************************
@@ -587,15 +587,15 @@ void setup(void)
     Serial.println("NOT!!! deleting setup.ini");
 #endif
 
-    getSetupIni(pumpControl);
+    getSetupIni(pumpStatus);
     // readFile("/setup.ini");
     Serial.println();
     Serial.print("pump1_operationTime : ");
-    Serial.println(pumpControl.pump1_operationTime);
+    Serial.println(pumpStatus.pump1_operationTime);
     Serial.print("pump2_operationTime : ");
-    Serial.println(pumpControl.pump2_operationTime);
+    Serial.println(pumpStatus.pump2_operationTime);
     Serial.print("linkPump            : ");
-    Serial.println(pumpControl.linkPump);
+    Serial.println(pumpStatus.linkPump);
 
 //=============================================================================================
 // handling error lot
@@ -641,7 +641,7 @@ void loop(void)
 {
 
   // local variables
-  PumpStatus pumpControl; // create a PumpControl object to manage pump states
+  PumpStatus pumpStatus; // create a PumpControl object to manage pump states
 
   // Reset the Watchdog Timer at the beginning of each loop iteration
   if (simTimeout == 1)
@@ -726,7 +726,7 @@ void loop(void)
     {
       if (valueStable > 0)
       {
-        sendPost(pumpControl);
+        sendPost(pumpStatus);
         // sendPost_V2();
       }
     }
@@ -887,8 +887,8 @@ void loop(void)
 #endif
 
   controlPump();
-  selectPump(pumpControl);
-  measureOperatingTime(pumpControl);
+  selectPump(pumpStatus);
+  measureOperatingTime(pumpStatus);
 
   // input command via serial interface
   //**************************************************************************************
@@ -971,7 +971,7 @@ void smtpCallback(SMTP_Status status)
 
 //*******************************************************************************
 // read values out of setup.ini
-void getSetupIni(PumpStatus &pumpControl)
+void getSetupIni(PumpStatus &pumpStatus)
 //*******************************************************************************
 {
   // check if file exists, if not, generate one with zero values
@@ -979,7 +979,7 @@ void getSetupIni(PumpStatus &pumpControl)
   {
     Serial.println("setup.ini does not exist / generate a new file");
     Serial.println("Calling putSetupIni");
-    putSetupIni(pumpControl);
+    putSetupIni(pumpStatus);
   }
   // open file for reading
   File file = LittleFS.open("/setup.ini", "r");
@@ -1013,15 +1013,15 @@ void getSetupIni(PumpStatus &pumpControl)
       // with every new line decode setting
       if (tokenName == "pump1_operationTime")
       {
-        pumpControl.pump1_operationTime = tokenValue.toInt();
+        pumpStatus.pump1_operationTime = tokenValue.toInt();
       }
       if (tokenName == "pump2_operationTime")
       {
-        pumpControl.pump2_operationTime = tokenValue.toInt();
+        pumpStatus.pump2_operationTime = tokenValue.toInt();
       }
       if (tokenName == "linkPump")
       {
-        pumpControl.linkPump = tokenValue.toInt();
+        pumpStatus.linkPump = tokenValue.toInt();
       }
 
       // and prepare for next line
@@ -1057,18 +1057,18 @@ void getSetupIni(PumpStatus &pumpControl)
 }
 //*******************************************************************************
 // write values to setup.ini
-void putSetupIni(PumpStatus &pumpControl)
+void putSetupIni(PumpStatus &pumpStatus)
 //*******************************************************************************
 {
   Serial.println("putSetupIni entered");
   String tempString = "";
 
   tempString += String("pump1_operationTime=");
-  tempString += String(pumpControl.pump1_operationTime);
+  tempString += String(pumpStatus.pump1_operationTime);
   tempString += String(";\npump2_operationTime=");
-  tempString += String(pumpControl.pump2_operationTime);
+  tempString += String(pumpStatus.pump2_operationTime);
   tempString += String(";\nlinkPump=");
-  tempString += String(pumpControl.linkPump);
+  tempString += String(pumpStatus.linkPump);
   tempString += String(";\n");
 
   writeFile("/setup.ini", (tempString).c_str()); // Append data to the file

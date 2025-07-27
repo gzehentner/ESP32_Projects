@@ -38,9 +38,9 @@ extern int pump2_op; // indicator, that pump2 is running
 
 //*******************************************************************************
 
-void measureOperatingTime(PumpStatus &pumpControl);
+void measureOperatingTime(PumpStatus &pumpStatus);
 void controlPump();
 
-void selectPump(PumpStatus &pumpControl);
+void selectPump(PumpStatus &pumpStatus);
 
 #endif

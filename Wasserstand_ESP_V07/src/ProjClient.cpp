@@ -72,7 +72,7 @@ const char *root_ca_chain =
 
 int errCnt_communication = 0;
 
-void sendPost(PumpStatus &pumpControl)
+void sendPost(PumpStatus &pumpStatus)
 // send data as POST to another webserver
 // V3 no Arduino String class for sending data
 {
@@ -121,11 +121,11 @@ void sendPost(PumpStatus &pumpControl)
   strcat(message, val);
 
   strcat(message, "&pump1_operationTime=");
-  itoa(pumpControl.pump1_operationTime, val, 10);
+  itoa(pumpStatus.pump1_operationTime, val, 10);
   strcat(message, val);
 
   strcat(message, "&pump2_operationTime=");
-  itoa(pumpControl.pump2_operationTime, val, 10);
+  itoa(pumpStatus.pump2_operationTime, val, 10);
   strcat(message, val);
 
   client.begin(wificlient, sendHttpTo);                                  // Specify request destination

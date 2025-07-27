@@ -53,10 +53,10 @@ extern int rdRingPtr; // position to read out of buffer
 
 //*******************************************************************************
 // write values to setup.ini
-void putSetupIni(PumpStatus &pumpControl);
+void putSetupIni(PumpStatus &pumpStatus);
 //*******************************************************************************
 // read values out of setup.ini
-void getSetupIni(PumpStatus &pumpControl);
+void getSetupIni(PumpStatus &pumpStatus);
 //*******************************************************************************
 
 // definitions for analog-digital conversion (using external ADS1115)

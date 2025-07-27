@@ -7,6 +7,6 @@ Include file for client things
 
 // header for ProjClient.c
 
-void sendPost(PumpStatus &pumpControl);
+void sendPost(PumpStatus &pumpStatus);
 
 #endif

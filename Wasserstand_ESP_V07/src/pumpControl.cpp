@@ -30,7 +30,7 @@ int pumpA_op = 0; // indicator, that pumpA is running
 int pumpB_op = 0; // indicator, that pumpB is running
 
 //*******************************************************************************
-void measureOperatingTime(PumpStatus &pumpControl)
+void measureOperatingTime(PumpStatus &pumpStatus)
 //*******************************************************************************
 {
     // local variables
@@ -51,13 +51,13 @@ void measureOperatingTime(PumpStatus &pumpControl)
         if (pump1_op == 1)
         {
             // in case of pump A is running, add actual runtime to operationTime (millis * timUnit_opTime)
-            pumpControl.pump1_operationTime += opTime_millisDiff / timeUnit_opTime;
+            pumpStatus.pump1_operationTime += opTime_millisDiff / timeUnit_opTime;
         }
 
         if (pump2_op == 1)
         {
             // in case of pump B is running, add actual runtime to operationTime (millis * timUnit_opTime)
-            pumpControl.pump2_operationTime += opTime_millisDiff / timeUnit_opTime;
+            pumpStatus.pump2_operationTime += opTime_millisDiff / timeUnit_opTime;
         }
     }
 }
@@ -112,7 +112,7 @@ void controlPump()
 }
 
 //*******************************************************************************
-void selectPump(PumpStatus &pumpControl)
+void selectPump(PumpStatus &pumpStatus)
 {
     //*******************************************************************************
     // link logic pumpA/B to physical available pump1/2
@@ -124,25 +124,25 @@ void selectPump(PumpStatus &pumpControl)
     // linkPump =0;   // A->1 -- B->2
     // linkPump =1;   // A->2 -- B->1
 
-    int pump_operationTimeDiff = (pumpControl.pump1_operationTime -
-                                  pumpControl.pump2_operationTime);
+    int pump_operationTimeDiff = (pumpStatus.pump1_operationTime -
+                                  pumpStatus.pump2_operationTime);
 
-    if ((pumpControl.linkPump == 0) &&
+    if ((pumpStatus.linkPump == 0) &&
         (abs(pump_operationTimeDiff) > opTimeToExchange) &&
-        (pumpControl.pump1_operationTime > pumpControl.pump2_operationTime))
+        (pumpStatus.pump1_operationTime > pumpStatus.pump2_operationTime))
     {
-        pumpControl.linkPump = 1;
-        putSetupIni(pumpControl);
+        pumpStatus.linkPump = 1;
+        putSetupIni(pumpStatus);
     }
-    else if ((pumpControl.linkPump == 1) &&
+    else if ((pumpStatus.linkPump == 1) &&
              (abs(pump_operationTimeDiff) > opTimeToExchange) &&
-             (pumpControl.pump1_operationTime <= pumpControl.pump2_operationTime))
+             (pumpStatus.pump1_operationTime <= pumpStatus.pump2_operationTime))
     {
-        pumpControl.linkPump = 0;
-        putSetupIni(pumpControl);
+        pumpStatus.linkPump = 0;
+        putSetupIni(pumpStatus);
     }
 
-    if (pumpControl.linkPump == 0)
+    if (pumpStatus.linkPump == 0)
     {
         pump1_op = pumpA_op;
         pump2_op = pumpB_op;
