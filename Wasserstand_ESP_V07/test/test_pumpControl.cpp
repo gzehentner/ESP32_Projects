@@ -4,7 +4,7 @@
 
 TEST_CASE("selectPump tauscht Pumpen bei großem Zeitunterschied")
 {
-    PumpControl pc;
+    PumpStatus pc;
     pc.pump1_operationTime = 200;
     pc.pump2_operationTime = 50;
     pc.linkPump = 0;
@@ -16,7 +16,7 @@ TEST_CASE("selectPump tauscht Pumpen bei großem Zeitunterschied")
 
 TEST_CASE("selectPump bleibt bei kleinem Zeitunterschied")
 {
-    PumpControl pc;
+    PumpStatus pc;
     pc.pump1_operationTime = 100;
     pc.pump2_operationTime = 90;
     pc.linkPump = 0;

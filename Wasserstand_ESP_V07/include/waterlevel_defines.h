@@ -53,6 +53,11 @@
 #endif
 #endif
 
+// +international_country_code + phone number
+// Portugal +351, example: +351912345678
+extern String phoneNumber;
+extern String apiKey;
+
 /* *******************************************************************
         the board settings / die Einstellungen der verschiedenen Boards
 ********************************************************************/
@@ -139,7 +144,7 @@ Builtin ADC cannot be used with ESP32
 #if BOARDTYPE == ESP32
 // pin of builtin led
 #if (MyBoardIsDevC == 1)
-const int builtin_led = 2;
+const int builtin_led = 26;
 #else
 const int builtin_led = 4;
 #endif

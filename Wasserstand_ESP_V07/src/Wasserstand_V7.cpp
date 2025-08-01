@@ -108,6 +108,9 @@ known issues: OTA download not possible "not enouth space"
 
 #include <ESP_Mail_Client.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
+
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
@@ -229,6 +232,7 @@ char input[64];
 bool inputReadingCompleted = false;
 
 long lastMillis = 0;
+int timeTickForCyclicPrint = 0;
 
 int doPrint = 0;
 int value = 0;
@@ -292,6 +296,9 @@ char *ramend = (char *)0x20088000;
 const char *ssid = STASSID;
 const char *password = STAPSK;
 
+String phoneNumber2 = "491607547424";
+String apiKey = "6878208";
+
 WiFiUDP ntpUDP;
 
 #ifndef CSS_MAINCOLOR
@@ -335,6 +342,37 @@ PumpStatus pumpStatus; // create a pump control object
          S E T U P
  *****************************************************************************************************************
  *****************************************************************************************************************/
+//===================================================================*/
+// test sending a WhatsApp message
+void sendMessageWhatsApp(String message)
+{
+
+  // Data to send with HTTP POST
+  //  String url = "https://api.callmebot.com/whatsapp.php?phone=" + phoneNumber + "&apikey=" + apiKey + "&text=" + urlEncode(message);
+  String url = "https://api.callmebot.com/whatsapp.php?phone=491607547424&apikey=6878208&text=Hello Georg";
+  HTTPClient http;
+  http.begin(url);
+
+  // Specify content-type header
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+  // Send HTTP POST request
+  int httpResponseCode = http.POST(url);
+  if (httpResponseCode == 200)
+  {
+    Serial.print("Message sent successfully");
+  }
+  else
+  {
+    Serial.println("Error sending the message");
+    Serial.print("HTTP response code: ");
+    Serial.println(httpResponseCode);
+  }
+
+  // Free resources
+  http.end();
+}
+//===================================================================*/
 
 void setup(void)
 {
@@ -628,6 +666,8 @@ void setup(void)
   // Initialize the Watchdog Timer
   esp_task_wdt_init(WDT_TIMEOUT, true); // Enable panic so ESP32 resets
   esp_task_wdt_add(NULL);               // Add the current task (loop) to the Watchdog
+
+  // sendMessageWhatsApp("Test");
 }
 /*==================================================================*/
 
@@ -864,28 +904,49 @@ void loop(void)
     previousMillisCyclicPrint = millis();
   }
 #endif // DEBUG_PRINT_RAW
-// **************************************************************************************************
+       // **************************************************************************************************
+
+  // generate a time tick for cyclic operations; e.g. debug print, but also blink LED
+  if (millis() - previousMillisCyclicPrint > WaitingTimeCyclicPrint)
+
+  {
+    timeTickForCyclicPrint = 1;
+
+    previousMillisCyclicPrint = millis();
+  }
+  else
+  {
+    timeTickForCyclicPrint = 0;
+  }
 
 // **************************************************************************************************
 #ifdef DEBUG_PRINT_CYCLIC
   // **************************************************************************************************
-  if (millis() - previousMillisCyclicPrint > WaitingTimeCyclicPrint)
-  {
-    // Serial.print(formattedTime);
-    // heapInfo.collect();
-    // heapInfo.print();
+  // Serial.print(formattedTime);
+  // heapInfo.collect();
+  // heapInfo.print();
 
-    // Serial.print("millisNow : ");Serial.print(opTime_millisNow);Serial.print(" millisDiff : ");Serial.println(opTime_millisDiff);
-    //  Serial.print(myValueFilteredAct);
-    //  Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
-    //  Serial.print("  ");
-    //  Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  Op time 1 : "); Serial.print(pump1_operationTime);
-    //  Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
-    //  Serial.print(" linkPump : ");Serial.println(linkPump);
+  // Serial.print("millisNow : ");Serial.print(opTime_millisNow);Serial.print(" millisDiff : ");Serial.println(opTime_millisDiff);
+  //  Serial.print(myValueFilteredAct);
+  //  Serial.print(" - AlarmStateLevel: "); Serial.print(alarmStateLevel);
+  //  Serial.print("  ");
+  //  Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  Op time 1 : "); Serial.print(pump1_operationTime);
+  //  Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
+  //  Serial.print(" linkPump : ");Serial.println(linkPump);
 
-    previousMillisCyclicPrint = millis();
-  }
 #endif
+
+  if (timeTickForCyclicPrint == 1)
+  {
+    if (digitalRead(builtin_led) == HIGH)
+    {
+      digitalWrite(builtin_led, LOW);
+    }
+    else
+    {
+      digitalWrite(builtin_led, HIGH);
+    }
+  }
 
   controlPump(pumpControl);
   selectPump(pumpStatus, pumpControl);
