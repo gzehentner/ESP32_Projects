@@ -304,7 +304,7 @@ char *ramend = (char *)0x20088000;
 const char *ssid = STASSID;
 const char *password = STAPSK;
 
-String phoneNumber2 = "491607547424";
+String phoneNumber = "+491607547424";
 String apiKey = "6878208";
 
 WiFiUDP ntpUDP;
@@ -375,37 +375,6 @@ PumpControl pumpControl = {0, 0, 0, 0}; // create a PumpControl object to manage
          S E T U P
  *****************************************************************************************************************
  *****************************************************************************************************************/
-//===================================================================*/
-// test sending a WhatsApp message
-void sendMessageWhatsApp(String message)
-{
-
-  // Data to send with HTTP POST
-  //  String url = "https://api.callmebot.com/whatsapp.php?phone=" + phoneNumber + "&apikey=" + apiKey + "&text=" + urlEncode(message);
-  String url = "https://api.callmebot.com/whatsapp.php?phone=491607547424&apikey=6878208&text=Hello Georg";
-  HTTPClient http;
-  http.begin(url);
-
-  // Specify content-type header
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-
-  // Send HTTP POST request
-  int httpResponseCode = http.POST(url);
-  if (httpResponseCode == 200)
-  {
-    Serial.print("Message sent successfully");
-  }
-  else
-  {
-    Serial.println("Error sending the message");
-    Serial.print("HTTP response code: ");
-    Serial.println(httpResponseCode);
-  }
-
-  // Free resources
-  http.end();
-}
-//===================================================================*/
 
 void setup(void)
 {
@@ -880,6 +849,13 @@ void loop(void)
 
     if (!MailClient.sendMail(&smtp, &message, false))
       MailClient.printf("Error, Status Code: %d, Error Code: %d, Reason: %s\n", smtp.statusCode(), smtp.errorCode(), smtp.errorReason().c_str());
+
+    // Send WhatsApp message
+    if (executeSendMail)
+    {
+      Serial.println("Sending WhatsApp message");
+      sendWhatsAppMessage(htmlMsg);
+    };
 
   exit:
 

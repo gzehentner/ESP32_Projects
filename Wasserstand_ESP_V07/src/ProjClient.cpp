@@ -18,12 +18,14 @@
 #include <HTTPClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
+#include <UrlEncode.h>
 
 #else // BOARDTYPE == ESP8266)
 #include <ESP_Mail_Client.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
 #include <ESP8266HTTPClient.h> // for the webclient https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266HTTPClient
+#include dont know, whether this is valid for ESP8266 < UrlEncode.h>
 #endif
 
 // zertifikat bplaced chain
@@ -180,4 +182,35 @@ void sendPost(PumpStatus &pumpStatus, PumpControl &pumpControl)
     // reset to zero, when communication is running again
     errCnt_communication = 0;
   }
+}
+
+void sendWhatsAppMessage(String message)
+{
+
+  // Data to send with HTTP POST
+  String url = "https://api.callmebot.com/whatsapp.php?phone=" + phoneNumber + "&apikey=" + apiKey + "&text=" + urlEncode(message);
+  //String url = "https://api.callmebot.com/whatsapp.php?phone=+491607547424&apikey=6878208&text=" + urlEncode(message);
+  
+
+  HTTPClient client;
+  client.begin(url);
+
+  // Specify content-type header
+  client.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+  // Send HTTP POST request
+  int httpResponseCode = client.POST(url);
+  if (httpResponseCode == 200)
+  {
+    Serial.print("Message sent successfully");
+  }
+  else
+  {
+    Serial.println("Error sending the message");
+    Serial.print("HTTP response code: ");
+    Serial.println(httpResponseCode);
+  }
+
+  // Free resources
+  client.end();
 }
