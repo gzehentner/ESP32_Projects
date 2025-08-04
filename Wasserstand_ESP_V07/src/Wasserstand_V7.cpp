@@ -188,6 +188,14 @@ extern CurrentLoopSensor currentLoopSensor();
          Globals - Variables and constants
  ********************************************************************/
 
+// int testGlobal = 0;      // global variable to test the cyclic print
+// int op1timeGlobal = 0;   // global variable to hold the operation time of pump 1
+// int op2timeGlobal = 0;   // global variable to hold the operation time of pump 2
+// int pumpA_op_global = 0; // global variable to hold the operation state of pump A
+// int pumpB_op_global = 0; // global variable to hold the operation state of pump
+// int pump1_op_global = 0; // global variable to hold the operation state of pump 1
+// int pump2_op_global = 0; // global variable to hold the operation state of pump 2
+
 unsigned long seconds_since_startup = 0; // current second since startup
 
 unsigned long previousMillis = 0; // used to determine intervall of ADC measurement
@@ -334,8 +342,33 @@ void flushInput()
   }
 }
 
+void debugPrintCyclic(int index, long WaitingTimeCyclicPrint, String printText, int newline, long printValue)
+{
+  static long previousMillisCyclicPrint[20] = {0};
+
+  // print some debug information cyclic
+  if (millis() - previousMillisCyclicPrint[index] > WaitingTimeCyclicPrint)
+  {
+    previousMillisCyclicPrint[index] = millis();
+
+    Serial.print(printText);
+    Serial.print(printValue);
+    if (newline)
+    {
+      Serial.println();
+    }
+    else
+    {
+      Serial.print(" ");
+    }
+  }
+} // end of debugPrintCyclic
+
+//===================================================================*/
 // variables for toplevel
-PumpStatus pumpStatus; // create a pump control object
+PumpStatus pumpStatus = {0, 0, 0};      // create a PumpStatus object to manage pump states
+PumpControl pumpControl = {0, 0, 0, 0}; // create a PumpControl object to manage pump operations
+//===================================================================*/
 
 /*****************************************************************************************************************
  *****************************************************************************************************************
@@ -617,7 +650,7 @@ void setup(void)
 //=============================================================================================
 // handling setup.ini
 //=============================================================================================
-#if deleteSetupFile == 1
+#if deleteSetupFile == 0
     // deleting setupFile
     Serial.println("deleting setupFile");
     deleteFile("/setup.ini");
@@ -679,10 +712,6 @@ void setup(void)
 
 void loop(void)
 {
-
-  // local variables
-  PumpStatus pumpStatus;   // create a PumpControl object to manage pump states
-  PumpControl pumpControl; // create a PumpControl object to manage pump operations
 
   // Reset the Watchdog Timer at the beginning of each loop iteration
   if (simTimeout == 1)
@@ -933,6 +962,9 @@ void loop(void)
   //  Serial.print("  pumpA: "); Serial.print(pumpA_op); Serial.print("  Op time 1 : "); Serial.print(pump1_operationTime);
   //  Serial.print("  pumpB: "); Serial.print(pumpB_op); Serial.print("  Op time 2 : "); Serial.print(pump2_operationTime);
   //  Serial.print(" linkPump : ");Serial.println(linkPump);
+  if (timeTickForCyclicPrint == 1)
+  {
+  }
 
 #endif
 
@@ -949,8 +981,8 @@ void loop(void)
   }
 
   controlPump(pumpControl);
-  selectPump(pumpStatus, pumpControl);
   measureOperatingTime(pumpStatus, pumpControl);
+  selectPump(pumpStatus, pumpControl);
 
   // input command via serial interface
   //**************************************************************************************

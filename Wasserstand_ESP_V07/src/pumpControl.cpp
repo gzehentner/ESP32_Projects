@@ -34,30 +34,30 @@ void measureOperatingTime(PumpStatus &pumpStatus, PumpControl &pumpControl)
 //*******************************************************************************
 {
     // local variables
-    unsigned long opTime_millisNow = 0;
-    unsigned long opTime_millisDiff = 0;
-    unsigned long opTime_previousMillis = 0;
+    static unsigned long opTime_millisNow_mea = 0;
+    static unsigned long opTime_millisDiff_mea = 0;
+    static unsigned long opTime_previousMillis_mea = 0;
 
     // measure time since last invocation
-    opTime_millisNow = millis();
+    opTime_millisNow_mea = millis();
 
-    opTime_millisDiff = opTime_millisNow - opTime_previousMillis;
+    opTime_millisDiff_mea = opTime_millisNow_mea - opTime_previousMillis_mea;
 
-    if (opTime_millisDiff > timeUnit_opTime)
+    if (opTime_millisDiff_mea > timeUnit_opTime)
     {
 
-        opTime_previousMillis = opTime_millisNow;
+        opTime_previousMillis_mea = opTime_millisNow_mea;
 
         if (pumpControl.pump1_op == 1)
         {
             // in case of pump A is running, add actual runtime to operationTime (millis * timUnit_opTime)
-            pumpStatus.pump1_operationTime += opTime_millisDiff / timeUnit_opTime;
+            pumpStatus.pump1_operationTime += opTime_millisDiff_mea / timeUnit_opTime;
         }
 
         if (pumpControl.pump2_op == 1)
         {
             // in case of pump B is running, add actual runtime to operationTime (millis * timUnit_opTime)
-            pumpStatus.pump2_operationTime += opTime_millisDiff / timeUnit_opTime;
+            pumpStatus.pump2_operationTime += opTime_millisDiff_mea / timeUnit_opTime;
         }
     }
 }
@@ -70,7 +70,7 @@ void controlPump(PumpControl &pumpControl)
     // local variables
     unsigned long start2ndPump_millisNow;
     unsigned long start2ndPumpNow = 0;
-    unsigned long startPumpA_millis = 0;
+    static unsigned long startPumpA_millis = 0;
 
     start2ndPump_millisNow = millis();
 
