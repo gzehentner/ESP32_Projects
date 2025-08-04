@@ -23,9 +23,6 @@ struct PumpStatus
                              // 1:  1 <-> B  // 2 <-> A
 };
 
-// extern unsigned long pump1_operationTime; // operating time for pump A in minutes
-// extern unsigned long pump2_operationTime; // operating time for pump B in minutes
-
 struct PumpControl
 {
     int pump1_op; // indicator, that pump1 is running

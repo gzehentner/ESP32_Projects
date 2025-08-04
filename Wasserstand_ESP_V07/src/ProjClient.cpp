@@ -143,10 +143,6 @@ void sendPost(PumpStatus &pumpStatus, PumpControl &pumpControl)
     httpCode = -66;
     simError = 0; // reset after one error
   }
-  if (simReboot == 1)
-  {
-    httpCode = -99; // do not reset;
-  }
   // error handling
   if (httpCode < 0)
   {

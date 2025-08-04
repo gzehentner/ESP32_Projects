@@ -87,8 +87,7 @@ int simVal_AHHH = 1;
 int simVal_AHH  = 1;
 int simVal_AH   = 1;
 int simVal_AL   = 0;
-int simError    = 0;    //  sim one failed sendPost (ProjClient.cpp)
-int simReboot   = 0;    //  force reboot due to many failed transmissions to client
+int simError = 0;       //  sim one failed sendPost (ProjClient.cpp)
 int simTimeout = 0;     //  sim timeout of watchdog timer
 // int simVal_ALL = 0;
 
@@ -376,12 +375,6 @@ void handlePage()
   message += F("<p class='on_red'><a href='c.php?toggle=6' target='i' onclick='reloadPage()'>Error</a></p>\n");
   } else {
   message += F("<p class='off'><a href='c.php?toggle=6' target='i' onclick='reloadPage()'>non error</a></p>\n");
-  }
-  if (simReboot == 1)  // 
-  {
-  message += F("<p class='on_red'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>Reboot</a></p>\n");
-  } else {
-  message += F("<p class='off'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>nRboot</a></p>\n");
   }
   if (simTimeout == 1)  // 
   {
@@ -892,23 +885,7 @@ void handleCommand()
         }
       }
     }
-    if (server.arg(0) == "7") 
-    {
-      Serial.println(F("D232 toggle reboot generation"));
-      if (simReboot==1)
-      { // toggle error generation
-        simReboot = 0;
-        Serial.println("simReboot off");
-      }
-      else
-      {
-        // force error with sendPost to bplaced; response with negative code is forced
-        if (debugLevelSwitches==1) {
-          simReboot = 1;
-          Serial.println("simReboot on");
-        }
-      }
-    }
+
     if (server.arg(0) == "9") 
     {
       Serial.println(F("D232 toggle timeout generation"));
