@@ -55,6 +55,7 @@ String subject = "";
 String subjectAddon = "";
 
 String htmlMsg = "";
+String textMsg = "";
 
 /* END Variables for CurrentLoop */
 /*=================================================================*/
@@ -337,6 +338,7 @@ void prepareSendMail()
   // reserve enough space for strings
   subject.reserve(50);
   htmlMsg.reserve(200);
+  textMsg.reserve(200);
 
   if (useLiveMail == 1)
   {
@@ -354,6 +356,8 @@ void prepareSendMail()
         subject = subjectAddon + F("Pegel Zehentner -- Warnung ");
         htmlMsg = F("<p>Wasserstand Zehentner ist in den Warnbereich gestiegen <br>");
         htmlMsg += F("Pegelstand über die Web-Seite: </p>; // <a href='http://zehentner.bplaced.net/Wasserstand/live/handleGraph.php'>Wasserstand-Messung</a> beobachten </p>");
+        textMsg = F("Wasserstand Zehentner ist in den Warnbereich gestiegen\n");
+        textMsg += F("Pegelstand über die Web-Seite: http://zehentner.bplaced.net/Wasserstand/live/handleGraph.php beobachten");
         executeSendMail = true;
       }
       else if (alarmState == 5)
@@ -364,6 +368,9 @@ void prepareSendMail()
         htmlMsg = F("<p>Wasserstand Zehentner ist jetzt im Alarmbareich<br>");
         htmlMsg += F("es muss umgehend eine Pumpe in Betrieb genommen werden. <br>");
         htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.bplaced.net/Wasserstand/live/handleGraph.php'>Wasserstand-Messung</a> beobachten </p>");
+        textMsg = F("Wasserstand Zehentner ist jetzt im Alarmbareich\n");
+        textMsg += F("es muss umgehend eine Pumpe in Betrieb genommen werden.\n");
+        textMsg += F("Pegelstand über die Web-Seite: http://zehentner.bplaced.net/Wasserstand/live/handleGraph.php");
         executeSendMail = true;
       }
     }
@@ -376,6 +383,8 @@ void prepareSendMail()
         subject = subjectAddon + F("Pegel Zehentner -- Warnung ");
         htmlMsg = F("<p>Wasserstand Zehentner ist wieder zurück in den Warnbereich gesunken<br>");
         htmlMsg += F("Pegelstand über die Web-Seite: <a href='http://zehentner.bplaced.net/Wasserstand/live/handleGraph.php'>Wasserstand-Messung</a> beobachten </p>");
+        textMsg = F(">Wasserstand Zehentner ist wieder zurück in den Warnbereich gesunken\n");
+        textMsg += F("Pegelstand über die Web-Seite: http://zehentner.bplaced.net/Wasserstand/live/handleGraph.php beobachten");
         executeSendMail = true;
       }
       else if (alarmState == 3)
@@ -384,6 +393,7 @@ void prepareSendMail()
         Serial.println(F("level decreased to OK"));
         subject = subjectAddon + F("Pegel Zehentner -- OK ");
         htmlMsg = F("<p>Wasserstand Zehentner ist wieder im Normalbereich</p>");
+        textMsg = F("Wasserstand Zehentner ist wieder im Normalbereich");
         executeSendMail = true;
       }
       else if (alarmState == 2)

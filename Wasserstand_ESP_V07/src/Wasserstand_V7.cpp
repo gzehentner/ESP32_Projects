@@ -854,7 +854,7 @@ void loop(void)
     if (executeSendMail)
     {
       Serial.println("Sending WhatsApp message");
-      sendWhatsAppMessage(htmlMsg);
+      sendWhatsAppMessage(textMsg);
     };
 
   exit:
