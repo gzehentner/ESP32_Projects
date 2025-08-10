@@ -665,6 +665,30 @@ void setup(void)
 
   // listDir("/");
 
+  // write reboot reason if not normal
+
+  if ((resetReason != ESP_RST_POWERON) && (resetReason != ESP_RST_SW))
+  {
+    // write the reboot reason to the error log
+    Serial.println("Writing reboot reason to error.log");
+
+    // get current time and date
+    getEpochTime(epochTime);
+    formatDateAndTime(formattedTime, currentDate, epochTime);
+
+    // write the reboot reason to the error log
+    String errMessage = "";
+    errMessage = currentDate;
+    errMessage += " - ";
+    errMessage += formattedTime;
+    errMessage += " - ";
+    errMessage += "Reboot reason: ";
+    errMessage += resetReason;
+    errMessage += "\n";
+    appendFile("/error.log", errMessage.c_str());
+
+  } // end of if resetReason != ESP_RST_POWERON
+
   // Initialize the Watchdog Timer
   esp_task_wdt_init(WDT_TIMEOUT, true); // Enable panic so ESP32 resets
   esp_task_wdt_add(NULL);               // Add the current task (loop) to the Watchdog
