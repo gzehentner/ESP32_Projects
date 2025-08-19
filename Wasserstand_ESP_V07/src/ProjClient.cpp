@@ -40,6 +40,8 @@
 //      - Den Bereich zwischen diesen beiden Zeilen einschließlich der Zeilen selbst kopieren
 //      - das zweite Zertifikat ist das Root-Zertifikat, dieses verwenden wir
 //      - im notepad++ formatieren (siehe unten)
+// 3. error.log Datei löschen und neu erstellen
+//     Fehlermeldung fd=49 "reset by peer" deutet darauf hin, dass die datei übergelaufen ist
 
 const char *root_ca_chain =
     "-----BEGIN CERTIFICATE-----\n"
