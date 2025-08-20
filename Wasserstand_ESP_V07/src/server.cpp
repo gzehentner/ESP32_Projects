@@ -407,19 +407,28 @@ void handlePage()
   // Print error buffer
   message += F("<article>\n"
 
-  //-----------------------------------------------------------------------------------------
-  "<h2>Print errorbuffer</h2>\n" 
-  "<p>Falls ein Reset-Fehler auftritt wird dieser in das error.log geschrieben "
-  "<br>Dieses Wird hier angezeigt"
-  "</p>");
+               //-----------------------------------------------------------------------------------------
+               "<h2>Print errorbuffer</h2>\n"
+               "<p>Falls ein Reset-Fehler auftritt wird dieser in das error.log geschrieben "
+               "<br>Dieses Wird hier angezeigt"
+               "<br>Zum Löschen dieses Files ip-addr/c.php?CMD=reset_error_log"
+               "</p>");
 
   // open file for reading and check if it exists
   File file = LittleFS.open("/error.log", "r");
   if (!file) {
     Serial.println("Failed to open error.log nf for reading");
     message += "<br>File not found";
-    
-  } else {
+    Serial.println("error.log doesnt exist; generating a new one");
+
+    String errMessage = "";
+    errMessage = currentDate;
+    errMessage += " - ";
+    errMessage += formattedTime;
+    errMessage += " - ";
+    errMessage += "init error-file\n";
+    appendFile("/error.log", errMessage.c_str());
+    } else {
 
     // read from file line by line
     // prepare loop
@@ -903,7 +912,7 @@ void handleCommand()
         }
       }
     }
-if (server.arg(0) == "8") 
+    if (server.arg(0) == "8")
     {
       Serial.println(F("D232 toggle useLiveMail"));
       if (useLiveMail==1)
@@ -920,11 +929,17 @@ if (server.arg(0) == "8")
         }
       }
     }
-  }
+  } // end of if argName(0) == toggle
   else if (server.argName(0) == "CMD" && server.arg(0) == "RESET") // Example how to reset the module. Just send ?CMD=RESET
   {
     Serial.println(F("D238 will reset"));
     ESP.restart();
+  }
+
+  else if (server.argName(0) == "CMD" && server.arg(0) == "reset_error_log") // reset error.log .../c.php?CMD=RESET
+  {
+    Serial.println(F("D238 will delete error file"));
+    deleteFile("/error.log");
   }
 
   // else if (server.argName(0) == "reloaded" && server.arg(0) == "true") 
