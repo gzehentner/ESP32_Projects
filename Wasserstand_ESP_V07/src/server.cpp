@@ -395,7 +395,10 @@ void handlePage()
   } else {
   message += F("<p class='off'><a href='c.php?toggle=5' target='i' onclick='reloadPage()'>nPost</a></p>\n");
   }
-  
+
+  message += F("<p class='on_red'><a href='c.php?CMD=reset_error_log' target='i' onclick='reloadPage()'>del errLog</a></p>\n");
+  message += F("<p class='on_red'><a href='c.php?CMD=RESET' target='i' onclick='reloadPage()'>Reboot</a></p>\n");
+
   message += F("<iframe name='i' style='display:none' title='Tooltip' ></iframe>\n" // hack to keep the button press in the window
   //-----------------------------------------------------------------------------------------
   // end of simulation
@@ -410,8 +413,7 @@ void handlePage()
                //-----------------------------------------------------------------------------------------
                "<h2>Print errorbuffer</h2>\n"
                "<p>Falls ein Reset-Fehler auftritt wird dieser in das error.log geschrieben "
-               "<br>Dieses Wird hier angezeigt"
-               "<br>Zum Löschen dieses Files ip-addr/c.php?CMD=reset_error_log"
+               "<br>Dieses wird hier angezeigt"
                "</p>");
 
   // open file for reading and check if it exists
@@ -936,7 +938,7 @@ void handleCommand()
     ESP.restart();
   }
 
-  else if (server.argName(0) == "CMD" && server.arg(0) == "reset_error_log") // reset error.log .../c.php?CMD=RESET
+  else if (server.argName(0) == "CMD" && server.arg(0) == "reset_error_log") // reset error.log .../c.php?CMD=reset_error_log
   {
     Serial.println(F("D238 will delete error file"));
     deleteFile("/error.log");
