@@ -201,6 +201,12 @@ unsigned long seconds_since_startup = 0; // current second since startup
 unsigned long previousMillis = 0; // used to determine intervall of ADC measurement
 unsigned long millisNow = 0;
 
+// measure maxLoopRuntime
+unsigned long maxLoopRuntime = 0; // maximum runtime for one man loop
+unsigned long actLoopRuntime = 0;
+unsigned long previousMillisLoopRuntime = 0; // last timestamp for loop
+unsigned long millisNowLoopRuntime = 0;      // actual timestamp
+
 const uint16_t ajaxIntervall = 5; // intervall for AJAX or fetch API call of website in seconds
 uint32_t clientPreviousSs = 0;    // - clientIntervall;  // last second when data was sent to server
 
@@ -363,6 +369,25 @@ void debugPrintCyclic(int index, long WaitingTimeCyclicPrint, String printText, 
     }
   }
 } // end of debugPrintCyclic
+
+MeasureRuntime measureSensor = {0, 0, 0};
+MeasureRuntime measureLoopOthers = {0, 0, 0};
+MeasureRuntime measureLoopAll = {0, 0, 0};
+
+void measureRuntimeStart(MeasureRuntime &measureRuntime)
+{
+  measureRuntime.startTime = millis();
+}
+
+void measureRuntimeEnd(MeasureRuntime &measureRuntime)
+{
+  measureRuntime.runTime = millis() - measureRuntime.startTime;
+
+  if (measureRuntime.runTime > measureRuntime.maxDelta)
+  {
+    measureRuntime.maxDelta = measureRuntime.runTime;
+  }
+}
 
 //===================================================================*/
 // variables for toplevel
@@ -706,6 +731,11 @@ void setup(void)
 void loop(void)
 {
 
+  measureRuntimeEnd(measureLoopAll);
+  measureRuntimeEnd(measureLoopOthers);
+
+  measureRuntimeStart(measureLoopAll);
+
   // Reset the Watchdog Timer at the beginning of each loop iteration
   if (simTimeout == 1)
   {
@@ -803,7 +833,9 @@ void loop(void)
   /* evaluate water level */
   // **************************************************************************************************
 
+  measureRuntimeStart(measureSensor);
   Current2Waterlevel();
+  measureRuntimeEnd(measureSensor);
 
   SetAlarmState_from_relais();
   SetAlarmState_from_level();
@@ -1027,6 +1059,26 @@ void loop(void)
 
   doPrint = 0;
   printOnChangeActive = 0;
+
+  // **************************************************************************************************
+  // measure max latency for loop run
+  // **************************************************************************************************
+  // get actual timestamp
+  millisNowLoopRuntime = millis();
+  // calculate actual loopRuntime
+  actLoopRuntime = millisNowLoopRuntime - previousMillisLoopRuntime;
+
+  // if actual loopRuntime is greater than max, this is the new max
+  if (actLoopRuntime > maxLoopRuntime)
+  {
+    maxLoopRuntime = actLoopRuntime;
+  }
+
+  // remember actual timestamp as previous
+  previousMillisLoopRuntime = millisNowLoopRuntime;
+
+  measureRuntimeStart(measureLoopOthers);
+
   // **************************************************************************************************
   // **************************************************************************************************
 } // end void loop()

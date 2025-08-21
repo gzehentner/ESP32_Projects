@@ -42,6 +42,7 @@ extern int filterCnt;
 extern unsigned long previousMillis; // used to determine intervall of ADC measurement
 
 extern unsigned long millisNow;
+extern unsigned long maxLoopRuntime; // maximum runtime for one man loop
 
 // variables for shortterm ringbuffer
 extern unsigned long ringTime[iRingValueMax + 1]; // ring buffer for display last n values

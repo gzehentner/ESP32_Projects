@@ -299,6 +299,17 @@ void handlePage()
   message += F("   Wasserstand aktuell: ");
   message += myValueFilteredAct;
 
+  message += F("<br><br>  maximal loop runtime over all: ");
+  message += measureLoopAll.maxDelta;
+  message += F(" ms<br><br>");
+
+  message += F("<br><br>  maximal other tasks runtime: ");
+  message += measureLoopOthers.maxDelta;
+  message += F(" ms<br><br>");
+  message += F("  maximal sensor runtime: ");
+  message += measureSensor.maxDelta;
+  message += F(" ms<br><br>");
+
   //-----------------------------------------------------------------------------------------
   // End of show message depending of alarmstate
   message += F("</article>");

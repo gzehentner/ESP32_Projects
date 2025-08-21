@@ -315,4 +315,19 @@ const int maxValue = 500; // measurement range: 000cm to 500cm --> maxValue=500
 //=========================================================
 void debugPrintCyclic(int index, long WaitingTimeCyclicPrint, String printText, int newline, long printValue);
 
+struct MeasureRuntime
+{
+        /* data */
+        unsigned long startTime;
+        unsigned long runTime;
+        unsigned long maxDelta;
+};
+
+extern MeasureRuntime measureSensor;
+extern MeasureRuntime measureLoopOthers;
+extern MeasureRuntime measureLoopAll;
+
+void measureRuntimeStart(MeasureRuntime &measureRuntime);
+void measureRuntimeEnd(MeasureRuntime &measureRuntime);
+
 #endif
