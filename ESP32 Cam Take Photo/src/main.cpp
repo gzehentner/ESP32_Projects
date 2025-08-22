@@ -1,14 +1,30 @@
 /*********
   Rui Santos
   Complete project details at https://RandomNerdTutorials.com/esp32-cam-take-photo-display-web-server/
-  
-  IMPORTANT!!! 
+
+  IMPORTANT!!!
    - Select Board "AI Thinker ESP32-CAM"
    - GPIO 0 must be connected to GND to upload a sketch
    - After connecting GPIO 0 to GND, press the ESP32-CAM on-board RESET button to put your board in flashing mode
-  
+
   The above copyright notice and this permission notice shall be included in all
   copies or substantial portions of the Software.
+
+  Verdrahtung CAM Photo Development:
+  - Umschalter gedrückt -> Versorgungsspannung aus
+  - Umschalter nicht gedrückt -> Versorgungsspannung ein
+  - Taster gedrückt -> Boot modus
+
+  Verdrahtung CAM Photo Keller
+  - Litze Orange Gelb: Versorgungsspannung
+  - Litze Braun Violett: Boot moduls
+
+  Firmware Download
+  1) Versorgung aus
+  2) Taster drücken
+  3) Versorgung ein
+  4) Download starten
+  5) Taster loslassen und Versorgung aus / ein --> Firmware läuft
 *********/
 
 #include <U8g2lib.h>
@@ -29,7 +45,7 @@
 #include "soc/rtc_cntl_reg.h"  // Disable brownout problems
 #include "driver/rtc_io.h"
 #include <ESPAsyncWebServer.h>
-//#include <StringArray.h>
+// #include <StringArray.h>
 #include <SPIFFS.h>
 #include <FS.h>
 #include <timeserver.h>
