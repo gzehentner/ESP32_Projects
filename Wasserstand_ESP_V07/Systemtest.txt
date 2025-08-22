@@ -69,6 +69,12 @@ Testprozedur:
         - dadurch wird ein 11s delay aktiviert
         - nach 10s geht der ESP in reboot
         - nach dem Reboot ist simTimeout wieder ausgeschaltet ("WD ok")
+=========================================================================
+5) Error file löschen (Button klicken)
+=========================================================================
+=========================================================================
+6) Reboot auslösen (Button klicken)
+=========================================================================
 
 
 
