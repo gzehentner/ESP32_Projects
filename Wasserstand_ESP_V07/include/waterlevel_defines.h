@@ -171,7 +171,7 @@ extern int remoteLastMessage;
 extern int remoteMessagesSucessfull;
 
 // Watchdog timeout in seconds
-#define WDT_TIMEOUT 10 // Reset if loop takes longer than 10 seconds
+#define WDT_TIMEOUT 20 // Reset if loop takes longer than 10 seconds
 
 //**************************************************************
 //**************************************************************
