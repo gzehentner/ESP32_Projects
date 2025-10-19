@@ -119,7 +119,6 @@ void handleNotFound() {
   }
 
   server.send(404, "text/plain", message);
-  // digitalWrite(builtin_led, 0);
 }
 
 
@@ -875,15 +874,14 @@ void handleCommand()
     if (server.arg(0) == "5") // the value for that parameter(led))
     {
       Serial.println(F("D232 toggle sendToClient"));
-      if (digitalRead(builtin_led))
+      if (sendToClient==0)
       { // toggle: if the pin was on - switch it of and vice versa
-        digitalWrite(builtin_led, LOW);
+      
         sendToClient = 1;  // enable sending to client in Wasserstand_V5.cpp
         Serial.println("sendToClient = 1");
       }
       else
       {
-        digitalWrite(builtin_led, HIGH);
         //if (isLiveSystem==0) {
           sendToClient = 0;  // disable sending to client in dev version ofWasserstand_V5.cpp
           Serial.println("sendToClient = 0");

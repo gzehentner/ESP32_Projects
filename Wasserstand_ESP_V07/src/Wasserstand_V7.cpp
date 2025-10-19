@@ -159,6 +159,9 @@ WebServer server(80);
 #include <MyLittleFSLib.h>
 #endif
 
+// #include <TelnetStream.h>
+// #include <debugPrint.h>
+
 #include <ElegantOTA.h>
 #include "esp_task_wdt.h" // Include ESP32 Watchdog Timer library
 
@@ -420,6 +423,12 @@ void setup(void)
   Serial.println("Serial is ready to accept input");
   //------------------------
 
+  
+  /*=================================================================*/
+  // print board information
+
+  
+  
   Serial.println(F("\n" TXT_BOARDNAME "\nVersion: " VERSION " Board " TXT_BOARDID " "));
   Serial.print(__DATE__);
   Serial.print(F(" "));
@@ -715,12 +724,11 @@ void setup(void)
   } // end of if resetReason != ESP_RST_POWERON
 
   // Initialize the Watchdog Timer
-  esp_task_wdt_init(WDT_TIMEOUT, true); // Enable panic so ESP32 resets
-  esp_task_wdt_add(NULL);               // Add the current task (loop) to the Watchdog
+  esp_task_wdt_init(WDT_TIMEOUT, true);  // Enable panic so ESP32 resets
+  esp_task_wdt_add(NULL);  // Add the current task (loop) to the Watchdog
 
-  // sendMessageWhatsApp("Test");
 }
-/*==================================================================*/
+  
 
 /*****************************************************************************************************************
  *****************************************************************************************************************

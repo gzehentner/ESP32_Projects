@@ -21,7 +21,7 @@ int errCnt_communication = 0;
 //    - in das Verzeichnis C:\Program Files\OpenSSL-Win64 wechseln
 //    - start.bat doppelt klicken
 // 2. In der OpenSSL Konsole:
-//    - openssl s_client -showcerts -connect zehentner.bplaced.net:443
+//    - openssl s_client -showcerts -connect zehentner.bplaced.net:443  
 //    - in der Ausgabe sind zwei Zertifikate enthalten:
 //      - erkennbar an "BEGIN CERTIFICATE" und "END CERTIFICATE"
 //      - Den Bereich zwischen diesen beiden Zeilen einschließlich der Zeilen selbst kopieren

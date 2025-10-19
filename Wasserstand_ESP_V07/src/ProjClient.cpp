@@ -8,6 +8,8 @@
 #include <pumpControl.h>
 #include <timeserver.h>
 #include <MyLittleFSLib.h>
+// #include <TelnetStream.h>
+// #include <debugPrint.h>
 
 #if BOARDTYPE == ESP32
 // for Send-Mail
