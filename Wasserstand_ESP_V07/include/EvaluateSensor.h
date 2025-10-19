@@ -13,7 +13,8 @@
 
   extern String subject;
   extern String htmlMsg;
-  
+  extern String textMsg;
+
   void Current2Waterlevel();
   void beginCurrentLoopSensor();
   void ReadRelaisSetErrorLevel();
@@ -26,4 +27,3 @@
 
   
 #endif
-

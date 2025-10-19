@@ -6,6 +6,7 @@
 #define WATERLEVEL_H
 
 #include <Arduino.h>
+#include <pumpControl.h>
 
 extern int val_AH;
 extern int val_AL;
@@ -25,11 +26,11 @@ extern const char *sendHttpTo;         // the module will send information to th
 // extern int inByte;
 // extern int incomingByte; // for incoming serial data
 
-extern int alarmStateRelais   ; // actual state of alarm derived from relais
+extern int alarmStateRelais;    // actual state of alarm derived from relais
 extern int alarmStateRelaisOld; // previous value of alarmStateRelais
-extern int alarmStateLevel    ; // actual state of alarm derived from measured water level
-extern int alarmStateLevelOld ; // previous value of alarmStateLevel
-extern int alarmState   ;       // worst case value of both alarmState
+extern int alarmStateLevel;     // actual state of alarm derived from measured water level
+extern int alarmStateLevelOld;  // previous value of alarmStateLevel
+extern int alarmState;          // worst case value of both alarmState
 extern int alarmStateOld;       // previous value of alarmState
 
 extern bool executeSendMail;
@@ -37,41 +38,37 @@ extern bool executeSendMail;
 extern int myValueFilteredAct; // actual result for display in web page
 extern int myAdcFilteredAct;
 
-extern int filterCnt;   
-extern unsigned long previousMillis;             // used to determine intervall of ADC measurement
+extern int filterCnt;
+extern unsigned long previousMillis; // used to determine intervall of ADC measurement
 
-extern unsigned long millisNow;   
+extern unsigned long millisNow;
+extern unsigned long maxLoopRuntime; // maximum runtime for one man loop
 
 // variables for shortterm ringbuffer
-extern unsigned long ringTime[iRingValueMax+1];    // ring buffer for display last n values
-extern int    ringValue[iRingValueMax+1];
-extern int    ringADC[iRingValueMax+1];
+extern unsigned long ringTime[iRingValueMax + 1]; // ring buffer for display last n values
+extern int ringValue[iRingValueMax + 1];
+extern int ringADC[iRingValueMax + 1];
 
-extern int wrRingPtr;           // index variable for write buffer
-extern int rdRingPtr;            // position to read out of buffer
-
-extern int timeTickForCyclicPrint; // used in loop()
-
+extern int wrRingPtr; // index variable for write buffer
+extern int rdRingPtr; // position to read out of buffer
 
 //*******************************************************************************
 // write values to setup.ini
-void putSetupIni();
+void putSetupIni(PumpStatus &pumpStatus);
 //*******************************************************************************
 // read values out of setup.ini
-void getSetupIni();
+void getSetupIni(PumpStatus &pumpStatus);
 //*******************************************************************************
 
-
-
 // definitions for analog-digital conversion (using external ADS1115)
-  #if MyUSE_ADC == ADS1115_ADC
-    #if BOARDTYPE == ESP32
-      // TwoWire I2CSensors = TwoWire(0);
-      extern Adafruit_ADS1115 ads;
-      // int16_t adc0;
-    #else
-      extern Adafruit_ADS1115 ads;
-      //Wire.begin(4,5);
-    #endif
-  #endif
+#if MyUSE_ADC == ADS1115_ADC
+#if BOARDTYPE == ESP32
+// TwoWire I2CSensors = TwoWire(0);
+extern Adafruit_ADS1115 ads;
+// int16_t adc0;
+#else
+extern Adafruit_ADS1115 ads;
+// Wire.begin(4,5);
+#endif
+#endif
 #endif

@@ -87,8 +87,7 @@ int simVal_AHHH = 1;
 int simVal_AHH  = 1;
 int simVal_AH   = 1;
 int simVal_AL   = 0;
-int simError    = 0;    //  sim one failed sendPost (ProjClient.cpp)
-int simReboot   = 0;    //  force reboot due to many failed transmissions to client
+int simError = 0;       //  sim one failed sendPost (ProjClient.cpp)
 int simTimeout = 0;     //  sim timeout of watchdog timer
 // int simVal_ALL = 0;
 
@@ -299,6 +298,17 @@ void handlePage()
   message += F("   Wasserstand aktuell: ");
   message += myValueFilteredAct;
 
+  message += F("<br><br>  maximal loop runtime over all: ");
+  message += measureLoopAll.maxDelta;
+  message += F(" ms<br><br>");
+
+  message += F("<br><br>  maximal other tasks runtime: ");
+  message += measureLoopOthers.maxDelta;
+  message += F(" ms<br><br>");
+  message += F("  maximal sensor runtime: ");
+  message += measureSensor.maxDelta;
+  message += F(" ms<br><br>");
+
   //-----------------------------------------------------------------------------------------
   // End of show message depending of alarmstate
   message += F("</article>");
@@ -376,12 +386,6 @@ void handlePage()
   } else {
   message += F("<p class='off'><a href='c.php?toggle=6' target='i' onclick='reloadPage()'>non error</a></p>\n");
   }
-  if (simReboot == 1)  // 
-  {
-  message += F("<p class='on_red'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>Reboot</a></p>\n");
-  } else {
-  message += F("<p class='off'><a href='c.php?toggle=7' target='i' onclick='reloadPage()'>nRboot</a></p>\n");
-  }
   if (simTimeout == 1)  // 
   {
   message += F("<p class='on_red'><a href='c.php?toggle=9' target='i' onclick='reloadPage()'>WD Err</a></p>\n");
@@ -401,7 +405,10 @@ void handlePage()
   } else {
   message += F("<p class='off'><a href='c.php?toggle=5' target='i' onclick='reloadPage()'>nPost</a></p>\n");
   }
-  
+
+  message += F("<p class='on_red'><a href='c.php?CMD=reset_error_log' target='i' onclick='reloadPage()'>del errLog</a></p>\n");
+  message += F("<p class='on_red'><a href='c.php?CMD=RESET' target='i' onclick='reloadPage()'>Reboot</a></p>\n");
+
   message += F("<iframe name='i' style='display:none' title='Tooltip' ></iframe>\n" // hack to keep the button press in the window
   //-----------------------------------------------------------------------------------------
   // end of simulation
@@ -413,19 +420,27 @@ void handlePage()
   // Print error buffer
   message += F("<article>\n"
 
-  //-----------------------------------------------------------------------------------------
-  "<h2>Print errorbuffer</h2>\n" 
-  "<p>Falls ein Reset-Fehler auftritt wird dieser in das error.log geschrieben "
-  "<br>Dieses Wird hier angezeigt"
-  "</p>");
+               //-----------------------------------------------------------------------------------------
+               "<h2>Print errorbuffer</h2>\n"
+               "<p>Falls ein Reset-Fehler auftritt wird dieser in das error.log geschrieben "
+               "<br>Dieses wird hier angezeigt"
+               "</p>");
 
   // open file for reading and check if it exists
   File file = LittleFS.open("/error.log", "r");
   if (!file) {
     Serial.println("Failed to open error.log nf for reading");
     message += "<br>File not found";
-    
-  } else {
+    Serial.println("error.log doesnt exist; generating a new one");
+
+    String errMessage = "";
+    errMessage = currentDate;
+    errMessage += " - ";
+    errMessage += formattedTime;
+    errMessage += " - ";
+    errMessage += "init error-file\n";
+    appendFile("/error.log", errMessage.c_str());
+    } else {
 
     // read from file line by line
     // prepare loop
@@ -890,23 +905,7 @@ void handleCommand()
         }
       }
     }
-    if (server.arg(0) == "7") 
-    {
-      Serial.println(F("D232 toggle reboot generation"));
-      if (simReboot==1)
-      { // toggle error generation
-        simReboot = 0;
-        Serial.println("simReboot off");
-      }
-      else
-      {
-        // force error with sendPost to bplaced; response with negative code is forced
-        if (debugLevelSwitches==1) {
-          simReboot = 1;
-          Serial.println("simReboot on");
-        }
-      }
-    }
+
     if (server.arg(0) == "9") 
     {
       Serial.println(F("D232 toggle timeout generation"));
@@ -924,7 +923,7 @@ void handleCommand()
         }
       }
     }
-if (server.arg(0) == "8") 
+    if (server.arg(0) == "8")
     {
       Serial.println(F("D232 toggle useLiveMail"));
       if (useLiveMail==1)
@@ -941,11 +940,17 @@ if (server.arg(0) == "8")
         }
       }
     }
-  }
+  } // end of if argName(0) == toggle
   else if (server.argName(0) == "CMD" && server.arg(0) == "RESET") // Example how to reset the module. Just send ?CMD=RESET
   {
     Serial.println(F("D238 will reset"));
     ESP.restart();
+  }
+
+  else if (server.argName(0) == "CMD" && server.arg(0) == "reset_error_log") // reset error.log .../c.php?CMD=reset_error_log
+  {
+    Serial.println(F("D238 will delete error file"));
+    deleteFile("/error.log");
   }
 
   // else if (server.argName(0) == "reloaded" && server.arg(0) == "true") 

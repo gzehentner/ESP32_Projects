@@ -57,6 +57,7 @@ Testprozedur:
         - error Button klicken (wird nach Auslösen eines Errors automatisch zurückgesetzt)
         - Meldung im Fehlerfenster Eror=66
     - mehrfacher Fehler und Reboot
+       (!! diese Funktion wurde ausgebaut; Prio hat der Pumpenbetrieb. Übertragungsfehler sind nicht fatal)
         - Rboot einschalten
         - Reboot muss ausgeführt werden (Terminal Ausgabe)
         - Pumpen Betriebsdauer muss wieder passen
@@ -68,6 +69,12 @@ Testprozedur:
         - dadurch wird ein 11s delay aktiviert
         - nach 10s geht der ESP in reboot
         - nach dem Reboot ist simTimeout wieder ausgeschaltet ("WD ok")
+=========================================================================
+5) Error file löschen (Button klicken)
+=========================================================================
+=========================================================================
+6) Reboot auslösen (Button klicken)
+=========================================================================
 
 
 

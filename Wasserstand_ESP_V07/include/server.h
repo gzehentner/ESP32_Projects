@@ -21,14 +21,13 @@ extern int simVal_AH ;
 extern int simVal_AL ;
 extern int simVal_ALL;
 extern int simError  ;    //  sim one failed sendPost (ProjClient.cpp)
-extern int simReboot ;    //  force reboot due to many failed transmissions to client
 extern int simTimeout; // force timeout error for testing purposes
 
 
 //extern WebServer server; // declare an instance for the webserver
 extern int sendToClient; // enable sending to client
 extern int useLiveMail ; // to check the email send process, we want to use the live email address, because t-online is very slow
-
+extern int deleteErrorLog; // delete error.log file, if set to 1
 
 // **************************************************************************************************
   void handleRoot();
