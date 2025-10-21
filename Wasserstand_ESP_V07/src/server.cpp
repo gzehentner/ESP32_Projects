@@ -96,10 +96,17 @@ int firstRun = 1;
 
 int time_steps = 0;
 
+// **************************************************************************************************
+// variables for manual pump control
+// **************************************************************************************************
+int manualPumpControl = 0;
+int manPump1Enabled = 0;
+int manPump2Enabled = 0;
 
 // **************************************************************************************************
-void handleNotFound() {
-// **************************************************************************************************
+void handleNotFound()
+{
+  // **************************************************************************************************
   // digitalWrite(builtin_led, 1);
   String message = "File Not Found\n\n";
   message += "URI: ";
@@ -120,7 +127,6 @@ void handleNotFound() {
 
   server.send(404, "text/plain", message);
 }
-
 
 // **************************************************************************************************
 /* add a header  to each page including refs for all other pages */
@@ -414,9 +420,50 @@ void handlePage()
   // end of simulation
   "</article>\n");
 
+  //-----------------------------------------------------------------------------------------
+  // Simulation
+  message += F("<article>\n"
+               //-----------------------------------------------------------------------------------------
+               "<h2>Manuelle Pumpen-Kontrolle</h2>\n"
+               "<p>Bevor die Pumpen per Hand geschaltet werden können, bitte die oberste Schaltfläche anklicken "
+               "<br>rot : Manuelle Pumpen-Kontrolle ein"
+               "<br><br>Um die Pumpen zu schalten, klicke auf den entsprechenden Schalter<br>"
+               "<br>Pumpe 1 : grün  : eingeschaltet"
+               "<br>Pumpe 2 : grün  : eingeschaltet"
+               "</p>");
+  if (manualPumpControl == 1) // manueller Betrieb ein
+  {
+    message += F("<p class='on_green'><a href='c.php?toggle=20' target='i' onclick='reloadPage()' >Handbetrieb</a></p>\n");
+  }
+  else
+  {
+    message += F("<p class='off'><a href='c.php?toggle=20' target='i' onclick='reloadPage()'>Handbetrieb</a></p>\n");
+  }
 
+  if (manPump1Enabled == 1) //
+  {
+    message += F("<p class='green'><a href='c.php?toggle=21' target='i' onclick='reloadPage()'>Pumpe 1</a></p>\n");
+  }
+  else
+  {
+    message += F("<p class='off'><a href='c.php?toggle=21' target='i' onclick='reloadPage()'>Pumpe 1</a></p>\n");
+  }
+  if (manPump2Enabled == 1) //
+  {
+    message += F("<p class='green'><a href='c.php?toggle=22' target='i' onclick='reloadPage()'>Pumpe 2</a></p>\n");
+  }
+  else
+  {
+    message += F("<p class='off'><a href='c.php?toggle=22' target='i' onclick='reloadPage()'>Pumpe 2</a></p>\n");
+  }
 
- //-----------------------------------------------------------------------------------------
+  message += F("<iframe name='i' style='display:none' title='Tooltip' ></iframe>\n"
+  // hack to keep the button press in the window
+  //-----------------------------------------------------------------------------------------
+  // end of manual pump control
+  "</article>\n");
+
+  //-----------------------------------------------------------------------------------------
   // Print error buffer
   message += F("<article>\n"
 
@@ -428,7 +475,8 @@ void handlePage()
 
   // open file for reading and check if it exists
   File file = LittleFS.open("/error.log", "r");
-  if (!file) {
+  if (!file)
+  {
     Serial.println("Failed to open error.log nf for reading");
     message += "<br>File not found";
     Serial.println("error.log doesnt exist; generating a new one");
@@ -440,7 +488,9 @@ void handlePage()
     errMessage += " - ";
     errMessage += "init error-file\n";
     appendFile("/error.log", errMessage.c_str());
-    } else {
+  }
+  else
+  {
 
     // read from file line by line
     // prepare loop
@@ -823,8 +873,7 @@ void handleCommand()
     Serial.println(server.arg(i));
   }
   if (server.argName(0) == "toggle") // the parameter which was sent to this server
-  {
-    //reloadDone = 0;
+  {    //reloadDone = 0;
     //Serial.println("reloadDone -> 0 -- Cmd = toggle");
 
     if (server.arg(0) == "a") // the value for that parameter
@@ -917,29 +966,75 @@ void handleCommand()
       else
       {
         // force error with sendPost to bplaced; response with negative code is forced
-        if (debugLevelSwitches==1) {
+        if (debugLevelSwitches == 1) {
+        
           simTimeout = 1;
           Serial.println("simTimeout on");
         }
       }
     }
-    if (server.arg(0) == "8")
-    {
-      Serial.println(F("D232 toggle useLiveMail"));
-      if (useLiveMail==1)
-      { // toggle usage of mail address
-        useLiveMail = 0;
-        Serial.println("useLiveMail off");
-      }
-      else
+
+      // ---------------------------------------------
+      // Handbetrieb
+      if (server.arg(0) == "20") 
       {
-        // use web.de
-        if (debugLevelSwitches==1) {
-          useLiveMail = 1;
-          Serial.println("useLiveMail on");
+        Serial.println(F("Manual Operation"));
+        if (manualPumpControl==1)
+        { // toggle error generation
+          manualPumpControl = 0;
+          Serial.println("manualPumpControl off");
+        }
+        else
+        {
+          manualPumpControl = 1;
+          Serial.println("manualPumpControl on");
         }
       }
-    }
+      // ---------------------------------------------
+      // Pumpe 1 Handbetrieb
+      if (server.arg(0) == "21")
+      {
+        //Serial.println(F("Manual Pumpe 1"));
+        if (manualPumpControl == 0) 
+        {
+          manPump1Enabled = 0;
+        } 
+        else 
+        {
+
+          if (manPump1Enabled == 1)
+          { // toggle pump on / off
+            manPump1Enabled = 0;
+            Serial.println("Pumpe 1 aus");
+          } else {
+            manPump1Enabled = 1;
+            Serial.println("Pumpe 1 ein");
+          }
+        }
+      }
+      // ---------------------------------------------
+      // Pumpe 1 Handbetrieb
+      if (server.arg(0) == "22")
+      {
+        if (manualPumpControl == 0)
+        {
+          manPump2Enabled = 0;
+        }
+        else
+        {
+
+          if (manPump2Enabled == 1)
+          { // toggle pump on / off
+            manPump2Enabled = 0;
+            Serial.println("Pumpe 2 aus");
+          }
+          else
+          {
+            manPump2Enabled = 1;
+            Serial.println("Pumpe 2 ein");
+          }
+        }
+      }
   } // end of if argName(0) == toggle
   else if (server.argName(0) == "CMD" && server.arg(0) == "RESET") // Example how to reset the module. Just send ?CMD=RESET
   {
