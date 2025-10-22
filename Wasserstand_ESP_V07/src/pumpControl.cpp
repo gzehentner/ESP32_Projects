@@ -112,6 +112,23 @@ void controlPump(PumpControl &pumpControl)
 }
 
 //*******************************************************************************
+void manualPumpOperation(PumpControl &PumpControl)
+{
+    // when manual control is active, automatic control is disabled
+    if (PumpControl.manualPumpControl == 1)
+    {
+        digitalWrite(GPout_pump1, PumpControl.manPump1Enabled);
+        digitalWrite(GPout_pump2, PumpControl.manPump2Enabled);
+    } 
+    else
+    {
+        // set output pin to control pump
+        digitalWrite(GPout_pump1, PumpControl.pump1_op);
+        digitalWrite(GPout_pump2, PumpControl.pump2_op);
+    }
+}
+
+//*******************************************************************************
 void selectPump(PumpStatus &pumpStatus, PumpControl &pumpControl)
 {
     //*******************************************************************************
@@ -154,6 +171,6 @@ void selectPump(PumpStatus &pumpStatus, PumpControl &pumpControl)
     }
 
     // set output pin to control pump
-    digitalWrite(GPout_pump1, pumpControl.pump1_op);
-    digitalWrite(GPout_pump2, pumpControl.pump2_op);
+    // digitalWrite(GPout_pump1, pumpControl.pump1_op);
+    // digitalWrite(GPout_pump2, pumpControl.pump2_op);
 }

@@ -421,7 +421,7 @@ void handlePage()
   "</article>\n");
 
   //-----------------------------------------------------------------------------------------
-  // Simulation
+  // Manuelle Pumpe
   message += F("<article>\n"
                //-----------------------------------------------------------------------------------------
                "<h2>Manuelle Pumpen-Kontrolle</h2>\n"
@@ -982,6 +982,8 @@ void handleCommand()
         if (manualPumpControl==1)
         { // toggle error generation
           manualPumpControl = 0;
+          manPump1Enabled = 0;    // manual control only when manualPumpControl is enabled
+          manPump2Enabled = 0;
           Serial.println("manualPumpControl off");
         }
         else

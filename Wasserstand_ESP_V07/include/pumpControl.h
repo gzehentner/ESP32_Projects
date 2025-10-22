@@ -30,6 +30,10 @@ struct PumpControl
 
     int pumpA_op; // indicator, that pumpA is running
     int pumpB_op; // indicator, that pumpB is running
+
+    int manualPumpControl;
+    int manPump1Enabled;
+    int manPump2Enabled;
 };
 
 //*******************************************************************************
@@ -37,5 +41,6 @@ struct PumpControl
 void measureOperatingTime(PumpStatus &pumpStatus, PumpControl &pumpControl);
 void controlPump(PumpControl &pumpControl);
 void selectPump(PumpStatus &pumpStatus, PumpControl &pumpControl);
+void manualPumpOperation(PumpControl &PumpControl);
 
 #endif

@@ -395,7 +395,7 @@ void measureRuntimeEnd(MeasureRuntime &measureRuntime)
 //===================================================================*/
 // variables for toplevel
 PumpStatus pumpStatus = {0, 0, 0};      // create a PumpStatus object to manage pump states
-PumpControl pumpControl = {0, 0, 0, 0}; // create a PumpControl object to manage pump operations
+PumpControl pumpControl = {0, 0, 0, 0, 0, 0, 0}; // create a PumpControl object to manage pump operations
 //===================================================================*/
 
 /*****************************************************************************************************************
@@ -739,6 +739,10 @@ void setup(void)
 void loop(void)
 {
 
+  pumpControl.manualPumpControl = manualPumpControl;
+  pumpControl.manPump1Enabled = manPump1Enabled;
+  pumpControl.manPump2Enabled = manPump2Enabled;
+  
   measureRuntimeEnd(measureLoopAll);
   measureRuntimeEnd(measureLoopOthers);
 
@@ -1004,6 +1008,10 @@ void loop(void)
   //  Serial.print(" linkPump : ");Serial.println(linkPump);
   if (timeTickForCyclicPrint == 1)
   {
+    Serial.println();
+    Serial.print("Control: "); Serial.print(manualPumpControl);
+    Serial.print("  Pump1 on:   "); Serial.print(manPump1Enabled);
+    Serial.print("  Pump2 on:   "); Serial.print(manPump2Enabled);
   }
 
 #endif
@@ -1023,6 +1031,7 @@ void loop(void)
   controlPump(pumpControl);
   measureOperatingTime(pumpStatus, pumpControl);
   selectPump(pumpStatus, pumpControl);
+  manualPumpOperation(pumpControl);
 
   // input command via serial interface
   //**************************************************************************************
