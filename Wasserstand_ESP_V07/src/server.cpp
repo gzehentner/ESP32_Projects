@@ -973,70 +973,88 @@ void handleCommand()
         }
       }
     }
-
-      // ---------------------------------------------
-      // Handbetrieb
-      if (server.arg(0) == "20") 
+    if (server.arg(0) == "8")
+    {
+      Serial.println(F("D232 toggle useLiveMail"));
+      if (useLiveMail == 1)
+      { // toggle usage of mail address
+        useLiveMail = 0;
+        Serial.println("useLiveMail off");
+      }
+      else
       {
-        Serial.println(F("Manual Operation"));
-        if (manualPumpControl==1)
-        { // toggle error generation
-          manualPumpControl = 0;
-          manPump1Enabled = 0;    // manual control only when manualPumpControl is enabled
-          manPump2Enabled = 0;
-          Serial.println("manualPumpControl off");
-        }
-        else
+        // use web.de
+        if (debugLevelSwitches == 1)
         {
-          manualPumpControl = 1;
-          Serial.println("manualPumpControl on");
+          useLiveMail = 1;
+          Serial.println("useLiveMail on");
         }
       }
-      // ---------------------------------------------
-      // Pumpe 1 Handbetrieb
-      if (server.arg(0) == "21")
-      {
-        //Serial.println(F("Manual Pumpe 1"));
-        if (manualPumpControl == 0) 
+    }
+      
+        // ---------------------------------------------
+        // Handbetrieb
+        if (server.arg(0) == "20") 
         {
-          manPump1Enabled = 0;
-        } 
-        else 
-        {
-
-          if (manPump1Enabled == 1)
-          { // toggle pump on / off
-            manPump1Enabled = 0;
-            Serial.println("Pumpe 1 aus");
-          } else {
-            manPump1Enabled = 1;
-            Serial.println("Pumpe 1 ein");
-          }
-        }
-      }
-      // ---------------------------------------------
-      // Pumpe 1 Handbetrieb
-      if (server.arg(0) == "22")
-      {
-        if (manualPumpControl == 0)
-        {
-          manPump2Enabled = 0;
-        }
-        else
-        {
-
-          if (manPump2Enabled == 1)
-          { // toggle pump on / off
+          Serial.println(F("Manual Operation"));
+          if (manualPumpControl==1)
+          { // toggle error generation
+            manualPumpControl = 0;
+            manPump1Enabled = 0;    // manual control only when manualPumpControl is enabled
             manPump2Enabled = 0;
-            Serial.println("Pumpe 2 aus");
+            Serial.println("manualPumpControl off");
           }
           else
           {
-            manPump2Enabled = 1;
-            Serial.println("Pumpe 2 ein");
+            manualPumpControl = 1;
+            Serial.println("manualPumpControl on");
           }
         }
-      }
+        // ---------------------------------------------
+        // Pumpe 1 Handbetrieb
+        if (server.arg(0) == "21")
+        {
+          //Serial.println(F("Manual Pumpe 1"));
+          if (manualPumpControl == 0) 
+          {
+            manPump1Enabled = 0;
+          } 
+          else 
+          {
+
+            if (manPump1Enabled == 1)
+            { // toggle pump on / off
+              manPump1Enabled = 0;
+              Serial.println("Pumpe 1 aus");
+            } else {
+              manPump1Enabled = 1;
+              Serial.println("Pumpe 1 ein");
+            }
+          }
+        }
+        // ---------------------------------------------
+        // Pumpe 1 Handbetrieb
+        if (server.arg(0) == "22")
+        {
+          if (manualPumpControl == 0)
+          {
+            manPump2Enabled = 0;
+          }
+          else
+          {
+
+            if (manPump2Enabled == 1)
+            { // toggle pump on / off
+              manPump2Enabled = 0;
+              Serial.println("Pumpe 2 aus");
+            }
+            else
+            {
+              manPump2Enabled = 1;
+              Serial.println("Pumpe 2 ein");
+            }
+          }
+        }
   } // end of if argName(0) == toggle
   else if (server.argName(0) == "CMD" && server.arg(0) == "RESET") // Example how to reset the module. Just send ?CMD=RESET
   {

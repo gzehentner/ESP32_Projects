@@ -1008,10 +1008,10 @@ void loop(void)
   //  Serial.print(" linkPump : ");Serial.println(linkPump);
   if (timeTickForCyclicPrint == 1)
   {
-    Serial.println();
-    Serial.print("Control: "); Serial.print(manualPumpControl);
-    Serial.print("  Pump1 on:   "); Serial.print(manPump1Enabled);
-    Serial.print("  Pump2 on:   "); Serial.print(manPump2Enabled);
+    // Serial.println();
+    // Serial.print("Control: "); Serial.print(manualPumpControl);
+    // Serial.print("  Pump1 on:   "); Serial.print(manPump1Enabled);
+    // Serial.print("  Pump2 on:   "); Serial.print(manPump2Enabled);
   }
 
 #endif
