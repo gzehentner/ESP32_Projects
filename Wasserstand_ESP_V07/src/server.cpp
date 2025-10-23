@@ -424,9 +424,10 @@ void handlePage()
   // Manuelle Pumpe
   message += F("<article>\n"
                //-----------------------------------------------------------------------------------------
-               "<h2>Manuelle Pumpen-Kontrolle</h2>\n"
-               "<p>Bevor die Pumpen per Hand geschaltet werden können, bitte die oberste Schaltfläche anklicken "
-               "<br>rot : Manuelle Pumpen-Kontrolle ein"
+               "<h2>Handbetrieb</h2>\n"
+               "<p>Handbetrieb einschalten: <br>oberste Schaltfläche klicken"
+               "<br>Handbetrieb --> automatische Regelung aus<br>"
+               "<br>grün : Handbetrieb ein"
                "<br><br>Um die Pumpen zu schalten, klicke auf den entsprechenden Schalter<br>"
                "<br>Pumpe 1 : grün  : eingeschaltet"
                "<br>Pumpe 2 : grün  : eingeschaltet"
@@ -442,7 +443,7 @@ void handlePage()
 
   if (manPump1Enabled == 1) //
   {
-    message += F("<p class='green'><a href='c.php?toggle=21' target='i' onclick='reloadPage()'>Pumpe 1</a></p>\n");
+    message += F("<p class='on_green'><a href='c.php?toggle=21' target='i' onclick='reloadPage()'>Pumpe 1</a></p>\n");
   }
   else
   {
@@ -450,7 +451,7 @@ void handlePage()
   }
   if (manPump2Enabled == 1) //
   {
-    message += F("<p class='green'><a href='c.php?toggle=22' target='i' onclick='reloadPage()'>Pumpe 2</a></p>\n");
+    message += F("<p class='on_green'><a href='c.php?toggle=22' target='i' onclick='reloadPage()'>Pumpe 2</a></p>\n");
   }
   else
   {
@@ -775,7 +776,7 @@ void handleCss()
               "h2{font-size:1.0em}"
               "h3{font-size:0.9em}"
               "p{color: black;}"
-              "a{text-decoration:none;color:dimgray;text-align:center}"
+              "a{text-decoration:none;color:black;text-align:center}"
               "main{text-align:center}"
               "article{vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:#E5E5E5;width:20em;text-align:left}" // if you don't like the floating effect (vor portrait mode on smartphones!) - remove display:inline-block
               "article h2{margin-top:0;padding-bottom:1px}"
@@ -785,17 +786,16 @@ void handleCss()
               "button {margin-top:0.3em; color: black !important;}" // Added color: black !important;
               "footer p{font-size:0.8em;color:dimgray;background:silver;text-align:center;margin-bottom:5px}"
               "nav{background-color:silver;margin:1px;padding:5px;font-size:0.8em}"
-              "nav a{color:dimgrey;padding:10px;text-decoration:none}"
+              "nav a{color: black;padding:10px;text-decoration:none}"
               "nav a:hover{text-decoration:underline}"
               "nav p{margin:0px;padding:0px}"
               ".on_red, .on_green, .off{margin-top:0;margin-bottom:0.2em;margin-left:4em;font-size:1.4em;border-style:solid;border-radius:10px;border-style:outset;width:5em;height:1.5em;text-decoration:none;text-align:center}"
-              ".off{color:black;background-color:gray;border-color:grey}"
-              ".on_red{background-color:red;border-color:red}"
-              ".on_green{background-color:green;border-color:green}"
+              ".off{color:black important!;background-color:gray;border-color:gray}"
+              ".on_red{color:black important!;background-color:red;border-color:red}"
+              ".on_green{color:black important!;background-color:green;border-color:green}"
               "message_ok  {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:green ;width:19em;text-align:center}"
               "message_warn{color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:orange;width:19em;text-align:center}"
-              "message_err {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:red   ;width:19em;text-align:center}"
-            );
+              "message_err {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:red   ;width:19em;text-align:center}");
   server.send(200, "text/css", message);
 }
 
@@ -844,7 +844,7 @@ void handleJs()
                "   if (jo['ss'] > 3600) {document.getElementById('hour').innerHTML = Math.floor(jo['ss'] / 3600 % 24);}\n"
                "   if (jo['ss'] > 86400) {document.getElementById('day').innerHTML = Math.floor(jo['ss'] / 86400 % 7);}\n"
                "   if (jo['ss'] > 604800) {document.getElementById('week').innerHTML = Math.floor(jo['ss'] / 604800 % 52);}\n"
-               "   document.getElementById('sec').style.color = 'dimgray';\n" // if everything was ok, the second will be grey again.
+               "   document.getElementById('sec').style.color = 'dimgray';\n" // if everything was ok, the second will be gray again.
                " })\n"
                " .catch(function() {\n" // this is where you run code if the server returns any errors
                "  document.getElementById('sec').style.color = 'red';\n"
