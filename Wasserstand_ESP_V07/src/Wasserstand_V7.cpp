@@ -210,6 +210,8 @@ unsigned long actLoopRuntime = 0;
 unsigned long previousMillisLoopRuntime = 0; // last timestamp for loop
 unsigned long millisNowLoopRuntime = 0;      // actual timestamp
 
+unsigned long dailyPumpRunTime = DAILY_PUMP_RUN_TIME;
+
 const uint16_t ajaxIntervall = 5; // intervall for AJAX or fetch API call of website in seconds
 uint32_t clientPreviousSs = 0;    // - clientIntervall;  // last second when data was sent to server
 
@@ -395,7 +397,8 @@ void measureRuntimeEnd(MeasureRuntime &measureRuntime)
 //===================================================================*/
 // variables for toplevel
 PumpStatus pumpStatus = {0, 0, 0};      // create a PumpStatus object to manage pump states
-PumpControl pumpControl = {0, 0, 0, 0, 0, 0, 0}; // create a PumpControl object to manage pump operations
+PumpControl pumpControl = {0, 0, 0, 0, 0, 0, 0, 0, 0}; // create a PumpControl object to manage pump operations
+int triggerCheckPump;
 //===================================================================*/
 
 /*****************************************************************************************************************
@@ -742,7 +745,10 @@ void loop(void)
   pumpControl.manualPumpControl = manualPumpControl;
   pumpControl.manPump1Enabled = manPump1Enabled;
   pumpControl.manPump2Enabled = manPump2Enabled;
-  
+
+
+
+
   measureRuntimeEnd(measureLoopAll);
   measureRuntimeEnd(measureLoopOthers);
 
@@ -1028,6 +1034,9 @@ void loop(void)
     }
   }
 
+
+  checkDailyTrigger(pumpStatus, pumpControl, triggerCheckPump);
+  checkPump(pumpStatus, pumpControl, triggerCheckPump, dailyPumpRunTime);
   controlPump(pumpControl);
   measureOperatingTime(pumpStatus, pumpControl);
   selectPump(pumpStatus, pumpControl);

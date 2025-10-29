@@ -34,6 +34,9 @@ struct PumpControl
     int manualPumpControl;
     int manPump1Enabled;
     int manPump2Enabled;
+
+    int checkPump1;
+    int checkPump2;
 };
 
 //*******************************************************************************
@@ -42,5 +45,10 @@ void measureOperatingTime(PumpStatus &pumpStatus, PumpControl &pumpControl);
 void controlPump(PumpControl &pumpControl);
 void selectPump(PumpStatus &pumpStatus, PumpControl &pumpControl);
 void manualPumpOperation(PumpControl &PumpControl);
+void initTimeZone();
+void checkDailyTrigger(PumpStatus &pumpStatus, PumpControl &pumpControl,
+                       int &triggerCheckPump);
+void checkPump(PumpStatus &pumpStatus, PumpControl &pumpControl, int triggerCheckPump,
+               unsigned long dailyPumpRunTime);
 
 #endif

@@ -24,7 +24,7 @@
 
 #include <Arduino.h>
 
-#define VERSION "7.2" // the version of this sketch
+#define VERSION "8.0" // the version of this sketch
 
 // setting for ADC select: MyUSE_ADC
 #define internADC 0
@@ -270,9 +270,11 @@ const int maxPoints = 100;
 #define Level_AHH 185  // Oberkante Schacht = 187cm // Oberkante Bodenplatte = (OK-Schacht + 8 cm) = 1,95cm
 #define Level_AH 170   // Warnschwelle
 #define Level_AL 155
-#define Level_ALL 140 // Unterkante KG Rohr
-                      // Aktueller Niedrig-Stand Nov 2023 = 99 cm
-#define Level_HIST 2  // Hysterese für den Pegel
+#define Level_ALL 140   // Unterkante KG Rohr
+                        // Gefälle Rohr Schacht innen zu außen ca. 20 cm
+                        // Aktueller Niedrig-Stand Nov 2023 = 99 cm
+
+                      #define Level_HIST 2  // Hysterese für den Pegel
 
 #define Level_AHHH_Str "195"
 #define Level_AHH_Str "185"
@@ -310,7 +312,15 @@ const int maxValue = 500; // measurement range: 000cm to 500cm --> maxValue=500
 #define timeUnit_opTime 1000 // (millis/1000) = seconds (for development)
 #define opTimeToExchange 20  // unit: timeUnit_opTime (seconds)
 #define timeToSecondPump 10  // unit: timeUnit_opTime (seconds)
+
+#define DEBUG_DAILY_TRIGGER // daily trigger for check both pumps
 #endif
+
+/*=================================================================*/
+/* Parameter for checkPump */
+/*=================================================================*/
+#define DAILY_PUMP_RUN_TIME 5000          // how long has the pump to be switched on? (milliseconds)
+extern unsigned long dailyPumpRunTime;
 
 //=========================================================
 void debugPrintCyclic(int index, long WaitingTimeCyclicPrint, String printText, int newline, long printValue);
