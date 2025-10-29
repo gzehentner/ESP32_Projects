@@ -313,7 +313,7 @@ const int maxValue = 500; // measurement range: 000cm to 500cm --> maxValue=500
 #define opTimeToExchange 20  // unit: timeUnit_opTime (seconds)
 #define timeToSecondPump 10  // unit: timeUnit_opTime (seconds)
 
-#define DEBUG_DAILY_TRIGGER // daily trigger for check both pumps
+//#define DEBUG_DAILY_TRIGGER // daily trigger for check both pumps
 #endif
 
 /*=================================================================*/
