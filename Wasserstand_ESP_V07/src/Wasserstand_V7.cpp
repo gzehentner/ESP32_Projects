@@ -105,6 +105,7 @@ known issues: OTA download not possible "not enouth space"
 #include <Arduino.h>
 
 #include <waterlevel.h>
+#include <myWiFiLib.h>
 
 #include <ESP_Mail_Client.h>
 #include <WiFi.h>
@@ -306,15 +307,7 @@ char *ramend = (char *)0x20088000;
 /* *******************************************************************
          other settings / weitere Einstellungen für den Anwender
  ********************************************************************/
-
-#ifndef STASSID                // either use an external .h file containing STASSID and STAPSK or ...
-#define STASSID "Zehentner"    // ... modify these line to your SSID
-#define STAPSK "ElisabethScho" // ... and set your WIFI password
-#endif
-
-const char *ssid = STASSID;
-const char *password = STAPSK;
-
+// WIFI Settings moved to myWiFiLib.h
 String phoneNumber = "+491607547424";
 String apiKey = "6878208";
 
@@ -450,27 +443,8 @@ void setup(void)
   }
 
   /*=================  Connect to WIFI */
-  char myhostname[8] = {"esp"};
-  strcat(myhostname, TXT_BOARDID);
-  WiFi.hostname(myhostname);
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  Serial.println("");
-
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
+  connectWifi();
+  
 #if BOARDTYPE == ESP32
 
   if (MDNS.begin("esp32"))

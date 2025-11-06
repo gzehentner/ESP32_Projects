@@ -8,6 +8,7 @@
 #include <pumpControl.h>
 #include <timeserver.h>
 #include <MyLittleFSLib.h>
+#include <myWiFiLib.h>
 // #include <TelnetStream.h>
 // #include <debugPrint.h>
 
@@ -189,11 +190,36 @@ const char *root_ca_chain =
     if (simError == 1)
     {
       httpCode = -66;
-      simError = 0; // reset after one error
+      //simError = 0; // reset after one error
     }
     // error handling
     if (httpCode < 0)
     {
+
+      ssize_t size = getFileSize("/error.log");
+      if (size < 0)
+        Serial.println("Could not get size or file not found");
+      else
+        Serial.printf("File size: %d bytes\n", (int)size);
+
+      if (size > MAX_ERROR_FILE_SIZE) 
+      {
+        // if backup file already exist, delete it
+        if (LittleFS.exists("/error.1.log"))
+          deleteFile("/error.1.log");
+
+          // rename to old
+          renameFile("/error.log", "/error.1.log");
+
+          // create new 
+          String errMessage = "";
+          errMessage = currentDate;
+          errMessage += " - ";
+          errMessage += formattedTime;
+          errMessage += " - ";
+          errMessage += "error.log renamed to error.1.log\n";
+          appendFile("/error.log", errMessage.c_str());
+      }
 
       // write to file
       String errMessage = "";
@@ -206,22 +232,17 @@ const char *root_ca_chain =
       errMessage += "\n";
       appendFile("/error.log", errMessage.c_str());
 
+       
       errCnt_communication++;
 
       // ein Neustart wg fehlerhafter Kommunikation führt zu instabilem System
       // am wichtigsten ist die Pumpensteuerung
 
-      // if (errCnt_communication > ERR_CNT_COMMUNICATION)
-      // {
-      //   // reset ESP8266
-      //   errMessage =  currentDate ;
-      //   errMessage += " - " ;
-      //   errMessage += formattedTime;
-      //   errMessage += " - " ;
-      //   errMessage +=  "client connection error - restart triggered\n";
-      //   appendFile("/error.log", errMessage.c_str());
-      //   ESP.restart();
-      // }
+       if (errCnt_communication > ERR_CNT_COMMUNICATION)
+       {
+         restartWiFi();
+         errCnt_communication = 0;
+        }
     }
     else
     {
