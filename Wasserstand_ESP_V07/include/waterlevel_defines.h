@@ -310,7 +310,7 @@ const int maxValue = 500; // measurement range: 000cm to 500cm --> maxValue=500
 #define timeToSecondPump 5    // unit: timeUnit_opTime (minutes)
 #define MAX_ERROR_FILE_SIZE 2048 // maximum size of error.log (bytes)
 #else
-#define timeUnit_opTime 500 // (millis/1000) = seconds (for development)
+#define timeUnit_opTime 1000 // (millis/1000) = seconds (for development)
 #define opTimeToExchange 20  // unit: timeUnit_opTime (seconds)
 #define timeToSecondPump 10  // unit: timeUnit_opTime (seconds)
 #define MAX_ERROR_FILE_SIZE 300  // maximum size of error.log (bytes)
