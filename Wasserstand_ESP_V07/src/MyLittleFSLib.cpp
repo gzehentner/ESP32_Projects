@@ -75,6 +75,27 @@ void deleteFile(const char *path) {
     Serial.println("Delete failed");
   }
 }
+
+ssize_t getFileSize(const char *path)
+{
+  if (!LittleFS.begin())
+  {
+    // mount failed
+    return -1;
+  }
+  if (!LittleFS.exists(path))
+  {
+    // file does not exist
+    return -1;
+  }
+  File f = LittleFS.open(path, "r");
+  if (!f)
+    return -1;
+  ssize_t sz = (ssize_t)f.size(); // bytes
+  f.close();
+  return sz;
+}
+
 //void listDir(const char *dirname) {
 //  Serial.printf("Listing directory: %s\n", dirname);
 

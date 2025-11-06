@@ -510,7 +510,58 @@ void handlePage()
     file.close();
   }
   //-----------------------------------------------------------------------------------------
- 
+
+  //-----------------------------------------------------------------------------------------
+  // Print error buffer old
+  message += F("<article>\n"
+
+               //-----------------------------------------------------------------------------------------
+               "<h2>Print errorbuffer old</h2>\n"
+               "<p>wenn error.log zu groß wird, wird es auf error.1.log kopiert"
+               "<br>Dieses wird hier angezeigt"
+               "</p>");
+
+
+  // open file for reading and check if it exists
+  file = LittleFS.open("/error.1.log", "r");
+  if (!file)
+  {
+    Serial.println("Failed to open error.1.log for reading");
+    message += "<br>File not found";
+    Serial.println("error.1.log doesnt exist; generating a new one");
+
+    String errMessage = "";
+    errMessage = currentDate;
+    errMessage += " - ";
+    errMessage += formattedTime;
+    errMessage += " - ";
+    errMessage += "init error-file\n";
+    appendFile("/error.1.log", errMessage.c_str());
+  }
+  else
+  {
+
+    // read from file line by line
+    // prepare loop
+    // define locals
+    char c;
+
+    while (file.available())
+    {
+      c = file.read();
+
+      if (c == '\n')
+      {
+        message += "<br>";
+      }
+      else
+      {
+        message += c;
+      }
+    }
+    file.close();
+  }
+
     addBottom(message);
   server.send(200, "text/html", message);
 }
