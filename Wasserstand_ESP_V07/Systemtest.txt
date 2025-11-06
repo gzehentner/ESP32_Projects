@@ -48,6 +48,15 @@ Testprozedur:
         - Einschaltdauer der Pumpen merken (wird be bplaced angezeigt)
             (nur wenn Post eingeschaltet ist)
             Nach dem Reboot test müssen die Werte wieder passen
+    ------------------------------------
+    -- Handbetrieb
+        - Handbetrieb einschalten
+        - Pumpe 1 und 2 einschalten (LED müssen leuchten)
+        - Handbetrieb ausschalten
+        - Pumpen müssen aus sein
+        - Handbetrieb ein
+        - Pumpen bleiben aus
+        - Handbetrieb aus
 =========================================================================
 3) Übertragungsfehler
 =========================================================================

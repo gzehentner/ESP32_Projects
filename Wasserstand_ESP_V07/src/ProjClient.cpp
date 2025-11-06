@@ -49,7 +49,8 @@
 //   https://letsencrypt.org/certs/isrgrootx1.pem
 // das soll 10 Jahre halten
 
-#ifdef blaced_root_cert
+// #define bplaced_root_cert
+#ifdef  bplaced_root_cert
 const char *root_ca_chain =
     "-----BEGIN CERTIFICATE-----\n"
     "MIIFBTCCAu2gAwIBAgIQWgDyEtjUtIDzkkFX6imDBTANBgkqhkiG9w0BAQsFADBP\n"

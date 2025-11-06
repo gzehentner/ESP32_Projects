@@ -23,6 +23,10 @@ extern int simVal_ALL;
 extern int simError  ;    //  sim one failed sendPost (ProjClient.cpp)
 extern int simTimeout; // force timeout error for testing purposes
 
+extern int manualPumpControl;
+extern int manPump1Enabled;
+extern int manPump2Enabled;
+
 
 //extern WebServer server; // declare an instance for the webserver
 extern int sendToClient; // enable sending to client

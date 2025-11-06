@@ -96,10 +96,17 @@ int firstRun = 1;
 
 int time_steps = 0;
 
+// **************************************************************************************************
+// variables for manual pump control
+// **************************************************************************************************
+int manualPumpControl = 0;
+int manPump1Enabled = 0;
+int manPump2Enabled = 0;
 
 // **************************************************************************************************
-void handleNotFound() {
-// **************************************************************************************************
+void handleNotFound()
+{
+  // **************************************************************************************************
   // digitalWrite(builtin_led, 1);
   String message = "File Not Found\n\n";
   message += "URI: ";
@@ -120,7 +127,6 @@ void handleNotFound() {
 
   server.send(404, "text/plain", message);
 }
-
 
 // **************************************************************************************************
 /* add a header  to each page including refs for all other pages */
@@ -414,9 +420,51 @@ void handlePage()
   // end of simulation
   "</article>\n");
 
+  //-----------------------------------------------------------------------------------------
+  // Manuelle Pumpe
+  message += F("<article>\n"
+               //-----------------------------------------------------------------------------------------
+               "<h2>Handbetrieb</h2>\n"
+               "<p>Handbetrieb einschalten: <br>oberste Schaltfläche klicken"
+               "<br>Handbetrieb --> automatische Regelung aus<br>"
+               "<br>grün : Handbetrieb ein"
+               "<br><br>Um die Pumpen zu schalten, klicke auf den entsprechenden Schalter<br>"
+               "<br>Pumpe 1 : grün  : eingeschaltet"
+               "<br>Pumpe 2 : grün  : eingeschaltet"
+               "</p>");
+  if (manualPumpControl == 1) // manueller Betrieb ein
+  {
+    message += F("<p class='on_green'><a href='c.php?toggle=20' target='i' onclick='reloadPage()' >Handbetrieb</a></p>\n");
+  }
+  else
+  {
+    message += F("<p class='off'><a href='c.php?toggle=20' target='i' onclick='reloadPage()'>Handbetrieb</a></p>\n");
+  }
 
+  if (manPump1Enabled == 1) //
+  {
+    message += F("<p class='on_green'><a href='c.php?toggle=21' target='i' onclick='reloadPage()'>Pumpe 1</a></p>\n");
+  }
+  else
+  {
+    message += F("<p class='off'><a href='c.php?toggle=21' target='i' onclick='reloadPage()'>Pumpe 1</a></p>\n");
+  }
+  if (manPump2Enabled == 1) //
+  {
+    message += F("<p class='on_green'><a href='c.php?toggle=22' target='i' onclick='reloadPage()'>Pumpe 2</a></p>\n");
+  }
+  else
+  {
+    message += F("<p class='off'><a href='c.php?toggle=22' target='i' onclick='reloadPage()'>Pumpe 2</a></p>\n");
+  }
 
- //-----------------------------------------------------------------------------------------
+  message += F("<iframe name='i' style='display:none' title='Tooltip' ></iframe>\n"
+  // hack to keep the button press in the window
+  //-----------------------------------------------------------------------------------------
+  // end of manual pump control
+  "</article>\n");
+
+  //-----------------------------------------------------------------------------------------
   // Print error buffer
   message += F("<article>\n"
 
@@ -428,7 +476,8 @@ void handlePage()
 
   // open file for reading and check if it exists
   File file = LittleFS.open("/error.log", "r");
-  if (!file) {
+  if (!file)
+  {
     Serial.println("Failed to open error.log nf for reading");
     message += "<br>File not found";
     Serial.println("error.log doesnt exist; generating a new one");
@@ -440,7 +489,9 @@ void handlePage()
     errMessage += " - ";
     errMessage += "init error-file\n";
     appendFile("/error.log", errMessage.c_str());
-    } else {
+  }
+  else
+  {
 
     // read from file line by line
     // prepare loop
@@ -725,7 +776,7 @@ void handleCss()
               "h2{font-size:1.0em}"
               "h3{font-size:0.9em}"
               "p{color: black;}"
-              "a{text-decoration:none;color:dimgray;text-align:center}"
+              "a{text-decoration:none;color:black;text-align:center}"
               "main{text-align:center}"
               "article{vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:#E5E5E5;width:20em;text-align:left}" // if you don't like the floating effect (vor portrait mode on smartphones!) - remove display:inline-block
               "article h2{margin-top:0;padding-bottom:1px}"
@@ -735,17 +786,16 @@ void handleCss()
               "button {margin-top:0.3em; color: black !important;}" // Added color: black !important;
               "footer p{font-size:0.8em;color:dimgray;background:silver;text-align:center;margin-bottom:5px}"
               "nav{background-color:silver;margin:1px;padding:5px;font-size:0.8em}"
-              "nav a{color:dimgrey;padding:10px;text-decoration:none}"
+              "nav a{color: black;padding:10px;text-decoration:none}"
               "nav a:hover{text-decoration:underline}"
               "nav p{margin:0px;padding:0px}"
               ".on_red, .on_green, .off{margin-top:0;margin-bottom:0.2em;margin-left:4em;font-size:1.4em;border-style:solid;border-radius:10px;border-style:outset;width:5em;height:1.5em;text-decoration:none;text-align:center}"
-              ".off{color:black;background-color:gray;border-color:grey}"
-              ".on_red{background-color:red;border-color:red}"
-              ".on_green{background-color:green;border-color:green}"
+              ".off{color:black important!;background-color:gray;border-color:gray}"
+              ".on_red{color:black important!;background-color:red;border-color:red}"
+              ".on_green{color:black important!;background-color:green;border-color:green}"
               "message_ok  {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:green ;width:19em;text-align:center}"
               "message_warn{color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:orange;width:19em;text-align:center}"
-              "message_err {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:red   ;width:19em;text-align:center}"
-            );
+              "message_err {color:white;vertical-align:top;display:inline-block;margin:0.2em;padding:0.1em;border-style:solid;border-color:#C0C0C0;background-color:red   ;width:19em;text-align:center}");
   server.send(200, "text/css", message);
 }
 
@@ -794,7 +844,7 @@ void handleJs()
                "   if (jo['ss'] > 3600) {document.getElementById('hour').innerHTML = Math.floor(jo['ss'] / 3600 % 24);}\n"
                "   if (jo['ss'] > 86400) {document.getElementById('day').innerHTML = Math.floor(jo['ss'] / 86400 % 7);}\n"
                "   if (jo['ss'] > 604800) {document.getElementById('week').innerHTML = Math.floor(jo['ss'] / 604800 % 52);}\n"
-               "   document.getElementById('sec').style.color = 'dimgray';\n" // if everything was ok, the second will be grey again.
+               "   document.getElementById('sec').style.color = 'dimgray';\n" // if everything was ok, the second will be gray again.
                " })\n"
                " .catch(function() {\n" // this is where you run code if the server returns any errors
                "  document.getElementById('sec').style.color = 'red';\n"
@@ -823,8 +873,7 @@ void handleCommand()
     Serial.println(server.arg(i));
   }
   if (server.argName(0) == "toggle") // the parameter which was sent to this server
-  {
-    //reloadDone = 0;
+  {    //reloadDone = 0;
     //Serial.println("reloadDone -> 0 -- Cmd = toggle");
 
     if (server.arg(0) == "a") // the value for that parameter
@@ -917,7 +966,8 @@ void handleCommand()
       else
       {
         // force error with sendPost to bplaced; response with negative code is forced
-        if (debugLevelSwitches==1) {
+        if (debugLevelSwitches == 1) {
+        
           simTimeout = 1;
           Serial.println("simTimeout on");
         }
@@ -926,7 +976,7 @@ void handleCommand()
     if (server.arg(0) == "8")
     {
       Serial.println(F("D232 toggle useLiveMail"));
-      if (useLiveMail==1)
+      if (useLiveMail == 1)
       { // toggle usage of mail address
         useLiveMail = 0;
         Serial.println("useLiveMail off");
@@ -934,12 +984,77 @@ void handleCommand()
       else
       {
         // use web.de
-        if (debugLevelSwitches==1) {
+        if (debugLevelSwitches == 1)
+        {
           useLiveMail = 1;
           Serial.println("useLiveMail on");
         }
       }
     }
+      
+        // ---------------------------------------------
+        // Handbetrieb
+        if (server.arg(0) == "20") 
+        {
+          Serial.println(F("Manual Operation"));
+          if (manualPumpControl==1)
+          { // toggle error generation
+            manualPumpControl = 0;
+            manPump1Enabled = 0;    // manual control only when manualPumpControl is enabled
+            manPump2Enabled = 0;
+            Serial.println("manualPumpControl off");
+          }
+          else
+          {
+            manualPumpControl = 1;
+            Serial.println("manualPumpControl on");
+          }
+        }
+        // ---------------------------------------------
+        // Pumpe 1 Handbetrieb
+        if (server.arg(0) == "21")
+        {
+          //Serial.println(F("Manual Pumpe 1"));
+          if (manualPumpControl == 0) 
+          {
+            manPump1Enabled = 0;
+          } 
+          else 
+          {
+
+            if (manPump1Enabled == 1)
+            { // toggle pump on / off
+              manPump1Enabled = 0;
+              Serial.println("Pumpe 1 aus");
+            } else {
+              manPump1Enabled = 1;
+              Serial.println("Pumpe 1 ein");
+            }
+          }
+        }
+        // ---------------------------------------------
+        // Pumpe 1 Handbetrieb
+        if (server.arg(0) == "22")
+        {
+          if (manualPumpControl == 0)
+          {
+            manPump2Enabled = 0;
+          }
+          else
+          {
+
+            if (manPump2Enabled == 1)
+            { // toggle pump on / off
+              manPump2Enabled = 0;
+              Serial.println("Pumpe 2 aus");
+            }
+            else
+            {
+              manPump2Enabled = 1;
+              Serial.println("Pumpe 2 ein");
+            }
+          }
+        }
   } // end of if argName(0) == toggle
   else if (server.argName(0) == "CMD" && server.arg(0) == "RESET") // Example how to reset the module. Just send ?CMD=RESET
   {
