@@ -96,6 +96,17 @@ ssize_t getFileSize(const char *path)
   return sz;
 }
 
+void appendErrorFile(const char *message, String currentDate, String formattedTime)
+{
+  String errMessage = "";
+  errMessage = currentDate;
+  errMessage += " - ";
+  errMessage += formattedTime;
+  errMessage += " - ";
+  errMessage += message;
+  errMessage += "\n";
+  appendFile("/error.log", errMessage.c_str());
+}
 //void listDir(const char *dirname) {
 //  Serial.printf("Listing directory: %s\n", dirname);
 

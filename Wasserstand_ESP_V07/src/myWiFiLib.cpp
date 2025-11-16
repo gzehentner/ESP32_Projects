@@ -4,6 +4,9 @@
 #include <WiFi.h>
 
 #include <myWiFiLib.h>
+#include <MyLittleFSLib.h>
+#include <timeserver.h>
+
 #include <waterlevel_defines.h>
 
 const char *ssid = STASSID;
@@ -56,6 +59,12 @@ void restartWiFi()
 
     if (WiFi.status() == WL_CONNECTED)
     {
+        // write to file
+        String errMessage = "";
+        errMessage += " reconnected, to IP address: ";
+        errMessage += WiFi.localIP();
+        appendErrorFile(errMessage.c_str(),currentDate,formattedTime);
+
         Serial.println("\nWiFi reconnected!");
         Serial.print("IP address: ");
         Serial.println(WiFi.localIP());
