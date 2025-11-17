@@ -207,7 +207,9 @@ const char *root_ca_chain =
 
       //simError = 0; // reset after one error
     }
+    // ===========================================
     // error handling
+    // ===========================================
     if (httpCode < 0)
     {
 
@@ -216,8 +218,9 @@ const char *root_ca_chain =
       Serial.print("unchangedHttpCode : ");
       Serial.println(unchangedHttpCode);
 
-
-      // check size of error.log
+      // ===========================================
+      // check size of error.log and mv to error.1.log
+      // ===========================================
       ssize_t size = getFileSize("/error.log");
       Serial.printf("File size: %d bytes\n", (int)size);
 
@@ -236,7 +239,9 @@ const char *root_ca_chain =
         appendErrorFile(errMessage.c_str(), currentDate, formattedTime);
       }
 
+      // ===========================================
       // remember error code; write message to file only, if it is different to the last one
+      // ===========================================
       if (httpCode == oldHttpCode)
       {
 
@@ -267,20 +272,35 @@ const char *root_ca_chain =
        
       errCnt_communication++;
 
+      //========================================================================
       // ein Neustart wg fehlerhafter Kommunikation führt zu instabilem System
       // am wichtigsten ist die Pumpensteuerung
+      //========================================================================
 
-       if (errCnt_communication > ERR_CNT_COMMUNICATION)
-       {
-         restartWiFi();
-         errCnt_communication = 0;
-
-       }
+      if (errCnt_communication > ERR_CNT_COMMUNICATION)
+      {
+        restartWiFi();
+        errCnt_communication = 0;
+      }
     }
-    else
+    else // if httpCode is >= 0
     {
       // reset to zero, when communication is running again
       errCnt_communication = 0;
+
+      //========================================================================
+      // if same error code occures htmlCode is not printed. If a different code comes up the number of equal codes
+      //  are printed. The same if httpCode comes with a value > 0
+      //========================================================================
+      if (unchangedHttpCode > 0)
+      {
+        // write to file
+        errMessage = "httpCode unchanged for ";
+        errMessage += unchangedHttpCode;
+        errMessage += " times";
+        appendErrorFile(errMessage.c_str(), currentDate, formattedTime);
+        unchangedHttpCode = 0;
+      }
     }
     oldHttpCode = httpCode;
 }
