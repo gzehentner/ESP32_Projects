@@ -120,7 +120,7 @@ const char *root_ca_chain =
 #endif
 
   int errCnt_communication = 0;
-
+  String errMessage = "";
   void sendPost(PumpStatus &pumpStatus, PumpControl &pumpControl)
   // send data as POST to another webserver
   // V3 no Arduino String class for sending data
@@ -133,6 +133,10 @@ const char *root_ca_chain =
     const size_t MESSAGE_SIZE_MAX = 300; // maximum bytes for Message Buffer
     char message[MESSAGE_SIZE_MAX];      // the temporary sending message - html body
     char val[32];                        // buffer to convert floats and integers before appending
+
+    static int oldHttpCode = 0;
+    static int unchangedHttpCode = 0;
+    static int cntError = 0;
 
     strcpy(message, "board="); // Append chars
     strcat(message, TXT_BOARDID);
@@ -189,48 +193,76 @@ const char *root_ca_chain =
 
     if (simError == 1)
     {
-      httpCode = -66;
+      // to simulate handling of unchanged httpCode, we have to generate to different 
+      //  error codes. -66 three times, -60 fourtimes
+      if (cntError > 3)
+        httpCode = -60;
+      else
+        httpCode = -66;
+
+      if (cntError > 7)
+        cntError = 0;
+      else
+        cntError++;
+
       //simError = 0; // reset after one error
     }
     // error handling
     if (httpCode < 0)
     {
 
-      ssize_t size = getFileSize("/error.log");
-      if (size < 0)
-        Serial.println("Could not get size or file not found");
-      else
-        Serial.printf("File size: %d bytes\n", (int)size);
+      Serial.print("oldHttpCode: ");
+      Serial.println(oldHttpCode);
+      Serial.print("unchangedHttpCode : ");
+      Serial.println(unchangedHttpCode);
 
+
+      // check size of error.log
+      ssize_t size = getFileSize("/error.log");
+      Serial.printf("File size: %d bytes\n", (int)size);
+
+      // if it is too big create new one
       if (size > MAX_ERROR_FILE_SIZE) 
       {
         // if backup file already exist, delete it
         if (LittleFS.exists("/error.1.log"))
           deleteFile("/error.1.log");
 
-          // rename to old
-          renameFile("/error.log", "/error.1.log");
+        // rename to old
+        renameFile("/error.log", "/error.1.log");
 
-          // create new 
-          String errMessage = "";
-          errMessage = currentDate;
-          errMessage += " - ";
-          errMessage += formattedTime;
-          errMessage += " - ";
-          errMessage += "error.log renamed to error.1.log\n";
-          appendFile("/error.log", errMessage.c_str());
+        // create new 
+        errMessage = "error.log renamed to error.1.log\n";
+        appendErrorFile(errMessage.c_str(), currentDate, formattedTime);
       }
 
-      // write to file
-      String errMessage = "";
-      errMessage = currentDate;
-      errMessage += " - ";
-      errMessage += formattedTime;
-      errMessage += " - ";
-      errMessage += " httpCode = ";
-      errMessage += httpCode;
-      errMessage += "\n";
-      appendFile("/error.log", errMessage.c_str());
+      // remember error code; write message to file only, if it is different to the last one
+      if (httpCode == oldHttpCode)
+      {
+
+        unchangedHttpCode++;
+        Serial.print("oldHttpCode: ");
+        Serial.println(oldHttpCode);
+        Serial.print("unchangedHttpCode : ");
+        Serial.println(unchangedHttpCode);
+      }
+      else
+      {
+        if (unchangedHttpCode > 0)
+        {
+          // write to file
+          errMessage = "httpCode unchanged for ";
+          errMessage += unchangedHttpCode;
+          errMessage += " times";
+          appendErrorFile(errMessage.c_str(), currentDate, formattedTime);
+          unchangedHttpCode = 0;
+        }
+
+        // write to file
+        errMessage = " httpCode = ";
+        errMessage += httpCode;
+        appendErrorFile(errMessage.c_str(), currentDate, formattedTime);
+      }
 
        
       errCnt_communication++;
@@ -242,21 +274,28 @@ const char *root_ca_chain =
        {
          restartWiFi();
          errCnt_communication = 0;
-        }
+
+       }
     }
     else
     {
       // reset to zero, when communication is running again
       errCnt_communication = 0;
     }
+    oldHttpCode = httpCode;
 }
 
 void sendWhatsAppMessage(String message)
 {
 
   // Data to send with HTTP POST
-  String url = "https://api.callmebot.com/whatsapp.php?phone=" + phoneNumber + "&apikey=" + apiKey + "&text=" + urlEncode(message);
-  //String url = "https://api.callmebot.com/whatsapp.php?phone=+491607547424&apikey=6878208&text=" + urlEncode(message);
+  String url;
+  url.concat("https://api.callmebot.com/whatsapp.php?phone=");
+  url.concat(phoneNumber);
+  url.concat("&apikey=");
+  url.concat(apiKey);
+  url.concat("&text=");
+  url.concat(urlEncode(message));
   
 
   HTTPClient client;

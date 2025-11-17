@@ -10,6 +10,8 @@ void appendFile(const char *path,  const char *message);
 void renameFile(const char *path1, const char *path2  );
 void deleteFile(const char *path   );
 ssize_t getFileSize(const char *path);
+void appendErrorFile(const char *message, String currentDate, String formattedTime);
+// append to error file
 
 // void listDir   (const char *dirname);
 #endif
