@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "PlatformIO Build ESP32-CAM",
+			"type": "shell",
+			"command": "platformio",
+			"args": [
+				"run",
+				"-e",
+				"esp32cam"
+			],
+			"group": "build"
+		}
+	]
+}
