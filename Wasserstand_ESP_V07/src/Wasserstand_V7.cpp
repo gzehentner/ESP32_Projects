@@ -135,6 +135,8 @@ WebServer server(80);
 
 #include <MyLittleFSLib.h>
 
+#include <SerialLink.h>
+
 #else // ESP8266
 #include <Arduino.h>
 
@@ -246,6 +248,13 @@ int alarmStateOld = 0;       // previous value of alarmState
 bool executeSendMail = false;
 
 int debugLevelSwitches_old = 0;
+
+// SerialLink-Objekt für Kommunikation mit zweitem ESP32
+#if BOARDTYPE == ESP32
+SerialLink serialLink;
+unsigned long lastSerialLinkSend = 0;
+const uint16_t serialLinkInterval = 5; // Sende-Intervall in Sekunden
+#endif
 String receivedString = "";
 
 char input[64];
@@ -589,6 +598,15 @@ void setup(void)
   log_d("Free PSRAM: %d", ESP.getFreePsram());
 #endif
 #endif
+
+  /*=================================================================*/
+  // SerialLink initialisieren (nur ESP32)
+#if BOARDTYPE == ESP32
+  Serial.println(F("Initializing SerialLink..."));
+  serialLink.begin(9600, 4, 27); // 9600 baud, RX=GPIO4, TX=GPIO27 (GPIO17 belegt durch GPin_AL)
+  Serial.println(F("SerialLink ready"));
+#endif
+  /*=================================================================*/
 
   //==========================================
   // prepare logfile
@@ -1050,6 +1068,85 @@ void loop(void)
     }
   }
 #endif // useSerialInput
+
+  // **************************************************************************************************
+  // SerialLink: Daten senden und empfangen
+  // **************************************************************************************************
+#if BOARDTYPE == ESP32
+  // Eingehende Nachrichten verarbeiten
+  if (serialLink.available()) {
+    uint8_t msgType;
+    uint8_t msgData[SL_MAX_DATA_LENGTH];
+    uint8_t msgLength;
+    
+    if (serialLink.receiveMessage(msgType, msgData, msgLength)) {
+      Serial.print(F("SerialLink RX: Type=0x"));
+      Serial.print(msgType, HEX);
+      Serial.print(F(", Length="));
+      Serial.println(msgLength);
+      
+      // Nachricht verarbeiten
+      switch (msgType) {
+        case SL_MSG_PING:
+          // Ping empfangen -> Pong senden
+          serialLink.sendMessage(SL_MSG_PONG, nullptr, 0);
+          Serial.println(F("  -> PING received, PONG sent"));
+          break;
+          
+        case SL_MSG_TEXT:
+          // Textnachricht empfangen
+          msgData[msgLength] = '\0'; // Null-Terminierung
+          Serial.print(F("  -> Text: "));
+          Serial.println((char*)msgData);
+          break;
+          
+        case SL_MSG_WATERLEVEL:
+          // Wasserstand-Daten empfangen
+          if (msgLength == sizeof(WaterLevelData)) {
+            WaterLevelData data;
+            memcpy(&data, msgData, sizeof(WaterLevelData));
+            Serial.print(F("  -> WaterLevel: "));
+            Serial.print(data.level_mm);
+            Serial.print(F("mm, Alarm="));
+            Serial.println(data.alarm_state);
+          }
+          break;
+          
+        default:
+          Serial.println(F("  -> Unknown message type"));
+          break;
+      }
+    }
+  }
+  
+  // Eigene Daten periodisch senden
+  if (seconds_since_startup - lastSerialLinkSend >= serialLinkInterval) {
+    lastSerialLinkSend = seconds_since_startup;
+    
+    // Wasserstand-Daten zusammenstellen und senden
+    WaterLevelData wlData;
+    wlData.level_mm = myValueFilteredAct;
+    wlData.adc_value = myAdcFilteredAct;
+    wlData.alarm_state = alarmState;
+    wlData.timestamp = seconds_since_startup;
+    
+    if (serialLink.sendWaterLevel(wlData)) {
+      Serial.print(F("SerialLink TX: WaterLevel "));
+      Serial.print(wlData.level_mm);
+      Serial.println(F("mm sent"));
+    }
+    
+    // Statistik ausgeben (alle 60 Sekunden)
+    if (seconds_since_startup % 60 == 0) {
+      Serial.print(F("SerialLink Stats: TX="));
+      Serial.print(serialLink.getSentCount());
+      Serial.print(F(", RX="));
+      Serial.print(serialLink.getReceivedCount());
+      Serial.print(F(", Errors="));
+      Serial.println(serialLink.getErrorCount());
+    }
+  }
+#endif
 
   // **************************************************************************************************
   // set a delay to avoid ESP is busy all the time

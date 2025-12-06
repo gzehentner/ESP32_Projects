@@ -58,9 +58,17 @@
 
 #include <main.h>
 
-#include <takePhoto.h>    
+#include <takePhoto.h>
+#include <SerialLink.h>    
 
   // camera_fb_t * fb = NULL; // pointer
+
+// SerialLink für Wasserstand-Daten
+SerialLink serialLink;
+int lastWaterLevel_mm = 0;
+uint8_t lastAlarmState = 0;
+unsigned long lastSerialCheck = 0;
+unsigned long lastDataReceived = 0;
 
 // Replace with your network credentials
 const char* ssid = "Zehentner";
@@ -305,6 +313,12 @@ void setup() {
   #endif
 
   //======================================================================
+  // SerialLink initialisieren (RX=GPIO14, TX=GPIO13)
+  Serial.println("Initialisiere SerialLink...");
+  serialLink.begin(9600, 14, 13);
+  Serial.println("SerialLink bereit (RX:14, TX:13)");
+
+  //======================================================================
 
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
@@ -366,6 +380,58 @@ void loop() {
   #endif
   
   //======================================================================
+  // SerialLink: Empfange Wasserstand-Daten (alle 100ms prüfen)
+  if (millis() - lastSerialCheck > 100) {
+    lastSerialCheck = millis();
+    
+    if (serialLink.available()) {
+      uint8_t msgType;
+      uint8_t msgData[SL_MAX_DATA_LENGTH];
+      uint8_t msgLength;
+      if (serialLink.receiveMessage(msgType, msgData, msgLength)) {
+        lastDataReceived = millis();
+        
+        switch(msgType) {
+          case SL_MSG_PING:
+            Serial.println("[SerialLink] PING empfangen");
+            // Sende PONG zurück
+            {
+              uint8_t dummy = 0;
+              serialLink.sendMessage(SL_MSG_PONG, &dummy, 0);
+            }
+            break;
+            
+          case SL_MSG_WATERLEVEL: {
+            WaterLevelData* wlData = (WaterLevelData*)msgData;
+            lastWaterLevel_mm = wlData->level_mm;
+            lastAlarmState = wlData->alarm_state;
+            Serial.printf("[SerialLink] Wasserstand: %d mm, ADC: %d, Alarm: %d\n",
+                         wlData->level_mm, wlData->adc_value, wlData->alarm_state);
+            break;
+          }
+          
+          case SL_MSG_ALARM_STATE:
+            lastAlarmState = msgData[0];
+            Serial.printf("[SerialLink] Alarm-Status: %d\n", lastAlarmState);
+            break;
+            
+          case SL_MSG_TEXT:
+            Serial.print("[SerialLink] Text: ");
+            for(uint8_t i = 0; i < msgLength; i++) {
+              Serial.print((char)msgData[i]);
+            }
+            Serial.println();
+            break;
+            
+          default:
+            Serial.printf("[SerialLink] Unbekannter Typ: 0x%02X\n", msgType);
+            break;
+        }
+      }
+    }
+  }
+  
+  //======================================================================
   // take photo on click
   if (takeNewPhoto) {
     capturePhotoSaveSpiffs();
@@ -378,6 +444,7 @@ void loop() {
   if ((msecNow - msecLastCapture)/1000 > SEC_CAPTURE_DIFF)
   // if (false)
   {
+    serialLink.sendText("capturing photo");
     Serial.println("capturing photo");
     capturePhotoSaveSpiffs();
 
@@ -386,7 +453,7 @@ void loop() {
 
     msecLastCapture = msecNow;
     Serial.println("Sending photo done");
-
+    serialLink.sendText("Sending photo done");
     // reset msecTick with every capture
     msecTick = 0;
   }
@@ -423,6 +490,19 @@ void loop() {
     u8g2.setCursor(0, 24);
     u8g2.print("ErrCnt:");
     u8g2.print(errCnt_WiFi);
+
+    // Wasserstand anzeigen (4. Zeile)
+    u8g2.setCursor(0, 36);
+    if (lastDataReceived > 0 && (millis() - lastDataReceived) < 30000) {
+      u8g2.print("WL:");
+      u8g2.print(lastWaterLevel_mm);
+      u8g2.print("mm");
+      if (lastAlarmState > 0) {
+        u8g2.print(" ALARM!");
+      }
+    } else {
+      u8g2.print("WL: ---");
+    }
 
     u8g2.sendBuffer();
     msecTick++;
