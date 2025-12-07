@@ -339,8 +339,10 @@ struct MeasureRuntime
 extern MeasureRuntime measureSensor;
 extern MeasureRuntime measureLoopOthers;
 extern MeasureRuntime measureLoopAll;
+extern MeasureRuntime measureSendPost;
 
 void measureRuntimeStart(MeasureRuntime &measureRuntime);
 void measureRuntimeEnd(MeasureRuntime &measureRuntime);
+void measureRuntimeClearMax(MeasureRuntime &measureRuntime);
 
 #endif

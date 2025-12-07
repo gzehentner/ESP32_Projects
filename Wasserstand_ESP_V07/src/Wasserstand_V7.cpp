@@ -380,6 +380,7 @@ void debugPrintCyclic(int index, long WaitingTimeCyclicPrint, String printText, 
 MeasureRuntime measureSensor = {0, 0, 0};
 MeasureRuntime measureLoopOthers = {0, 0, 0};
 MeasureRuntime measureLoopAll = {0, 0, 0};
+MeasureRuntime measureSendPost = {0, 0, 0};
 
 void measureRuntimeStart(MeasureRuntime &measureRuntime)
 {
@@ -394,6 +395,11 @@ void measureRuntimeEnd(MeasureRuntime &measureRuntime)
   {
     measureRuntime.maxDelta = measureRuntime.runTime;
   }
+}
+
+void measureRuntimeClearMax(MeasureRuntime &measureRuntime)
+{
+  measureRuntime.maxDelta = 0;
 }
 
 //===================================================================*/
@@ -829,7 +835,9 @@ void loop(void)
     {
       if (valueStable > 0)
       {
+        measureRuntimeStart(measureSendPost);
         sendPost(pumpStatus, pumpControl);
+        measureRuntimeEnd(measureSendPost);
         // sendPost_V2();
       }
     }
@@ -1049,6 +1057,7 @@ void loop(void)
   }
 
   // serial input is not yet working reliably
+#define useSerialInput
 #ifdef useSerialInput
   // if there's any serial available, read it:
   if (Serial.available() > 0)
@@ -1057,14 +1066,19 @@ void loop(void)
     receivedString = Serial.readString();
 
     Serial.println();
-    Serial.println("rec: " + receivedString) + "---";
-    Serial.println(";");
+    Serial.print("rec:-");
+    Serial.print(receivedString);
+    Serial.println("---");
 
-    Serial.println("len: " + (receivedString.length()));
+    Serial.print("len: "); Serial.println(receivedString.length());
 
-    if (receivedString == "r")
+    if (receivedString == "rm")
     {
-      Serial.println("executing readFile");
+      Serial.println("resetting measure of runtimes");
+      measureRuntimeClearMax(measureLoopAll);
+      measureRuntimeClearMax(measureLoopOthers);
+      measureRuntimeClearMax(measureSendPost);
+      measureRuntimeClearMax(measureSensor);
     }
   }
 #endif // useSerialInput
@@ -1131,9 +1145,9 @@ void loop(void)
     wlData.timestamp = seconds_since_startup;
     
     if (serialLink.sendWaterLevel(wlData)) {
-      Serial.print(F("SerialLink TX: WaterLevel "));
-      Serial.print(wlData.level_mm);
-      Serial.println(F("mm sent"));
+      // Serial.print(F("SerialLink TX: WaterLevel "));
+      // Serial.print(wlData.level_mm);
+      // Serial.println(F("mm sent"));
     }
     
     // Statistik ausgeben (alle 60 Sekunden)

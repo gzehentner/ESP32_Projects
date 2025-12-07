@@ -315,6 +315,10 @@ void handlePage()
   message += measureSensor.maxDelta;
   message += F(" ms<br><br>");
 
+  message += F("  maximal sendPost runtime: ");
+  message += measureSendPost.maxDelta;
+  message += F(" ms<br><br>");
+
   //-----------------------------------------------------------------------------------------
   // End of show message depending of alarmstate
   message += F("</article>");
