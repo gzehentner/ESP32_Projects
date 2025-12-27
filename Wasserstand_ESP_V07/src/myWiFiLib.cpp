@@ -21,19 +21,31 @@ void connectWifi() {
     WiFi.begin(ssid, password);
     Serial.println("");
 
-    // Wait for connection
-    while (WiFi.status() != WL_CONNECTED)
+    // Wait for connection with timeout
+    int timeout = 0;
+    while (WiFi.status() != WL_CONNECTED && timeout < 20)
     {
         delay(500);
         Serial.print(".");
+        timeout++;
     }
 
-    Serial.println("");
-    Serial.print("Connected to ");
-    Serial.println(ssid);
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        Serial.println("");
+        Serial.print("Connected to ");
+        Serial.println(ssid);
+        Serial.print("IP address: ");
+        Serial.println(WiFi.localIP());
+    }
+    else
+    {
+        Serial.println("\nFailed to connect WiFi!");
+        Serial.println("\nSystem will be reset");
+        ESP.restart();
+    }
 }
+
 void restartWiFi()
 {
 
