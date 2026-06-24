@@ -207,6 +207,31 @@ void checkDailyTrigger(PumpStatus &pumpStatus, PumpControl &pumpControl,
 /*=================================================================*/
 {
     time_t now = time(nullptr); // epoch in UTC
+    
+    // Check if time is valid (NTP synchronized)
+    // Unix epoch starts at 1970-01-01, anything before 2020-01-01 is invalid
+    // 2020-01-01 00:00:00 UTC = 1577836800
+    if (now < 1577836800) {
+        static unsigned long lastWarningMillis = 0;
+        if (millis() - lastWarningMillis > 5000) { // Print warning every 5 seconds
+            Serial.print("Time not synced yet (epoch=");
+            Serial.print(now);
+            Serial.println("), skipping pump trigger check");
+            lastWarningMillis = millis();
+        }
+        triggerCheckPump = 0;
+        return; // Time not yet synchronized, skip daily trigger check
+    }
+    
+    // Debug: Time is valid - print once when first synchronized
+    static bool timeValidPrinted = false;
+    if (!timeValidPrinted) {
+        Serial.print("Time synchronized! Epoch=");
+        Serial.print(now);
+        Serial.println(" - Daily trigger checks active");
+        timeValidPrinted = true;
+    }
+    
     struct tm timeinfo;
 #if defined(ARDUINO_ARCH_ESP32)
     localtime_r(&now, &timeinfo); // wandelt mit gesetzter TZ in lokale Zeit
@@ -226,11 +251,11 @@ void checkDailyTrigger(PumpStatus &pumpStatus, PumpControl &pumpControl,
                     lastTriggeredYDay = timeinfo.tm_min;
 
 #else
-    if (timeinfo.tm_hour == 1 && timeinfo.tm_min == 0) // Stunde 1 - Min 0 -> (01:00)
-    {
-        if (lastTriggeredYDay != timeinfo.tm_yday)
-        {
-            lastTriggeredYDay = timeinfo.tm_yday;
+            if (timeinfo.tm_hour == 1 && timeinfo.tm_min == 0) // Stunde 1 - Min 0 -> (01:00)
+            {
+                if (lastTriggeredYDay != timeinfo.tm_yday)
+                {
+                    lastTriggeredYDay = timeinfo.tm_yday;
 #endif                    
                     ////
                     triggerCheckPump = 1;

@@ -47,6 +47,7 @@
 #include <ESPAsyncWebServer.h>
 // #include <StringArray.h>
 #include <SPIFFS.h>
+#include <SD_MMC.h>
 #include <FS.h>
 #include <timeserver.h>
 
@@ -59,16 +60,20 @@
 #include <main.h>
 
 #include <takePhoto.h>
-#include <SerialLink.h>    
+#if 0
+#include <SerialLink.h>
+#endif
 
   // camera_fb_t * fb = NULL; // pointer
 
-// SerialLink für Wasserstand-Daten
+// SerialLink für Wasserstand-Daten (vorübergehend deaktiviert)
+#if 0
 SerialLink serialLink;
 int lastWaterLevel_mm = 0;
 uint8_t lastAlarmState = 0;
 unsigned long lastSerialCheck = 0;
 unsigned long lastDataReceived = 0;
+#endif
 
 // Replace with your network credentials
 const char* ssid = "Zehentner";
@@ -90,11 +95,11 @@ int genError = 0;
 int genErrorDone = 0;
 
 #if isLiveSystem == 1
-  #define SEC_CAPTURE_DIFF 60
+  #define SEC_CAPTURE_DIFF 600
   const char *myServerName     = "https://zehentner.bplaced.net/Wasserstand/live/rec_photo.php"; 
   const char *myServerNameFile = "https://zehentner.bplaced.net/Wasserstand/live/rec_photo_file.php"; 
 #else 
-  #define SEC_CAPTURE_DIFF 20
+  #define SEC_CAPTURE_DIFF 600
   const char *myServerName     = "https://zehentner.bplaced.net/Wasserstand/dev/rec_photo.php"; 
   const char *myServerNameFile = "https://zehentner.bplaced.net/Wasserstand/dev/rec_photo_file.php"; 
  #endif
@@ -103,6 +108,7 @@ int genErrorDone = 0;
 AsyncWebServer server(80);
 
 boolean takeNewPhoto = false;
+bool sdCardReady = false;
 
 // OV2640 camera module pins (CAMERA_MODEL_AI_THINKER)
 #define PWDN_GPIO_NUM     32
@@ -140,6 +146,7 @@ const char index_html[] PROGMEM = R"rawliteral(
       <button onclick="rotatePhoto();">ROTATE</button>
       <button onclick="capturePhoto()">CAPTURE PHOTO</button>
       <button onclick="location.reload();">REFRESH PAGE</button>
+      <button onclick="openPhotoList()">PHOTO LIST</button>
       <button onclick="injectErrorFunc();">INJECT ERROR</button>
       <button onclick="debugFunc();">Show Debug Page</button>
     </p>
@@ -171,6 +178,9 @@ const char index_html[] PROGMEM = R"rawliteral(
     xhr.open('GET', "/debug", true);
     xhr.send();
   }
+  function openPhotoList() {
+    window.open('/photos', '_blank');
+  }
 
 </script>
 </html>)rawliteral";
@@ -197,26 +207,61 @@ void setup() {
 
   //======================================================================
   // prepare WiFi
-  char myhostname[8] = {"CamDev"};
-  WiFi.hostname(myhostname);
+  Serial.println("WiFi init start");
+  WiFi.persistent(false);
+  WiFi.mode(WIFI_OFF);
+  delay(100);
+  WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
+  WiFi.setHostname("CamDev");
 
-  // Connect to Wi-Fi
+  // Connect to Wi-Fi with timeout to avoid blocking setup forever.
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi...");
+  unsigned long wifiStart = millis();
+  const unsigned long wifiTimeoutMs = 30000;
+  while (WiFi.status() != WL_CONNECTED && (millis() - wifiStart) < wifiTimeoutMs) {
+    delay(250);
+    Serial.print(".");
+  }
+  Serial.println();
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("WiFi connected");
+  } else {
+    Serial.println("WiFi connect timeout - starting fallback AP");
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP("ESP32-CAM-Photo");
+    Serial.print("AP IP Address: http://");
+    Serial.println(WiFi.softAPIP());
   }
 
   //======================================================================
   // prepare file system 
   if (!SPIFFS.begin(true)) {
-    Serial.println("An Error has occurred while mounting SPIFFS");
-    ESP.restart();
+    Serial.println("SPIFFS mount failed (auto-format path). Trying explicit format...");
+
+    if (!SPIFFS.format()) {
+      Serial.println("SPIFFS format failed");
+      ESP.restart();
+    }
+
+    if (!SPIFFS.begin(false)) {
+      Serial.println("SPIFFS mount failed after explicit format");
+      ESP.restart();
+    }
+
+    Serial.println("SPIFFS formatted and mounted successfully");
   }
   else {
     delay(500);
     Serial.println("SPIFFS mounted successfully");
   }
+
+  //======================================================================
+  // SPIFFS-only mode: SD initialization is disabled to avoid pin conflicts
+  // with I2C on GPIO14/15 (used by the display setup).
+  sdCardReady = false;
+  Serial.println("SD init skipped (SPIFFS-only mode)");
 
   //======================================================================
   // print error file
@@ -250,8 +295,15 @@ void setup() {
 
   //======================================================================
   // Print ESP32 Local IP Address
-  Serial.print("IP Address: http://");
-  Serial.println(WiFi.localIP());
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.print("IP Address: http://");
+    Serial.println(WiFi.localIP());
+  } else if (WiFi.getMode() & WIFI_AP) {
+    Serial.print("Use AP IP Address: http://");
+    Serial.println(WiFi.softAPIP());
+  } else {
+    Serial.println("No IP address (WiFi not connected)");
+  }
 
   //======================================================================
   // OV2640 camera module
@@ -313,10 +365,7 @@ void setup() {
   #endif
 
   //======================================================================
-  // SerialLink initialisieren (RX=GPIO14, TX=GPIO13)
-  Serial.println("Initialisiere SerialLink...");
-  serialLink.begin(9600, 14, 13);
-  Serial.println("SerialLink bereit (RX:14, TX:13)");
+  // SerialLink vorübergehend deaktiviert
 
   //======================================================================
 
@@ -336,6 +385,73 @@ void setup() {
 
   server.on("/saved-photo", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, FILE_PHOTO, "image/jpg", false);
+  });
+
+  // Show list of timestamped photos stored in SPIFFS.
+  server.on("/photos", HTTP_GET, [](AsyncWebServerRequest *request) {
+    File root = SPIFFS.open("/");
+    if (!root || !root.isDirectory()) {
+      request->send(500, "text/plain", "Fehler beim Lesen von SPIFFS");
+      return;
+    }
+
+    String html = "<!DOCTYPE html><html><head><meta charset='utf-8'>";
+    html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
+    html += "<title>SPIFFS Photos</title></head><body>";
+    html += "<h2>SPIFFS Photo List</h2>";
+    html += "<p><a href='/'>Back to Camera Page</a></p><ul>";
+
+    File file = root.openNextFile();
+    int count = 0;
+    while (file) {
+      String rawName = String(file.name());
+      String normalizedName = rawName;
+      if (!normalizedName.startsWith("/")) {
+        normalizedName = "/" + normalizedName;
+      }
+
+      if (normalizedName.startsWith("/photo_") && normalizedName.endsWith(".jpg")) {
+        html += "<li><a href='/photo?name=" + normalizedName + "' target='_blank'>";
+        html += normalizedName + "</a> (" + String((unsigned long)file.size()) + " bytes)</li>";
+        count++;
+      }
+      file.close();
+      file = root.openNextFile();
+    }
+
+    root.close();
+
+    if (count == 0) {
+      html += "<li>No timestamp photos found in SPIFFS yet.</li>";
+    }
+
+    html += "</ul></body></html>";
+    request->send(200, "text/html", html);
+  });
+
+  // Serve a selected photo from SPIFFS by filename parameter.
+  server.on("/photo", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (!request->hasParam("name")) {
+      request->send(400, "text/plain", "Missing parameter: name");
+      return;
+    }
+
+    String fileName = request->getParam("name")->value();
+    if (!fileName.startsWith("/")) {
+      fileName = "/" + fileName;
+    }
+
+    if (!fileName.startsWith("/photo_") || !fileName.endsWith(".jpg")) {
+      request->send(400, "text/plain", "Invalid filename");
+      return;
+    }
+
+    if (!SPIFFS.exists(fileName)) {
+      request->send(404, "text/plain", "File not found");
+      return;
+    }
+
+    request->send(SPIFFS, fileName, "image/jpg", false);
   });
 
   // handle DebugPage
@@ -380,56 +496,7 @@ void loop() {
   #endif
   
   //======================================================================
-  // SerialLink: Empfange Wasserstand-Daten (alle 100ms prüfen)
-  if (millis() - lastSerialCheck > 100) {
-    lastSerialCheck = millis();
-    
-    if (serialLink.available()) {
-      uint8_t msgType;
-      uint8_t msgData[SL_MAX_DATA_LENGTH];
-      uint8_t msgLength;
-      if (serialLink.receiveMessage(msgType, msgData, msgLength)) {
-        lastDataReceived = millis();
-        
-        switch(msgType) {
-          case SL_MSG_PING:
-            Serial.println("[SerialLink] PING empfangen");
-            // Sende PONG zurück
-            {
-              uint8_t dummy = 0;
-              serialLink.sendMessage(SL_MSG_PONG, &dummy, 0);
-            }
-            break;
-            
-          case SL_MSG_WATERLEVEL: {
-            WaterLevelData* wlData = (WaterLevelData*)msgData;
-            lastWaterLevel_mm = wlData->level_mm;
-            lastAlarmState = wlData->alarm_state;
-            Serial.printf("[SerialLink] Wasserstand: %d mm, ADC: %d, Alarm: %d\n",
-                         wlData->level_mm, wlData->adc_value, wlData->alarm_state);
-            break;
-          }
-          
-          case SL_MSG_ALARM_STATE:
-            lastAlarmState = msgData[0];
-            Serial.printf("[SerialLink] Alarm-Status: %d\n", lastAlarmState);
-            break;
-            
-          case SL_MSG_TEXT:
-            Serial.print("[SerialLink] Text: ");
-            for(uint8_t i = 0; i < msgLength; i++) {
-              Serial.print((char)msgData[i]);
-            }
-            Serial.println();
-            break;
-            
-          default:
-            Serial.printf("[SerialLink] Unbekannter Typ: 0x%02X\n", msgType);
-            break;
-        }
-      }
-    }
-  }
+  // SerialLink vorübergehend deaktiviert
   
   //======================================================================
   // take photo on click
@@ -439,21 +506,24 @@ void loop() {
   }
 
   //======================================================================
-  // take photo every n miliseconds and post it to external server
+  // take photo every n miliseconds and save to SD Card
   msecNow = millis();
   if ((msecNow - msecLastCapture)/1000 > SEC_CAPTURE_DIFF)
   // if (false)
   {
-    serialLink.sendText("capturing photo");
     Serial.println("capturing photo");
     capturePhotoSaveSpiffs();
 
-    Serial.println("Sending photo started");
-    postImageOnly();
+    // Check if SD Card is available and save to SD, otherwise just keep in SPIFFS
+    if (sdCardReady) {
+      capturePhotoSaveSD();
+      Serial.println("Photo saved to SD Card");
+    } else {
+      Serial.println("SD Card not available - photo saved to SPIFFS only");
+    }
 
     msecLastCapture = msecNow;
-    Serial.println("Sending photo done");
-    serialLink.sendText("Sending photo done");
+    Serial.println("Photo capture done");
     // reset msecTick with every capture
     msecTick = 0;
   }
@@ -491,17 +561,12 @@ void loop() {
     u8g2.print("ErrCnt:");
     u8g2.print(errCnt_WiFi);
 
-    // Wasserstand anzeigen (4. Zeile)
+    // SD-Status anzeigen (4. Zeile)
     u8g2.setCursor(0, 36);
-    if (lastDataReceived > 0 && (millis() - lastDataReceived) < 30000) {
-      u8g2.print("WL:");
-      u8g2.print(lastWaterLevel_mm);
-      u8g2.print("mm");
-      if (lastAlarmState > 0) {
-        u8g2.print(" ALARM!");
-      }
+    if (sdCardReady) {
+      u8g2.print("SD: OK");
     } else {
-      u8g2.print("WL: ---");
+      u8g2.print("SD: FAIL");
     }
 
     u8g2.sendBuffer();

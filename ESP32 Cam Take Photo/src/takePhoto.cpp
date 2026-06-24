@@ -7,8 +7,10 @@
 #include <HTTPClient.h>
 #include <esp_camera.h>
 #include <timeserver.h>
+#include <time.h>
 
 #include <SPIFFS.h>
+#include <SD_MMC.h>
 
 #include <main.h>
 #include <takePhoto.h>
@@ -131,7 +133,7 @@ void capturePhotoSaveSpiffs( void ) {
     }
 
     // ====================================
-    // Photo file name
+    // Always keep the newest picture at fixed path.
     Serial.printf("Picture file name: %s\n", FILE_PHOTO);
     File file = SPIFFS.open(FILE_PHOTO, FILE_WRITE);
 
@@ -149,6 +151,27 @@ void capturePhotoSaveSpiffs( void ) {
       Serial.print(file.size());
       Serial.println(" bytes");
     }
+    // ====================================
+    // Save additional history file with timestamp in SPIFFS.
+    char historyFile[48];
+    time_t now = time(nullptr);
+    struct tm timeinfo;
+    if (localtime_r(&now, &timeinfo) && (timeinfo.tm_year + 1900) >= 2020) {
+      strftime(historyFile, sizeof(historyFile), "/photo_%Y%m%d_%H%M%S.jpg", &timeinfo);
+    } else {
+      snprintf(historyFile, sizeof(historyFile), "/photo_uptime_%lu.jpg", millis() / 1000UL);
+    }
+
+    File history = SPIFFS.open(historyFile, FILE_WRITE);
+    if (!history) {
+      Serial.println("Failed to open history file in writing mode");
+    } else {
+      history.write(fb->buf, fb->len);
+      Serial.print("History photo saved in ");
+      Serial.println(historyFile);
+      history.close();
+    }
+
     // ====================================
     // Close the file
     file.close();
@@ -398,4 +421,67 @@ void postImageOnly() {
 
   http.end();
   delete[] buffer;
+}
+
+// ========================================================================================================
+// Capture Photo and Save it to SD Card with Timestamp
+void capturePhotoSaveSD( void ) {
+// ========================================================================================================
+  camera_fb_t * fb = NULL;
+  bool ok = 0;
+
+  do {
+    // ====================================
+    // Take a photo with the camera
+    Serial.println("Taking a photo...");
+
+    fb = esp_camera_fb_get();
+    if (!fb) {
+      Serial.println("Camera capture failed");
+      return;
+    }
+
+    // ====================================
+    // Generate filename with date and time
+    time_t now = time(nullptr);
+    struct tm* timeinfo = localtime(&now);
+    
+    char filename[64];
+    strftime(filename, sizeof(filename), "/photo_%Y_%m_%d_%H_%M_%S.jpg", timeinfo);
+    
+    Serial.printf("Picture file name: %s\n", filename);
+
+    // ====================================
+    // Open file on SD Card for writing
+    File file = SD_MMC.open(filename, FILE_WRITE);
+
+    if (!file) {
+      Serial.println("Failed to open file on SD Card for writing");
+      esp_camera_fb_return(fb);
+      delay(100);
+      continue;
+    }
+
+    // ====================================
+    // Write photo data to file
+    size_t written = file.write(fb->buf, fb->len);
+    
+    if (written == fb->len) {
+      Serial.print("The picture has been saved: ");
+      Serial.print(filename);
+      Serial.print(" - Size: ");
+      Serial.print(file.size());
+      Serial.println(" bytes");
+      ok = true;
+    } else {
+      Serial.println("Failed to write photo data to file");
+      ok = false;
+    }
+
+    // ====================================
+    // Close the file
+    file.close();
+    esp_camera_fb_return(fb);
+
+  } while ( !ok );
 }

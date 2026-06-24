@@ -11,6 +11,7 @@
 
 bool checkPhoto( fs::FS &fs );
 void capturePhotoSaveSpiffs( void );
+void capturePhotoSaveSD( void );
 void capturePhotoPost( void );
 void postImageFile();
 void postImageOnly();

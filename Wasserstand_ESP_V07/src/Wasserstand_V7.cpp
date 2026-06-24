@@ -1079,6 +1079,9 @@ void loop(void)
       measureRuntimeClearMax(measureLoopOthers);
       measureRuntimeClearMax(measureSendPost);
       measureRuntimeClearMax(measureSensor);
+    } else if (receivedString == "reboot") {
+      Serial.println("rebooting now...");
+      ESP.restart();
     }
   }
 #endif // useSerialInput
