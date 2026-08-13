@@ -258,7 +258,7 @@ void SetAlarmState_from_level()
     alarmStateLevel = 5; // pump running
   }
   // switch with hysteresis
-  else if ((alarmStateLevel = 5) && (myValueFilteredAct > Level_AHH - Level_HIST))
+  else if ((alarmStateLevel == 5) && (myValueFilteredAct > Level_AHH - Level_HIST))
   {
     alarmStateLevel = 5; // pump running
   }

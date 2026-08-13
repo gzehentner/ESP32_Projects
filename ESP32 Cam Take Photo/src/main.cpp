@@ -95,11 +95,11 @@ int genError = 0;
 int genErrorDone = 0;
 
 #if isLiveSystem == 1
-  #define SEC_CAPTURE_DIFF 600
+  #define SEC_CAPTURE_DIFF 60
   const char *myServerName     = "https://zehentner.bplaced.net/Wasserstand/live/rec_photo.php"; 
   const char *myServerNameFile = "https://zehentner.bplaced.net/Wasserstand/live/rec_photo_file.php"; 
 #else 
-  #define SEC_CAPTURE_DIFF 600
+  #define SEC_CAPTURE_DIFF 60
   const char *myServerName     = "https://zehentner.bplaced.net/Wasserstand/dev/rec_photo.php"; 
   const char *myServerNameFile = "https://zehentner.bplaced.net/Wasserstand/dev/rec_photo_file.php"; 
  #endif
