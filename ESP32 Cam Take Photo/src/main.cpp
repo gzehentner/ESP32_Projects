@@ -348,7 +348,13 @@ void setup() {
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
-  config.fb_location = CAMERA_FB_IN_DRAM;
+  // Keep internal RAM available for the TLS handshake. The AI Thinker
+  // ESP32-CAM normally has PSRAM, which is well suited for the frame buffer.
+  bool cameraHasPsram = psramFound();
+  config.fb_location = cameraHasPsram ? CAMERA_FB_IN_PSRAM : CAMERA_FB_IN_DRAM;
+  Serial.printf("PSRAM: %s, camera framebuffer: %s\n",
+                cameraHasPsram ? "available" : "not available",
+                cameraHasPsram ? "PSRAM" : "internal DRAM");
 
   // if (psramFound()) {
   if (false) {
@@ -523,7 +529,7 @@ void loop() {
   // take photo on click
   if (takeNewPhoto) {
     capturePhotoSaveSpiffs();
-    // postImageOnly();  // Temporarily disabled for stability test
+    postImageOnly();  // Test: upload only manually requested photos
     takeNewPhoto = false;
   }
 
@@ -535,7 +541,7 @@ void loop() {
   {
     Serial.println("capturing photo");
     capturePhotoSaveSpiffs();
-    // postImageOnly();  // Temporarily disabled for stability test
+    // postImageOnly();  // Automatic upload remains disabled during test
 
     // Check if SD Card is available and save to SD, otherwise just keep in SPIFFS
     if (sdCardReady) {

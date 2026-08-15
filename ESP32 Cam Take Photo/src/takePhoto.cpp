@@ -6,6 +6,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <esp_camera.h>
+#include <esp_heap_caps.h>
 #include <timeserver.h>
 #include <time.h>
 
@@ -393,6 +394,11 @@ void postImageFile() {
 void postImageOnly() {
 // ========================================================================================================
 
+  Serial.printf("Heap before upload: internal free=%u, largest internal=%u, PSRAM free=%u bytes\n",
+                (unsigned int)heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+                (unsigned int)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+                (unsigned int)ESP.getFreePsram());
+
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Photo upload skipped: WiFi not connected");
     return;
@@ -434,6 +440,11 @@ void postImageOnly() {
   }
 
   http.end();
+
+  Serial.printf("Heap after upload: internal free=%u, largest internal=%u, PSRAM free=%u bytes\n",
+                (unsigned int)heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+                (unsigned int)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+                (unsigned int)ESP.getFreePsram());
 }
 
 // ========================================================================================================
