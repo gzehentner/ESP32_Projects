@@ -190,7 +190,9 @@ const char index_html[] PROGMEM = R"rawliteral(
 
 void setup() {
 //======================================================================
-  // Turn-off the 'brownout detector'
+  // The current hardware supply drops briefly during WiFi startup.
+  // Disable brownout resets temporarily so the controller can start.
+  // The proper long-term fix is a stable 5 V supply with sufficient current.
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
 
   u8g2.begin();
@@ -256,6 +258,21 @@ void setup() {
     delay(500);
     Serial.println("SPIFFS mounted successfully");
   }
+  // Temporary test mode: format SPIFFS on every restart.
+  Serial.println("Formatting SPIFFS...");
+  SPIFFS.end();
+
+  if (!SPIFFS.format()) {
+    Serial.println("SPIFFS format failed");
+    ESP.restart();
+  }
+
+  if (!SPIFFS.begin(false)) {
+    Serial.println("SPIFFS mount failed after format");
+    ESP.restart();
+  }
+
+  Serial.println("SPIFFS formatted and mounted successfully");
 
   //======================================================================
   // SPIFFS-only mode: SD initialization is disabled to avoid pin conflicts
@@ -307,7 +324,9 @@ void setup() {
 
   //======================================================================
   // OV2640 camera module
-  camera_config_t config;
+  // Zero-initialize all fields to avoid random values in camera options
+  // which were added in newer versions of the camera driver.
+  camera_config_t config = {};
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
   config.pin_d0 = Y2_GPIO_NUM;
@@ -328,6 +347,8 @@ void setup() {
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
+  config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+  config.fb_location = CAMERA_FB_IN_DRAM;
 
   // if (psramFound()) {
   if (false) {
@@ -502,6 +523,7 @@ void loop() {
   // take photo on click
   if (takeNewPhoto) {
     capturePhotoSaveSpiffs();
+    // postImageOnly();  // Temporarily disabled for stability test
     takeNewPhoto = false;
   }
 
@@ -513,6 +535,7 @@ void loop() {
   {
     Serial.println("capturing photo");
     capturePhotoSaveSpiffs();
+    // postImageOnly();  // Temporarily disabled for stability test
 
     // Check if SD Card is available and save to SD, otherwise just keep in SPIFFS
     if (sdCardReady) {

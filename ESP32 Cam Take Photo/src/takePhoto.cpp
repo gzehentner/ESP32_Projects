@@ -110,7 +110,11 @@ const char *root_ca =
 bool checkPhoto( fs::FS &fs ) {
 // =======================================================================================
   File f_pic = fs.open( FILE_PHOTO );
+  if (!f_pic) {
+    return false;
+  }
   unsigned int pic_sz = f_pic.size();
+  f_pic.close();
   return ( pic_sz > 100 );
 }
 
@@ -118,70 +122,74 @@ bool checkPhoto( fs::FS &fs ) {
 // Capture Photo and Save it to SPIFFS
 void capturePhotoSaveSpiffs( void ) {
 // =======================================================================================
-  camera_fb_t * fb = NULL; // pointer
-  bool ok = 0; // Boolean indicating if the picture has been taken correctly
+  Serial.println("Taking a photo...");
 
-  do {
-    // ====================================
-    // Take a photo with the camera
-    Serial.println("Taking a photo...");
-
-    fb = esp_camera_fb_get();
-    if (!fb) {
-      Serial.println("Camera capture failed");
-      return;
+  camera_fb_t *fb = esp_camera_fb_get();
+  if (!fb || !fb->buf || fb->len <= 100) {
+    Serial.println("Camera capture failed or returned an invalid image");
+    if (fb) {
+      esp_camera_fb_return(fb);
     }
+    return;
+  }
 
-    // ====================================
-    // Always keep the newest picture at fixed path.
-    Serial.printf("Picture file name: %s\n", FILE_PHOTO);
-    File file = SPIFFS.open(FILE_PHOTO, FILE_WRITE);
+  Serial.printf("Picture file name: %s\n", FILE_PHOTO);
+  File file = SPIFFS.open(FILE_PHOTO, FILE_WRITE);
+  if (!file) {
+    Serial.println("Failed to open photo file in writing mode");
+    esp_camera_fb_return(fb);
+    return;
+  }
 
-    // ====================================
-    // Insert the data in the photo file
-    if (!file) {
-      Serial.println("Failed to open file in writing mode");
-    }
-    else {
-    // ====================================
-      file.write(fb->buf, fb->len); // payload (image), payload length
-      Serial.print("The picture has been saved in ");
-      Serial.print(FILE_PHOTO);
-      Serial.print(" - Size: ");
-      Serial.print(file.size());
-      Serial.println(" bytes");
-    }
-    // ====================================
-    // Save additional history file with timestamp in SPIFFS.
-    char historyFile[48];
-    time_t now = time(nullptr);
-    struct tm timeinfo;
-    if (localtime_r(&now, &timeinfo) && (timeinfo.tm_year + 1900) >= 2020) {
-      strftime(historyFile, sizeof(historyFile), "/photo_%Y%m%d_%H%M%S.jpg", &timeinfo);
-    } else {
-      snprintf(historyFile, sizeof(historyFile), "/photo_uptime_%lu.jpg", millis() / 1000UL);
-    }
+  size_t written = file.write(fb->buf, fb->len);
+  file.close();
+  if (written != fb->len) {
+    Serial.printf("Incomplete photo write: %u of %u bytes\n",
+                  (unsigned int)written, (unsigned int)fb->len);
+    SPIFFS.remove(FILE_PHOTO);
+    esp_camera_fb_return(fb);
+    return;
+  }
 
+  Serial.printf("Photo saved in %s - Size: %u bytes\n",
+                FILE_PHOTO, (unsigned int)written);
+
+  // Save a history copy only if enough space is currently available.
+  // Failure to save history must not block the main loop.
+  char historyFile[48];
+  time_t now = time(nullptr);
+  struct tm timeinfo;
+  if (localtime_r(&now, &timeinfo) && (timeinfo.tm_year + 1900) >= 2020) {
+    strftime(historyFile, sizeof(historyFile), "/photo_%Y%m%d_%H%M%S.jpg", &timeinfo);
+  } else {
+    snprintf(historyFile, sizeof(historyFile), "/photo_uptime_%lu.jpg", millis() / 1000UL);
+  }
+
+  size_t totalBytes = SPIFFS.totalBytes();
+  size_t usedBytes = SPIFFS.usedBytes();
+  size_t freeBytes = totalBytes > usedBytes ? totalBytes - usedBytes : 0;
+
+  if (freeBytes >= fb->len) {
     File history = SPIFFS.open(historyFile, FILE_WRITE);
     if (!history) {
       Serial.println("Failed to open history file in writing mode");
     } else {
-      history.write(fb->buf, fb->len);
-      Serial.print("History photo saved in ");
-      Serial.println(historyFile);
+      size_t historyWritten = history.write(fb->buf, fb->len);
       history.close();
+
+      if (historyWritten == fb->len) {
+        Serial.print("History photo saved in ");
+        Serial.println(historyFile);
+      } else {
+        Serial.println("Incomplete history photo write");
+        SPIFFS.remove(historyFile);
+      }
     }
+  } else {
+    Serial.println("Not enough SPIFFS space for a history photo");
+  }
 
-    // ====================================
-    // Close the file
-    file.close();
-    esp_camera_fb_return(fb);
-
-    // ====================================
-    // check if file has been correctly saved in SPIFFS
-    // ====================================
-    ok = checkPhoto(SPIFFS);
-  } while ( !ok );
+  esp_camera_fb_return(fb);
 }
 
 
@@ -373,7 +381,9 @@ void postImageFile() {
     Serial.println(httpResponseCode);
     Serial.println(response);
   } else {
-    Serial.println("Fehler bei der HTTP-Anfrage");
+    Serial.printf("Photo upload failed: %d (%s)\n",
+                  httpResponseCode,
+                  HTTPClient::errorToString(httpResponseCode).c_str());
   }
 
   http.end();
@@ -382,6 +392,11 @@ void postImageFile() {
 // ========================================================================================================
 void postImageOnly() {
 // ========================================================================================================
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Photo upload skipped: WiFi not connected");
+    return;
+  }
 
   // Öffne die JPEG-Datei aus dem SPIFFS
   File file = SPIFFS.open(FILE_PHOTO, "r");
@@ -397,30 +412,28 @@ void postImageOnly() {
   Serial.print(fileSize); 
   Serial.println(" Bytes");
 
-  uint8_t *buffer = new uint8_t[fileSize];
-  file.read(buffer, fileSize);
-  file.close();
-
-  //Serial.print("size: "); Serial.println(file.size);
-
   // HTTP-POST-Anfrage vorbereiten
   HTTPClient http;
 
   http.begin(myServerName, root_ca);  // Use HTTPS with the root CA certificate
   http.addHeader("Content-Type", "image/jpeg");
 
-  int httpResponseCode = http.POST(buffer, fileSize);
+  // Stream the JPEG directly from SPIFFS. Loading the complete image into
+  // RAM first leaves too little contiguous heap for the TLS handshake.
+  int httpResponseCode = http.sendRequest("POST", &file, fileSize);
+  file.close();
 
   if (httpResponseCode > 0) {
     String response = http.getString();
     Serial.println(httpResponseCode);
     Serial.println(response);
   } else {
-    Serial.println("Fehler bei der HTTP-Anfrage");
+    Serial.printf("Photo upload failed: %d (%s)\n",
+                  httpResponseCode,
+                  HTTPClient::errorToString(httpResponseCode).c_str());
   }
 
   http.end();
-  delete[] buffer;
 }
 
 // ========================================================================================================
