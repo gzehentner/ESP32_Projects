@@ -541,7 +541,7 @@ void loop() {
   {
     Serial.println("capturing photo");
     capturePhotoSaveSpiffs();
-    // postImageOnly();  // Automatic upload remains disabled during test
+    postImageOnly();  // Upload periodically captured photo
 
     // Check if SD Card is available and save to SD, otherwise just keep in SPIFFS
     if (sdCardReady) {
